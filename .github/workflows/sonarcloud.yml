@@ -1,0 +1,47 @@
+name: SonarCloud Analysis
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  sonar:
+    name: SonarCloud Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: Grant execute permission for Gradle
+        run: chmod +x gradlew
+
+      - name: Build Project
+        run: ./gradlew build -x test
+
+      - name: Run Tests and Generate Jacoco Report
+        run: ./gradlew test jacocoTestReport
+
+      - name: Run SonarCloud Analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          ./gradlew sonar \
+            -Dsonar.projectKey=Adpro-B02_eventsphere-be \
+            -Dsonar.organization=Adpro-B02 \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.login=$SONAR_TOKEN \
+            -Dsonar.coverage.jacoco.xmlReportPaths=build/reports/jacoco/test/jacocoTestReport.xml
