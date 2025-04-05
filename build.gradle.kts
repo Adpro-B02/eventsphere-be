@@ -9,7 +9,7 @@ plugins {
 sonarqube {
     properties {
         property("sonar.projectKey", "Adpro-B02_eventsphere-be")
-        property("sonar.organization", "Adpro-B02")
+        property("sonar.organization", "adpro-b02")
         property("sonar.host.url", "https://sonarcloud.io")
     }
 }
