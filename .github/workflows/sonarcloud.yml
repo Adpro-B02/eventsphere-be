@@ -43,5 +43,5 @@ jobs:
             -Dsonar.projectKey=Adpro-B02_eventsphere-be \
             -Dsonar.organization=adpro-b02 \
             -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.login=$SONAR_TOKEN \
+            -Dsonar.token=$SONAR_TOKEN \
             -Dsonar.coverage.jacoco.xmlReportPaths=build/reports/jacoco/test/jacocoTestReport.xml
