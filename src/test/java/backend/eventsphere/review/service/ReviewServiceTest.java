@@ -3,10 +3,10 @@ package backend.eventsphere.review.service;
 import backend.eventsphere.review.dto.ReviewCreateRequest;
 import backend.eventsphere.review.dto.ReviewResponse;
 import backend.eventsphere.review.dto.ReviewUpdateRequest;
-import backend.eventsphere.review.exception.ReviewNotFoundException;
-import backend.eventsphere.review.exception.ValidationException;
 import backend.eventsphere.review.model.Review;
 import backend.eventsphere.review.repository.ReviewRepository;
+import backend.eventsphere.review.service.mock.EventService;
+import backend.eventsphere.review.service.mock.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -18,6 +18,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 public class ReviewServiceImplTest {
@@ -54,10 +55,11 @@ public class ReviewServiceImplTest {
         when(reviewRepository.save(any(Review.class))).thenReturn(savedReview);
 
         // Act
-        ReviewResponse response = reviewService.createReview(request);
+        Optional<ReviewResponse> responseOpt = reviewService.createReview(request);
 
         // Assert
-        assertNotNull(response);
+        assertTrue(responseOpt.isPresent());
+        ReviewResponse response = responseOpt.get();
         assertEquals(savedReview.getId(), response.getId());
         assertEquals(savedReview.getRating(), response.getRating());
         assertEquals(savedReview.getComment(), response.getComment());
@@ -76,8 +78,11 @@ public class ReviewServiceImplTest {
         
         when(reviewRepository.findByUserIdAndEventId(201L, 101L)).thenReturn(Optional.of(existingReview));
 
-        // Act & Assert
-        assertThrows(ValidationException.class, () -> reviewService.createReview(request));
+        // Act
+        Optional<ReviewResponse> responseOpt = reviewService.createReview(request);
+
+        // Assert
+        assertFalse(responseOpt.isPresent());
         verify(reviewRepository, never()).save(any(Review.class));
     }
 
@@ -86,8 +91,11 @@ public class ReviewServiceImplTest {
         // Arrange
         ReviewCreateRequest request = new ReviewCreateRequest(101L, 201L, 6, "Invalid rating");
 
-        // Act & Assert
-        assertThrows(ValidationException.class, () -> reviewService.createReview(request));
+        // Act
+        Optional<ReviewResponse> responseOpt = reviewService.createReview(request);
+
+        // Assert
+        assertFalse(responseOpt.isPresent());
         verify(reviewRepository, never()).save(any(Review.class));
     }
 
@@ -97,8 +105,11 @@ public class ReviewServiceImplTest {
         ReviewCreateRequest request = new ReviewCreateRequest(999L, 201L, 4, "Great event!");
         when(eventService.eventExists(999L)).thenReturn(false);
 
-        // Act & Assert
-        assertThrows(ValidationException.class, () -> reviewService.createReview(request));
+        // Act
+        Optional<ReviewResponse> responseOpt = reviewService.createReview(request);
+
+        // Assert
+        assertFalse(responseOpt.isPresent());
         verify(reviewRepository, never()).save(any(Review.class));
     }
 
@@ -108,8 +119,11 @@ public class ReviewServiceImplTest {
         ReviewCreateRequest request = new ReviewCreateRequest(101L, 201L, 4, "Great event!");
         when(eventService.userAttendedEvent(201L, 101L)).thenReturn(false);
 
-        // Act & Assert
-        assertThrows(ValidationException.class, () -> reviewService.createReview(request));
+        // Act
+        Optional<ReviewResponse> responseOpt = reviewService.createReview(request);
+
+        // Assert
+        assertFalse(responseOpt.isPresent());
         verify(reviewRepository, never()).save(any(Review.class));
     }
 
@@ -125,10 +139,11 @@ public class ReviewServiceImplTest {
         when(reviewRepository.save(any(Review.class))).thenReturn(updatedReview);
 
         // Act
-        ReviewResponse response = reviewService.updateReview(reviewId, request);
+        Optional<ReviewResponse> responseOpt = reviewService.updateReview(reviewId, request);
 
         // Assert
-        assertNotNull(response);
+        assertTrue(responseOpt.isPresent());
+        ReviewResponse response = responseOpt.get();
         assertEquals(updatedReview.getId(), response.getId());
         assertEquals(updatedReview.getRating(), response.getRating());
         assertEquals(updatedReview.getComment(), response.getComment());
@@ -144,8 +159,11 @@ public class ReviewServiceImplTest {
         
         when(reviewRepository.findById(reviewId)).thenReturn(Optional.empty());
 
-        // Act & Assert
-        assertThrows(ReviewNotFoundException.class, () -> reviewService.updateReview(reviewId, request));
+        // Act
+        Optional<ReviewResponse> responseOpt = reviewService.updateReview(reviewId, request);
+
+        // Assert
+        assertFalse(responseOpt.isPresent());
         verify(reviewRepository, never()).save(any(Review.class));
     }
 
@@ -158,8 +176,11 @@ public class ReviewServiceImplTest {
         
         when(reviewRepository.findById(reviewId)).thenReturn(Optional.of(existingReview));
 
-        // Act & Assert
-        assertThrows(ValidationException.class, () -> reviewService.updateReview(reviewId, request));
+        // Act
+        Optional<ReviewResponse> responseOpt = reviewService.updateReview(reviewId, request);
+
+        // Assert
+        assertFalse(responseOpt.isPresent());
         verify(reviewRepository, never()).save(any(Review.class));
     }
 
@@ -187,8 +208,11 @@ public class ReviewServiceImplTest {
         
         when(reviewRepository.findById(reviewId)).thenReturn(Optional.empty());
 
-        // Act & Assert
-        assertThrows(ReviewNotFoundException.class, () -> reviewService.deleteReview(reviewId));
+        // Act
+        boolean result = reviewService.deleteReview(reviewId);
+
+        // Assert
+        assertFalse(result);
         verify(reviewRepository, never()).deleteById(anyLong());
     }
 
@@ -201,10 +225,11 @@ public class ReviewServiceImplTest {
         when(reviewRepository.findById(reviewId)).thenReturn(Optional.of(review));
 
         // Act
-        ReviewResponse response = reviewService.getReviewById(reviewId);
+        Optional<ReviewResponse> responseOpt = reviewService.getReviewById(reviewId);
 
         // Assert
-        assertNotNull(response);
+        assertTrue(responseOpt.isPresent());
+        ReviewResponse response = responseOpt.get();
         assertEquals(review.getId(), response.getId());
         assertEquals(review.getRating(), response.getRating());
         assertEquals(review.getComment(), response.getComment());
@@ -217,8 +242,11 @@ public class ReviewServiceImplTest {
         
         when(reviewRepository.findById(reviewId)).thenReturn(Optional.empty());
 
-        // Act & Assert
-        assertThrows(ReviewNotFoundException.class, () -> reviewService.getReviewById(reviewId));
+        // Act
+        Optional<ReviewResponse> responseOpt = reviewService.getReviewById(reviewId);
+
+        // Assert
+        assertFalse(responseOpt.isPresent());
     }
 
     @Test
@@ -269,11 +297,11 @@ public class ReviewServiceImplTest {
         when(reviewRepository.findByUserIdAndEventId(userId, eventId)).thenReturn(Optional.of(review));
 
         // Act
-        Optional<ReviewResponse> response = reviewService.getReviewByUserIdAndEventId(userId, eventId);
+        Optional<ReviewResponse> responseOpt = reviewService.getReviewByUserIdAndEventId(userId, eventId);
 
         // Assert
-        assertTrue(response.isPresent());
-        assertEquals(review.getId(), response.get().getId());
+        assertTrue(responseOpt.isPresent());
+        assertEquals(review.getId(), responseOpt.get().getId());
     }
 
     @Test
@@ -285,9 +313,9 @@ public class ReviewServiceImplTest {
         when(reviewRepository.findByUserIdAndEventId(userId, eventId)).thenReturn(Optional.empty());
 
         // Act
-        Optional<ReviewResponse> response = reviewService.getReviewByUserIdAndEventId(userId, eventId);
+        Optional<ReviewResponse> responseOpt = reviewService.getReviewByUserIdAndEventId(userId, eventId);
 
         // Assert
-        assertFalse(response.isPresent());
+        assertFalse(responseOpt.isPresent());
     }
 }

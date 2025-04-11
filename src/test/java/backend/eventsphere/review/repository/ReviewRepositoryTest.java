@@ -1,193 +1,192 @@
-package backend.eventsphere.review.repository;
+package backend.eventsphere.review.controller;
 
-import backend.eventsphere.review.model.Review;
+import backend.eventsphere.review.dto.ReviewCreateRequest;
+import backend.eventsphere.review.dto.ReviewResponse;
+import backend.eventsphere.review.dto.ReviewUpdateRequest;
+import backend.eventsphere.review.service.ReviewService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-public class ReviewRepositoryImplTest {
+@WebMvcTest(ReviewController.class)
+public class ReviewControllerTest {
 
-    @Mock
-    private JdbcTemplate jdbcTemplate;
+    @Autowired
+    private MockMvc mockMvc;
 
-    private ReviewRepositoryImpl reviewRepository;
+    @MockBean
+    private ReviewService reviewService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    private ReviewResponse sampleReviewResponse;
+    private List<ReviewResponse> sampleReviewResponses;
 
     @BeforeEach
     public void setup() {
         MockitoAnnotations.openMocks(this);
-        reviewRepository = new ReviewRepositoryImpl(jdbcTemplate);
+        
+        // Sample data for tests
+        sampleReviewResponse = new ReviewResponse(1L, 101L, 201L, 4, "Great event!");
+        ReviewResponse anotherReviewResponse = new ReviewResponse(2L, 101L, 202L, 5, "Excellent event!");
+        sampleReviewResponses = Arrays.asList(sampleReviewResponse, anotherReviewResponse);
     }
 
     @Test
-    public void testFindById() {
+    public void testCreateReview() throws Exception {
         // Arrange
-        Review expectedReview = new Review(1L, 101L, 201L, 4, "Great event!");
-        when(jdbcTemplate.queryForObject(anyString(), any(RowMapper.class), eq(1L)))
-                .thenReturn(expectedReview);
+        ReviewCreateRequest request = new ReviewCreateRequest(101L, 201L, 4, "Great event!");
+        when(reviewService.createReview(any(ReviewCreateRequest.class)))
+            .thenReturn(Optional.of(sampleReviewResponse));
 
-        // Act
-        Optional<Review> result = reviewRepository.findById(1L);
+        // Act & Assert
+        mockMvc.perform(post("/api/reviews")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(sampleReviewResponse.getId()))
+                .andExpect(jsonPath("$.eventId").value(sampleReviewResponse.getEventId()))
+                .andExpect(jsonPath("$.userId").value(sampleReviewResponse.getUserId()))
+                .andExpect(jsonPath("$.rating").value(sampleReviewResponse.getRating()))
+                .andExpect(jsonPath("$.comment").value(sampleReviewResponse.getComment()));
 
-        // Assert
-        assertTrue(result.isPresent());
-        assertEquals(expectedReview, result.get());
-        verify(jdbcTemplate).queryForObject(anyString(), any(RowMapper.class), eq(1L));
+        verify(reviewService).createReview(any(ReviewCreateRequest.class));
     }
 
     @Test
-    public void testFindById_NotFound() {
+    public void testCreateReview_ValidationError() throws Exception {
         // Arrange
-        when(jdbcTemplate.queryForObject(anyString(), any(RowMapper.class), eq(999L)))
-                .thenReturn(null);
+        ReviewCreateRequest request = new ReviewCreateRequest(101L, 201L, 6, "Invalid rating");
+        when(reviewService.createReview(any(ReviewCreateRequest.class)))
+            .thenReturn(Optional.empty());
 
-        // Act
-        Optional<Review> result = reviewRepository.findById(999L);
+        // Act & Assert
+        mockMvc.perform(post("/api/reviews")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").exists());
 
-        // Assert
-        assertFalse(result.isPresent());
+        verify(reviewService).createReview(any(ReviewCreateRequest.class));
     }
 
     @Test
-    public void testFindByEventId() {
+    public void testUpdateReview() throws Exception {
         // Arrange
-        Review review1 = new Review(1L, 101L, 201L, 4, "Great event!");
-        Review review2 = new Review(2L, 101L, 202L, 5, "Excellent!");
-        List<Review> expectedReviews = Arrays.asList(review1, review2);
+        long reviewId = 1L;
+        ReviewUpdateRequest request = new ReviewUpdateRequest(5, "Updated comment!");
+        ReviewResponse updatedResponse = new ReviewResponse(reviewId, 101L, 201L, 5, "Updated comment!");
+        
+        when(reviewService.updateReview(eq(reviewId), any(ReviewUpdateRequest.class)))
+            .thenReturn(Optional.of(updatedResponse));
 
-        when(jdbcTemplate.query(anyString(), any(RowMapper.class), eq(101L)))
-                .thenReturn(expectedReviews);
+        // Act & Assert
+        mockMvc.perform(put("/api/reviews/{id}", reviewId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(updatedResponse.getId()))
+                .andExpect(jsonPath("$.rating").value(updatedResponse.getRating()))
+                .andExpect(jsonPath("$.comment").value(updatedResponse.getComment()));
 
-        // Act
-        List<Review> results = reviewRepository.findByEventId(101L);
-
-        // Assert
-        assertEquals(2, results.size());
-        assertEquals(expectedReviews, results);
-        verify(jdbcTemplate).query(anyString(), any(RowMapper.class), eq(101L));
+        verify(reviewService).updateReview(eq(reviewId), any(ReviewUpdateRequest.class));
     }
 
     @Test
-    public void testFindByUserId() {
+    public void testUpdateReview_NotFound() throws Exception {
         // Arrange
-        Review review1 = new Review(1L, 101L, 201L, 4, "Great event!");
-        Review review2 = new Review(3L, 102L, 201L, 3, "Good event");
-        List<Review> expectedReviews = Arrays.asList(review1, review2);
+        long reviewId = 999L;
+        ReviewUpdateRequest request = new ReviewUpdateRequest(5, "Updated comment!");
+        
+        when(reviewService.updateReview(eq(reviewId), any(ReviewUpdateRequest.class)))
+            .thenReturn(Optional.empty());
 
-        when(jdbcTemplate.query(anyString(), any(RowMapper.class), eq(201L)))
-                .thenReturn(expectedReviews);
+        // Act & Assert
+        mockMvc.perform(put("/api/reviews/{id}", reviewId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").exists());
 
-        // Act
-        List<Review> results = reviewRepository.findByUserId(201L);
-
-        // Assert
-        assertEquals(2, results.size());
-        assertEquals(expectedReviews, results);
-        verify(jdbcTemplate).query(anyString(), any(RowMapper.class), eq(201L));
+        verify(reviewService).updateReview(eq(reviewId), any(ReviewUpdateRequest.class));
     }
 
     @Test
-    public void testFindByUserIdAndEventId() {
+    public void testDeleteReview() throws Exception {
         // Arrange
-        Review expectedReview = new Review(1L, 101L, 201L, 4, "Great event!");
-        when(jdbcTemplate.queryForObject(anyString(), any(RowMapper.class), eq(201L), eq(101L)))
-                .thenReturn(expectedReview);
+        long reviewId = 1L;
+        when(reviewService.deleteReview(reviewId)).thenReturn(true);
 
-        // Act
-        Optional<Review> result = reviewRepository.findByUserIdAndEventId(201L, 101L);
+        // Act & Assert
+        mockMvc.perform(delete("/api/reviews/{id}", reviewId))
+                .andExpect(status().isNoContent());
 
-        // Assert
-        assertTrue(result.isPresent());
-        assertEquals(expectedReview, result.get());
-        verify(jdbcTemplate).queryForObject(anyString(), any(RowMapper.class), eq(201L), eq(101L));
+        verify(reviewService).deleteReview(reviewId);
     }
 
     @Test
-    public void testSave_Insert() {
+    public void testDeleteReview_NotFound() throws Exception {
         // Arrange
-        Review review = new Review(null, 101L, 201L, 4, "Great event!");
-        when(jdbcTemplate.update(
-                anyString(),
-                eq(review.getEventId()),
-                eq(review.getUserId()),
-                eq(review.getRating()),
-                eq(review.getComment())
-        )).thenReturn(1);
-        when(jdbcTemplate.queryForObject(eq("SELECT LAST_INSERT_ID()"), eq(Long.class)))
-                .thenReturn(1L);
+        long reviewId = 999L;
+        when(reviewService.deleteReview(reviewId)).thenReturn(false);
 
-        // Act
-        Review savedReview = reviewRepository.save(review);
+        // Act & Assert
+        mockMvc.perform(delete("/api/reviews/{id}", reviewId))
+                .andExpect(status().isNotFound());
 
-        // Assert
-        assertNotNull(savedReview.getId());
-        assertEquals(1L, savedReview.getId());
-        verify(jdbcTemplate).update(
-                anyString(),
-                eq(review.getEventId()),
-                eq(review.getUserId()),
-                eq(review.getRating()),
-                eq(review.getComment())
-        );
+        verify(reviewService).deleteReview(reviewId);
     }
 
     @Test
-    public void testSave_Update() {
+    public void testGetReviewById() throws Exception {
         // Arrange
-        Review review = new Review(1L, 101L, 201L, 4, "Updated review");
-        when(jdbcTemplate.update(
-                anyString(),
-                eq(review.getRating()),
-                eq(review.getComment()),
-                eq(review.getId())
-        )).thenReturn(1);
+        long reviewId = 1L;
+        when(reviewService.getReviewById(reviewId)).thenReturn(Optional.of(sampleReviewResponse));
 
-        // Act
-        Review updatedReview = reviewRepository.save(review);
+        // Act & Assert
+        mockMvc.perform(get("/api/reviews/{id}", reviewId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(sampleReviewResponse.getId()))
+                .andExpect(jsonPath("$.eventId").value(sampleReviewResponse.getEventId()))
+                .andExpect(jsonPath("$.userId").value(sampleReviewResponse.getUserId()))
+                .andExpect(jsonPath("$.rating").value(sampleReviewResponse.getRating()))
+                .andExpect(jsonPath("$.comment").value(sampleReviewResponse.getComment()));
 
-        // Assert
-        assertEquals(review, updatedReview);
-        verify(jdbcTemplate).update(
-                anyString(),
-                eq(review.getRating()),
-                eq(review.getComment()),
-                eq(review.getId())
-        );
+        verify(reviewService).getReviewById(reviewId);
     }
 
     @Test
-    public void testDeleteById() {
+    public void testGetReviewById_NotFound() throws Exception {
         // Arrange
-        when(jdbcTemplate.update(anyString(), eq(1L))).thenReturn(1);
+        long reviewId = 999L;
+        when(reviewService.getReviewById(reviewId)).thenReturn(Optional.empty());
 
-        // Act
-        boolean result = reviewRepository.deleteById(1L);
+        // Act & Assert
+        mockMvc.perform(get("/api/reviews/{id}", reviewId))
+                .andExpect(status().isNotFound());
 
-        // Assert
-        assertTrue(result);
-        verify(jdbcTemplate).update(anyString(), eq(1L));
+        verify(reviewService).getReviewById(reviewId);
     }
 
     @Test
-    public void testDeleteById_NotFound() {
+    public void testGetReviewsByEventId() throws Exception {
         // Arrange
-        when(jdbcTemplate.update(anyString(), eq(999L))).thenReturn(0);
-
-        // Act
-        boolean result = reviewRepository.deleteById(999L);
-
-        // Assert
-        assertFalse(result);
-        verify(jdbcTemplate).update(anyString(), eq(999L));
-    }
-}
+        long eventId = 101L
