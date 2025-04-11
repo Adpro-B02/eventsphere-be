@@ -67,11 +67,12 @@ public class TicketRepositoryTest {
     @Test
     void testListTicketsForEvent() {
         UUID eventId = UUID.randomUUID();
-        ticketFactory.createTicket(eventId, "VIP", 100.0, 50);
-        ticketFactory.createTicket(eventId, "Regular", 50.0, 100);
 
-        ticketRepository.save(ticketFactory.createTicket(eventId, "VIP", 100.0, 50));
-        ticketRepository.save(ticketFactory.createTicket(eventId, "Regular", 50.0, 100));
+        Ticket ticket1 = ticketFactory.createTicket(eventId, "VIP", 100.0, 50);
+        Ticket ticket2 = ticketFactory.createTicket(eventId, "Regular", 50.0, 100);
+
+        ticketRepository.save(ticket1);
+        ticketRepository.save(ticket2);
 
         assertEquals(2, ticketRepository.listByEvent(eventId).size());
     }
