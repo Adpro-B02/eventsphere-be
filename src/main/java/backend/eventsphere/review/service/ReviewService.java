@@ -5,7 +5,7 @@ import backend.eventsphere.review.dto.ReviewResponse;
 import backend.eventsphere.review.dto.ReviewUpdateRequest;
 import backend.eventsphere.review.model.Review;
 import backend.eventsphere.review.repository.ReviewRepository;
-import backend.eventsphere.review.service.mock.EventService;
+import backend.eventsphere.review.service.mock.EventServiceMock;
 import backend.eventsphere.review.service.mock.UserService;
 
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -20,12 +20,12 @@ import java.util.stream.Collectors;
 public class ReviewService {
 
     private final ReviewRepository reviewRepository;
-    private final EventService eventService;
+    private final EventServiceMock eventService;
     private final UserService userService;
 
     public ReviewService(
         ReviewRepository reviewRepository, 
-        @Qualifier("mockEventService") EventService eventService, 
+        @Qualifier("mockEventService") EventServiceMock eventService, 
         @Qualifier("mockUserService") UserService userService) {
         this.reviewRepository = reviewRepository;
         this.eventService = eventService;

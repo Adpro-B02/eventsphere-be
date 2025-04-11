@@ -4,8 +4,8 @@ import org.springframework.stereotype.Service;
 import java.util.Arrays;
 import java.util.List;
 
-@Service
-public class EventService {
+@Service("mockEventService")
+public class EventServiceMock {
     // Hardcoded event IDs that we'll consider as "existing"
     private static final List<Long> VALID_EVENT_IDS = Arrays.asList(1L, 2L, 3L, 4L, 5L);
     
