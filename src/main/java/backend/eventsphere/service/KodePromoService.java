@@ -1,5 +1,6 @@
 package backend.eventsphere.service;
 
+import backend.eventsphere.factory.PromoFactory;
 import backend.eventsphere.model.KodePromo;
 import backend.eventsphere.repository.KodePromoRepository;
 
@@ -12,14 +13,16 @@ import java.util.UUID;
 public class KodePromoService {
 
     private final KodePromoRepository repository;
+    private final PromoFactory promoFactory;
 
-    public KodePromoService(KodePromoRepository repository) {
+    public KodePromoService(KodePromoRepository repository, PromoFactory promoFactory) {
         this.repository = repository;
+        this.promoFactory = promoFactory;
     }
 
     public KodePromo createPromo(String code, BigDecimal discount, LocalDate startDate,
                                  LocalDate endDate, UUID eventId, UUID createdBy) {
-        KodePromo promo = new KodePromo(null, code, discount, startDate, endDate, eventId, createdBy);
+        KodePromo promo = promoFactory.createPromo(code, discount, startDate, endDate, eventId, createdBy);
         return repository.save(promo);
     }
 
