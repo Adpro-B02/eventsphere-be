@@ -20,7 +20,7 @@ public class TicketFactory {
             throw new IllegalArgumentException("Ticket type already exists for this event");
         }
 
-        Ticket ticket = new Ticket(UUID.randomUUID(), ticketType, price, quota);
+        Ticket ticket = new Ticket(eventId, ticketType, price, quota);
         ticketsForEvent.put(ticketType, ticket);
 
         return ticket;
