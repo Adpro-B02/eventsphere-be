@@ -2,6 +2,8 @@ package backend.eventsphere.service;
 
 import backend.eventsphere.model.KodePromo;
 import backend.eventsphere.repository.KodePromoRepository;
+import backend.eventsphere.factory.PromoFactory;
+import backend.eventsphere.factory.DiskonPromoFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -23,7 +25,9 @@ class KodePromoServiceTest {
     @BeforeEach
     void setUp() {
         repository = mock(KodePromoRepository.class);
-        service = new KodePromoService(repository);
+        PromoFactory factory = new DiskonPromoFactory();
+        service = new KodePromoService(repository, factory);
+
         promoId = UUID.randomUUID();
         eventId = UUID.randomUUID();
         userId = UUID.randomUUID();
