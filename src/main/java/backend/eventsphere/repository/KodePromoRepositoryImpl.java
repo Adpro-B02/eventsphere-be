@@ -1,11 +1,13 @@
 package backend.eventsphere.repository;
 
 import backend.eventsphere.model.KodePromo;
+import org.springframework.stereotype.Repository;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+@Repository
 public class KodePromoRepositoryImpl implements KodePromoRepository {
 
     private final Map<UUID, KodePromo> storage = new ConcurrentHashMap<>();

@@ -3,6 +3,7 @@ package backend.eventsphere.service;
 import backend.eventsphere.factory.PromoFactory;
 import backend.eventsphere.model.KodePromo;
 import backend.eventsphere.repository.KodePromoRepository;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+@Service
 public class KodePromoService {
 
     private final KodePromoRepository repository;
