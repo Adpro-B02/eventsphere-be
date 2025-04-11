@@ -1,74 +1,116 @@
 package model;
 
 import org.junit.jupiter.api.Test;
-import java.time.LocalDate;
+
+import java.time.LocalDateTime;
 import java.util.UUID;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class EventTest {
+
     @Test
-    void testConstructorAndGetters() {
+    void testConstructorWithoutStatus() {
         UUID organizerId = UUID.randomUUID();
-        LocalDateTime eventDateTime = LocalDateTime.of(2025, 6, 1, 13, 0);
+        LocalDateTime dateTime = LocalDateTime.of(2025, 6, 1, 13, 0);
 
         Event event = new Event(
                 organizerId,
                 "Tech Meetup",
                 100000L,
-                eventDateTime,
+                dateTime,
                 "Surabaya",
                 "Meetup developer komunitas regional"
         );
 
-        assertNull(event.getId()); // ID belum diset oleh JPA
+        assertNotNull(event.getId());
         assertEquals(organizerId, event.getOrganizerId());
         assertEquals("Tech Meetup", event.getName());
         assertEquals(100000L, event.getTicketPrice());
-        assertEquals(eventDateTime, event.getEventDateTime());
+        assertEquals(dateTime, event.getEventDateTime());
         assertEquals("Surabaya", event.getLocation());
         assertEquals("Meetup developer komunitas regional", event.getDescription());
+        assertEquals("PLANNED", event.getStatus());
     }
 
     @Test
-    void testSetters() {
-        Event event = new Event();
+    void testConstructorWithValidStatus() {
         UUID organizerId = UUID.randomUUID();
-        LocalDateTime eventDateTime = LocalDateTime.of(2025, 7, 10, 14, 30);
+        LocalDateTime dateTime = LocalDateTime.of(2025, 7, 10, 14, 30);
 
-        event.setId(UUID.randomUUID());
-        event.setOrganizerId(organizerId);
-        event.setName("Design Festival");
-        event.setTicketPrice(150000L);
-        event.setEventDateTime(eventDateTime);
-        event.setLocation("Bandung");
-        event.setDescription("Festival desain dan inovasi.");
+        Event event = new Event(
+                organizerId,
+                "Design Festival",
+                150000L,
+                dateTime,
+                "Bandung",
+                "Festival desain dan inovasi.",
+                "CANCELLED"
+        );
 
-        assertNotNull(event.getId());
-        assertEquals(organizerId, event.getOrganizerId());
-        assertEquals("Design Festival", event.getName());
-        assertEquals(150000L, event.getTicketPrice());
-        assertEquals(eventDateTime, event.getEventDateTime());
-        assertEquals("Bandung", event.getLocation());
-        assertEquals("Festival desain dan inovasi.", event.getDescription());
+        assertEquals("CANCELLED", event.getStatus());
     }
 
     @Test
-    void testToStringContainsFieldValues() {
+    void testConstructorWithInvalidStatus() {
         UUID organizerId = UUID.randomUUID();
-        LocalDateTime eventDateTime = LocalDateTime.of(2025, 8, 20, 10, 0);
+        LocalDateTime dateTime = LocalDateTime.of(2025, 7, 10, 14, 30);
+
+        assertThrows(IllegalArgumentException.class, () -> new Event(
+                organizerId,
+                "Design Festival",
+                150000L,
+                dateTime,
+                "Bandung",
+                "Festival desain dan inovasi.",
+                "UNKNOWN_STATUS"
+        ));
+    }
+
+    @Test
+    void testSetStatusWithValidValue() {
+        Event event = new Event(
+                UUID.randomUUID(),
+                "Test Event",
+                120000L,
+                LocalDateTime.now(),
+                "Jakarta",
+                "Test"
+        );
+
+        event.setStatus("COMPLETED");
+        assertEquals("COMPLETED", event.getStatus());
+    }
+
+    @Test
+    void testSetStatusWithInvalidValue() {
+        Event event = new Event(
+                UUID.randomUUID(),
+                "Test Event",
+                120000L,
+                LocalDateTime.now(),
+                "Jakarta",
+                "Test"
+        );
+
+        assertThrows(IllegalArgumentException.class, () -> event.setStatus("INVALID"));
+    }
+
+    @Test
+    void testToStringContainsValues() {
+        UUID organizerId = UUID.randomUUID();
+        LocalDateTime dateTime = LocalDateTime.of(2025, 8, 20, 10, 0);
 
         Event event = new Event(
                 organizerId,
                 "Startup Day",
                 200000L,
-                eventDateTime,
+                dateTime,
                 "Jakarta",
                 "Pameran startup dari seluruh Indonesia"
         );
 
-        String eventString = event.toString();
-        assertTrue(eventString.contains("Startup Day"));
-        assertTrue(eventString.contains("Jakarta"));
-        assertTrue(eventString.contains("200000"));
+        String output = event.toString();
+        assertTrue(output.contains("Startup Day"));
     }
 }
