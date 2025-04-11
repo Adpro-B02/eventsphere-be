@@ -1,32 +1,30 @@
-package backend.eventsphere.review.model;
+package backend.eventsphere.review.dto;
 
-public class Review {
-    private Long id;
-    private Long eventId;
+public class ReviewCreateRequest {
     private Long userId;
+    private Long eventId;
     private Integer rating;
     private String comment;
 
     // Default constructor
-    public Review() {
+    public ReviewCreateRequest() {
     }
 
     // All-args constructor
-    public Review(Long id, Long eventId, Long userId, Integer rating, String comment) {
-        this.id = id;
-        this.eventId = eventId;
+    public ReviewCreateRequest(Long userId, Long eventId, Integer rating, String comment) {
         this.userId = userId;
+        this.eventId = eventId;
         this.rating = rating;
         this.comment = comment;
     }
 
     // Getters and setters
-    public Long getId() {
-        return id;
+    public Long getUserId() {
+        return userId;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
     public Long getEventId() {
@@ -35,14 +33,6 @@ public class Review {
 
     public void setEventId(Long eventId) {
         this.eventId = eventId;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
     }
 
     public Integer getRating() {

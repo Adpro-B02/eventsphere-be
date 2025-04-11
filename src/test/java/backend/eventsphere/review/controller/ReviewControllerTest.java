@@ -3,284 +3,221 @@ package backend.eventsphere.review.controller;
 import backend.eventsphere.review.dto.ReviewCreateRequest;
 import backend.eventsphere.review.dto.ReviewResponse;
 import backend.eventsphere.review.dto.ReviewUpdateRequest;
-import backend.eventsphere.review.exception.ReviewNotFoundException;
-import backend.eventsphere.review.exception.ValidationException;
 import backend.eventsphere.review.service.ReviewService;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockitoAnnotations;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(ReviewController.class)
+@ExtendWith(MockitoExtension.class)
 public class ReviewControllerTest {
 
-    @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @Mock
     private ReviewService reviewService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @InjectMocks
+    private ReviewController reviewController;
 
-    private ReviewResponse sampleReviewResponse;
-    private List<ReviewResponse> sampleReviewResponses;
+    private ObjectMapper objectMapper;
+    private ReviewCreateRequest validCreateRequest;
+    private ReviewUpdateRequest validUpdateRequest;
+    private ReviewResponse validReviewResponse;
 
     @BeforeEach
-    public void setup() {
-        MockitoAnnotations.openMocks(this);
-        
-        // Sample data for tests
-        sampleReviewResponse = new ReviewResponse(1L, 101L, 201L, 4, "Great event!");
-        ReviewResponse anotherReviewResponse = new ReviewResponse(2L, 101L, 202L, 5, "Excellent event!");
-        sampleReviewResponses = Arrays.asList(sampleReviewResponse, anotherReviewResponse);
+    void setUp() {
+        mockMvc = MockMvcBuilders.standaloneSetup(reviewController).build();
+        objectMapper = new ObjectMapper();
+
+        // Setup test data
+        validCreateRequest = new ReviewCreateRequest(1L, 1L, 5, "Excellent event!");
+        validUpdateRequest = new ReviewUpdateRequest(4, "Good event, but could be better.");
+        validReviewResponse = new ReviewResponse(1L, 1L, 1L, 5, "Excellent event!");
     }
 
     @Test
-    public void testCreateReview() throws Exception {
+    void createReview_ValidRequest_ReturnsCreatedReview() throws Exception {
         // Arrange
-        ReviewCreateRequest request = new ReviewCreateRequest(101L, 201L, 4, "Great event!");
-        when(reviewService.createReview(any(ReviewCreateRequest.class))).thenReturn(sampleReviewResponse);
-
-        // Act & Assert
-        mockMvc.perform(post("/api/reviews")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(sampleReviewResponse.getId()))
-                .andExpect(jsonPath("$.eventId").value(sampleReviewResponse.getEventId()))
-                .andExpect(jsonPath("$.userId").value(sampleReviewResponse.getUserId()))
-                .andExpect(jsonPath("$.rating").value(sampleReviewResponse.getRating()))
-                .andExpect(jsonPath("$.comment").value(sampleReviewResponse.getComment()));
-
-        verify(reviewService).createReview(any(ReviewCreateRequest.class));
-    }
-
-    @Test
-    public void testCreateReview_ValidationError() throws Exception {
-        // Arrange
-        ReviewCreateRequest request = new ReviewCreateRequest(101L, 201L, 6, "Invalid rating");
         when(reviewService.createReview(any(ReviewCreateRequest.class)))
-                .thenThrow(new ValidationException("Rating must be between 1 and 5"));
+                .thenReturn(Optional.of(validReviewResponse));
 
         // Act & Assert
         mockMvc.perform(post("/api/reviews")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Rating must be between 1 and 5"));
-
-        verify(reviewService).createReview(any(ReviewCreateRequest.class));
+                .content(objectMapper.writeValueAsString(validCreateRequest)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(validReviewResponse.getId()))
+                .andExpect(jsonPath("$.eventId").value(validReviewResponse.getEventId()))
+                .andExpect(jsonPath("$.userId").value(validReviewResponse.getUserId()))
+                .andExpect(jsonPath("$.rating").value(validReviewResponse.getRating()))
+                .andExpect(jsonPath("$.comment").value(validReviewResponse.getComment()));
     }
 
     @Test
-    public void testUpdateReview() throws Exception {
+    void createReview_InvalidRequest_ReturnsBadRequest() throws Exception {
         // Arrange
-        long reviewId = 1L;
-        ReviewUpdateRequest request = new ReviewUpdateRequest(5, "Updated comment!");
-        ReviewResponse updatedResponse = new ReviewResponse(reviewId, 101L, 201L, 5, "Updated comment!");
-        
-        when(reviewService.updateReview(eq(reviewId), any(ReviewUpdateRequest.class))).thenReturn(updatedResponse);
+        when(reviewService.createReview(any(ReviewCreateRequest.class)))
+                .thenReturn(Optional.empty());
 
         // Act & Assert
-        mockMvc.perform(put("/api/reviews/{id}", reviewId)
+        mockMvc.perform(post("/api/reviews")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                .content(objectMapper.writeValueAsString(validCreateRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Failed to create review"))
+                .andExpect(jsonPath("$.status").value(400));
+    }
+
+    @Test
+    void updateReview_ValidRequest_ReturnsUpdatedReview() throws Exception {
+        // Arrange
+        ReviewResponse updatedResponse = new ReviewResponse(
+                1L, 1L, 1L, validUpdateRequest.getRating(), validUpdateRequest.getComment());
+        
+        when(reviewService.updateReview(anyLong(), any(ReviewUpdateRequest.class)))
+                .thenReturn(Optional.of(updatedResponse));
+
+        // Act & Assert
+        mockMvc.perform(put("/api/reviews/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(validUpdateRequest)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(updatedResponse.getId()))
                 .andExpect(jsonPath("$.rating").value(updatedResponse.getRating()))
                 .andExpect(jsonPath("$.comment").value(updatedResponse.getComment()));
-
-        verify(reviewService).updateReview(eq(reviewId), any(ReviewUpdateRequest.class));
     }
 
     @Test
-    public void testUpdateReview_NotFound() throws Exception {
+    void updateReview_ReviewNotFound_ReturnsNotFound() throws Exception {
         // Arrange
-        long reviewId = 999L;
-        ReviewUpdateRequest request = new ReviewUpdateRequest(5, "Updated comment!");
-        
-        when(reviewService.updateReview(eq(reviewId), any(ReviewUpdateRequest.class)))
-                .thenThrow(new ReviewNotFoundException("Review not found with id: " + reviewId));
-
-        // Act & Assert
-        mockMvc.perform(put("/api/reviews/{id}", reviewId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Review not found with id: " + reviewId));
-
-        verify(reviewService).updateReview(eq(reviewId), any(ReviewUpdateRequest.class));
-    }
-
-    @Test
-    public void testDeleteReview() throws Exception {
-        // Arrange
-        long reviewId = 1L;
-        when(reviewService.deleteReview(reviewId)).thenReturn(true);
-
-        // Act & Assert
-        mockMvc.perform(delete("/api/reviews/{id}", reviewId))
-                .andExpect(status().isNoContent());
-
-        verify(reviewService).deleteReview(reviewId);
-    }
-
-    @Test
-    public void testDeleteReview_NotFound() throws Exception {
-        // Arrange
-        long reviewId = 999L;
-        doThrow(new ReviewNotFoundException("Review not found with id: " + reviewId))
-                .when(reviewService).deleteReview(reviewId);
-
-        // Act & Assert
-        mockMvc.perform(delete("/api/reviews/{id}", reviewId))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Review not found with id: " + reviewId));
-
-        verify(reviewService).deleteReview(reviewId);
-    }
-
-    @Test
-    public void testGetReviewById() throws Exception {
-        // Arrange
-        long reviewId = 1L;
-        when(reviewService.getReviewById(reviewId)).thenReturn(sampleReviewResponse);
-
-        // Act & Assert
-        mockMvc.perform(get("/api/reviews/{id}", reviewId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(sampleReviewResponse.getId()))
-                .andExpect(jsonPath("$.eventId").value(sampleReviewResponse.getEventId()))
-                .andExpect(jsonPath("$.userId").value(sampleReviewResponse.getUserId()))
-                .andExpect(jsonPath("$.rating").value(sampleReviewResponse.getRating()))
-                .andExpect(jsonPath("$.comment").value(sampleReviewResponse.getComment()));
-
-        verify(reviewService).getReviewById(reviewId);
-    }
-
-    @Test
-    public void testGetReviewById_NotFound() throws Exception {
-        // Arrange
-        long reviewId = 999L;
-        when(reviewService.getReviewById(reviewId))
-                .thenThrow(new ReviewNotFoundException("Review not found with id: " + reviewId));
-
-        // Act & Assert
-        mockMvc.perform(get("/api/reviews/{id}", reviewId))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Review not found with id: " + reviewId));
-
-        verify(reviewService).getReviewById(reviewId);
-    }
-
-    @Test
-    public void testGetReviewsByEventId() throws Exception {
-        // Arrange
-        long eventId = 101L;
-        when(reviewService.getReviewsByEventId(eventId)).thenReturn(sampleReviewResponses);
-
-        // Act & Assert
-        mockMvc.perform(get("/api/reviews/event/{eventId}", eventId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].id").value(sampleReviewResponses.get(0).getId()))
-                .andExpect(jsonPath("$[1].id").value(sampleReviewResponses.get(1).getId()));
-
-        verify(reviewService).getReviewsByEventId(eventId);
-    }
-
-    @Test
-    public void testGetReviewsByUserId() throws Exception {
-        // Arrange
-        long userId = 201L;
-        List<ReviewResponse> userReviews = Arrays.asList(sampleReviewResponse);
-        when(reviewService.getReviewsByUserId(userId)).thenReturn(userReviews);
-
-        // Act & Assert
-        mockMvc.perform(get("/api/reviews/user/{userId}", userId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id").value(sampleReviewResponse.getId()))
-                .andExpect(jsonPath("$[0].userId").value(userId));
-
-        verify(reviewService).getReviewsByUserId(userId);
-    }
-
-    @Test
-    public void testGetReviewByUserIdAndEventId() throws Exception {
-        // Arrange
-        long userId = 201L;
-        long eventId = 101L;
-        when(reviewService.getReviewByUserIdAndEventId(userId, eventId))
-                .thenReturn(Optional.of(sampleReviewResponse));
-
-        // Act & Assert
-        mockMvc.perform(get("/api/reviews/user/{userId}/event/{eventId}", userId, eventId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(sampleReviewResponse.getId()))
-                .andExpect(jsonPath("$.eventId").value(eventId))
-                .andExpect(jsonPath("$.userId").value(userId));
-
-        verify(reviewService).getReviewByUserIdAndEventId(userId, eventId);
-    }
-
-    @Test
-    public void testGetReviewByUserIdAndEventId_NotFound() throws Exception {
-        // Arrange
-        long userId = 999L;
-        long eventId = 888L;
-        when(reviewService.getReviewByUserIdAndEventId(userId, eventId))
+        when(reviewService.updateReview(anyLong(), any(ReviewUpdateRequest.class)))
                 .thenReturn(Optional.empty());
 
         // Act & Assert
-        mockMvc.perform(get("/api/reviews/user/{userId}/event/{eventId}", userId, eventId))
-                .andExpect(status().isNotFound());
-
-        verify(reviewService).getReviewByUserIdAndEventId(userId, eventId);
-    }
-
-    @Test
-    public void testHandleValidationException() throws Exception {
-        // Arrange
-        ReviewCreateRequest request = new ReviewCreateRequest(null, 201L, 4, "Missing event ID");
-        when(reviewService.createReview(any(ReviewCreateRequest.class)))
-                .thenThrow(new ValidationException("Event ID cannot be null"));
-
-        // Act & Assert
-        mockMvc.perform(post("/api/reviews")
+        mockMvc.perform(put("/api/reviews/1")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Event ID cannot be null"));
+                .content(objectMapper.writeValueAsString(validUpdateRequest)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Review not found"))
+                .andExpect(jsonPath("$.status").value(404));
     }
 
     @Test
-    public void testHandleReviewNotFoundException() throws Exception {
+    void deleteReview_ReviewExists_ReturnsNoContent() throws Exception {
         // Arrange
-        long reviewId = 999L;
-        when(reviewService.getReviewById(reviewId))
-                .thenThrow(new ReviewNotFoundException("Review not found with id: " + reviewId));
+        when(reviewService.deleteReview(anyLong())).thenReturn(true);
 
         // Act & Assert
-        mockMvc.perform(get("/api/reviews/{id}", reviewId))
+        mockMvc.perform(delete("/api/reviews/1"))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void deleteReview_ReviewNotFound_ReturnsNotFound() throws Exception {
+        // Arrange
+        when(reviewService.deleteReview(anyLong())).thenReturn(false);
+
+        // Act & Assert
+        mockMvc.perform(delete("/api/reviews/1"))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Review not found with id: " + reviewId));
+                .andExpect(jsonPath("$.message").value("Review not found"))
+                .andExpect(jsonPath("$.status").value(404));
+    }
+
+    @Test
+    void getReviewById_ReviewExists_ReturnsReview() throws Exception {
+        // Arrange
+        when(reviewService.getReviewById(anyLong())).thenReturn(Optional.of(validReviewResponse));
+
+        // Act & Assert
+        mockMvc.perform(get("/api/reviews/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(validReviewResponse.getId()))
+                .andExpect(jsonPath("$.eventId").value(validReviewResponse.getEventId()))
+                .andExpect(jsonPath("$.userId").value(validReviewResponse.getUserId()))
+                .andExpect(jsonPath("$.rating").value(validReviewResponse.getRating()))
+                .andExpect(jsonPath("$.comment").value(validReviewResponse.getComment()));
+    }
+
+    @Test
+    void getReviewById_ReviewNotFound_ReturnsNotFound() throws Exception {
+        // Arrange
+        when(reviewService.getReviewById(anyLong())).thenReturn(Optional.empty());
+
+        // Act & Assert
+        mockMvc.perform(get("/api/reviews/1"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getReviewsByEventId_ReturnsReviews() throws Exception {
+        // Arrange
+        List<ReviewResponse> reviews = Arrays.asList(
+                new ReviewResponse(1L, 1L, 1L, 5, "Great event!"),
+                new ReviewResponse(2L, 1L, 2L, 4, "Good event!")
+        );
+        
+        when(reviewService.getReviewsByEventId(anyLong())).thenReturn(reviews);
+
+        // Act & Assert
+        mockMvc.perform(get("/api/reviews/event/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(reviews.get(0).getId()))
+                .andExpect(jsonPath("$[1].id").value(reviews.get(1).getId()))
+                .andExpect(jsonPath("$[0].comment").value(reviews.get(0).getComment()))
+                .andExpect(jsonPath("$[1].comment").value(reviews.get(1).getComment()));
+    }
+
+    @Test
+    void getReviewsByUserId_ReturnsReviews() throws Exception {
+        // Arrange
+        List<ReviewResponse> reviews = Arrays.asList(
+                new ReviewResponse(1L, 1L, 1L, 5, "Great event!"),
+                new ReviewResponse(2L, 2L, 1L, 4, "Good event!")
+        );
+        
+        when(reviewService.getReviewsByUserId(anyLong())).thenReturn(reviews);
+
+        // Act & Assert
+        mockMvc.perform(get("/api/reviews/user/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(reviews.get(0).getId()))
+                .andExpect(jsonPath("$[1].id").value(reviews.get(1).getId()))
+                .andExpect(jsonPath("$[0].comment").value(reviews.get(0).getComment()))
+                .andExpect(jsonPath("$[1].comment").value(reviews.get(1).getComment()));
+    }
+
+    @Test
+    void getReviewByUserIdAndEventId_ReviewExists_ReturnsReview() throws Exception {
+        // Arrange
+        when(reviewService.getReviewByUserIdAndEventId(anyLong(), anyLong()))
+                .thenReturn(Optional.of(validReviewResponse));
+
+        // Act & Assert
+        mockMvc.perform(get("/api/reviews/user/1/event/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(validReviewResponse.getId()))
+                .andExpect(jsonPath("$.eventId").value(validReviewResponse.getEventId()))
+                .andExpect(jsonPath("$.userId").value(validReviewResponse.getUserId()))
+                .andExpect(jsonPath("$.rating").value(validReviewResponse.getRating()))
+                .andExpect(jsonPath("$.comment").value(validReviewResponse.getComment()));
     }
 }

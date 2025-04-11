@@ -4,127 +4,105 @@ import backend.eventsphere.review.dto.ReviewCreateRequest;
 import backend.eventsphere.review.dto.ReviewResponse;
 import backend.eventsphere.review.dto.ReviewUpdateRequest;
 import backend.eventsphere.review.service.ReviewService;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
 import java.util.List;
 import java.util.Optional;
+import java.util.HashMap;
+import java.util.Map;
 
-/**
- * REST API Controller for handling review operations.
- */
 @RestController
 @RequestMapping("/api/reviews")
 public class ReviewController {
-    
+
     private final ReviewService reviewService;
-    
-    @Autowired
+
     public ReviewController(ReviewService reviewService) {
         this.reviewService = reviewService;
     }
-    
-    /**
-     * Create a new review.
-     */
+
     @PostMapping
-    public ResponseEntity<?> createReview(@Valid @RequestBody ReviewCreateRequest request) {
+    public ResponseEntity<?> createReview(@RequestBody ReviewCreateRequest request) {
         Optional<ReviewResponse> createdReview = reviewService.createReview(request);
         
-        return createdReview
-                .map(review -> new ResponseEntity<>(review, HttpStatus.CREATED))
-                .orElse(new ResponseEntity<>(
-                        new ErrorResponse("Invalid review data or user already reviewed this event"), 
-                        HttpStatus.BAD_REQUEST));
+        if (createdReview.isPresent()) {
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdReview.get());
+        } else {
+            Map<String, Object> errorResponse = createErrorMap("Failed to create review", 400);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        }
     }
-    
-    /**
-     * Update an existing review.
-     */
+
     @PutMapping("/{id}")
     public ResponseEntity<?> updateReview(
-            @PathVariable Long id, 
-            @Valid @RequestBody ReviewUpdateRequest request) {
+            @PathVariable Long id,
+            @RequestBody ReviewUpdateRequest request) {
         Optional<ReviewResponse> updatedReview = reviewService.updateReview(id, request);
         
-        return updatedReview
-                .map(ResponseEntity::ok)
-                .orElse(new ResponseEntity<>(
-                        new ErrorResponse("Review not found or invalid data"), 
-                        HttpStatus.NOT_FOUND));
+        if (updatedReview.isPresent()) {
+            return ResponseEntity.ok(updatedReview.get());
+        } else {
+            Map<String, Object> errorResponse = createErrorMap("Review not found", 404);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+        }
     }
-    
-    /**
-     * Delete a review.
-     */
+
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteReview(@PathVariable Long id) {
+    public ResponseEntity<?> deleteReview(@PathVariable Long id) {
         boolean deleted = reviewService.deleteReview(id);
         
-        return deleted
-                ? ResponseEntity.noContent().build()
-                : ResponseEntity.notFound().build();
+        if (deleted) {
+            return ResponseEntity.noContent().build();
+        } else {
+            Map<String, Object> errorResponse = createErrorMap("Review not found", 404);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+        }
     }
-    
-    /**
-     * Get a review by ID.
-     */
+
     @GetMapping("/{id}")
     public ResponseEntity<?> getReviewById(@PathVariable Long id) {
         Optional<ReviewResponse> review = reviewService.getReviewById(id);
         
-        return review
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        if (review.isPresent()) {
+            return ResponseEntity.ok(review.get());
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
-    
-    /**
-     * Get all reviews for an event.
-     */
+
     @GetMapping("/event/{eventId}")
     public ResponseEntity<List<ReviewResponse>> getReviewsByEventId(@PathVariable Long eventId) {
         List<ReviewResponse> reviews = reviewService.getReviewsByEventId(eventId);
         return ResponseEntity.ok(reviews);
     }
-    
-    /**
-     * Get all reviews by a user.
-     */
+
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<ReviewResponse>> getReviewsByUserId(@PathVariable Long userId) {
         List<ReviewResponse> reviews = reviewService.getReviewsByUserId(userId);
         return ResponseEntity.ok(reviews);
     }
-    
-    /**
-     * Get a review by user ID and event ID.
-     */
+
     @GetMapping("/user/{userId}/event/{eventId}")
-    public ResponseEntity<ReviewResponse> getReviewByUserIdAndEventId(
-            @PathVariable Long userId, 
+    public ResponseEntity<?> getReviewByUserIdAndEventId(
+            @PathVariable Long userId,
             @PathVariable Long eventId) {
         Optional<ReviewResponse> review = reviewService.getReviewByUserIdAndEventId(userId, eventId);
         
-        return review
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        if (review.isPresent()) {
+            return ResponseEntity.ok(review.get());
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
     
-    /**
-     * Simple error response class for REST API.
-     */
-    private static class ErrorResponse {
-        private final String message;
-        
-        public ErrorResponse(String message) {
-            this.message = message;
-        }
-        
-        public String getMessage() {
-            return message;
-        }
+    // Helper method to create error response map
+    private Map<String, Object> createErrorMap(String message, int status) {
+        Map<String, Object> errorMap = new HashMap<>();
+        errorMap.put("message", message);
+        errorMap.put("status", status);
+        return errorMap;
     }
 }

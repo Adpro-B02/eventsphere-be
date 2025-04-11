@@ -1,6 +1,6 @@
-package backend.eventsphere.review.model;
+package backend.eventsphere.review.dto;
 
-public class Review {
+public class ReviewResponse {
     private Long id;
     private Long eventId;
     private Long userId;
@@ -8,11 +8,11 @@ public class Review {
     private String comment;
 
     // Default constructor
-    public Review() {
+    public ReviewResponse() {
     }
 
     // All-args constructor
-    public Review(Long id, Long eventId, Long userId, Integer rating, String comment) {
+    public ReviewResponse(Long id, Long eventId, Long userId, Integer rating, String comment) {
         this.id = id;
         this.eventId = eventId;
         this.userId = userId;
