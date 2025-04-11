@@ -5,7 +5,7 @@ import backend.eventsphere.review.dto.ReviewResponse;
 import backend.eventsphere.review.dto.ReviewUpdateRequest;
 import backend.eventsphere.review.model.Review;
 import backend.eventsphere.review.repository.ReviewRepository;
-import backend.eventsphere.review.service.mock.EventService;
+import backend.eventsphere.review.service.mock.EventServiceMock;
 import backend.eventsphere.review.service.mock.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,7 +30,7 @@ public class ReviewServiceTest {
     private ReviewRepository reviewRepository;
 
     @Mock
-    private EventService eventService;
+    private EventServiceMock eventService;
 
     @Mock
     private UserService userService;
