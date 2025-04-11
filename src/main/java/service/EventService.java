@@ -26,6 +26,11 @@ public class EventService {
         return repository.findAll();
     }
 
+    public EventRepository getRepository() {
+        return repository;
+    }
+
+
     public void deleteEvent(UUID eventId, ValidationStrategy strategy) {
         Event event = repository.findById(eventId)
                 .orElseThrow(() -> new IllegalArgumentException("Event not found"));
