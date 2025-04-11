@@ -1,7 +1,7 @@
-package service.strategy;
+package backend.eventsphere.service.strategy;
 
-import model.Event;
-import repository.EventRepository;
+import backend.eventsphere.model.Event;
+import backend.eventsphere.repository.EventRepository;
 
 public class EventExistValidation implements ValidationStrategy {
 

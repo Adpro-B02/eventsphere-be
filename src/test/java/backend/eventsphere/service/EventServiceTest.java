@@ -1,11 +1,14 @@
-package service;
+package backend.eventsphere.service;
 
-import model.Event;
+import backend.eventsphere.service.EventService;
+import backend.eventsphere.service.strategy.DeletionValidation;
+import backend.eventsphere.service.strategy.EventDataValidation;
+import backend.eventsphere.service.strategy.EventExistValidation;
+import backend.eventsphere.model.Event;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import repository.EventRepositoryImpl;
-import repository.EventRepository;
-import service.strategy.*;
+import backend.eventsphere.repository.EventRepositoryImpl;
+import backend.eventsphere.repository.EventRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;

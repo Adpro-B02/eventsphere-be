@@ -1,6 +1,6 @@
-package repository;
+package backend.eventsphere.repository;
 
-import model.Event;
+import backend.eventsphere.model.Event;
 
 import java.util.List;
 import java.util.Optional;

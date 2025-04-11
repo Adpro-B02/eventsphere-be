@@ -1,11 +1,12 @@
-package controller;
+package backend.eventsphere.controller;
 
-import model.Event;
+import backend.eventsphere.controller.EventController;
+import backend.eventsphere.model.Event;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
 import org.springframework.http.ResponseEntity;
-import service.EventService;
+import backend.eventsphere.service.EventService;
 
 import java.time.LocalDateTime;
 import java.util.List;

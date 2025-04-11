@@ -1,9 +1,12 @@
-package repository;
+package backend.eventsphere.repository;
 
-import model.Event;
+import backend.eventsphere.model.Event;
+import org.springframework.stereotype.Repository;
+
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Repository
 public class EventRepositoryImpl implements EventRepository {
     private final Map<UUID, Event> eventStorage = new ConcurrentHashMap<>();
 

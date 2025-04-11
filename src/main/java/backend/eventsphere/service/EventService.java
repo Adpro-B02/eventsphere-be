@@ -1,12 +1,14 @@
-package service;
+package backend.eventsphere.service;
 
-import model.Event;
-import repository.EventRepository;
-import service.strategy.ValidationStrategy;
+import backend.eventsphere.model.Event;
+import backend.eventsphere.repository.EventRepository;
+import backend.eventsphere.service.strategy.ValidationStrategy;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
 
+@Service
 public class EventService {
 
     private final EventRepository repository;

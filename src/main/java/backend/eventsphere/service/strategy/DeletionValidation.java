@@ -1,6 +1,6 @@
-package service.strategy;
+package backend.eventsphere.service.strategy;
 
-import model.Event;
+import backend.eventsphere.model.Event;
 
 public class DeletionValidation implements ValidationStrategy {
 
