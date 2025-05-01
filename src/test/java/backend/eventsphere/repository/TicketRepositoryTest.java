@@ -63,6 +63,33 @@ public class TicketRepositoryTest {
     }
 
     @Test
+    void testUpdateTicket() {
+        UUID eventId = UUID.randomUUID();
+        Ticket ticket = ticketFactory.createTicket(eventId, "VIP", 100.0, 50);
+        ticketRepository.save(ticket);
+
+        ticket.setPrice(150.0);
+        ticket.setQuota(75);
+
+        ticketRepository.update(ticket);
+
+        Ticket updatedTicket = ticketRepository.findById(ticket.getId());
+        assertNotNull(updatedTicket);
+        assertEquals(150.0, updatedTicket.getPrice());
+        assertEquals(75, updatedTicket.getQuota());
+    }
+
+    @Test
+    void testUpdateNonExistentTicket() {
+        UUID eventId = UUID.randomUUID();
+        Ticket ticket = ticketFactory.createTicket(eventId, "VIP", 100.0, 50);
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            ticketRepository.update(ticket);
+        });
+    }
+
+    @Test
     void testDeleteTicket() {
         UUID eventId = UUID.randomUUID();
         Ticket ticket = ticketFactory.createTicket(eventId, "VIP", 100.0, 50);
