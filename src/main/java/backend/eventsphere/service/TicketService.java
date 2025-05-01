@@ -26,6 +26,27 @@ public class TicketService {
         return ticketRepository.listByEvent(eventId);
     }
 
+    public Ticket updateTicket(UUID ticketId, Double newPrice, Integer newQuota) {
+        Ticket ticket = ticketRepository.findById(ticketId);
+        if (ticket == null) {
+            throw new IllegalArgumentException("Ticket not found with ID: " + ticketId);
+        }
+        if (newPrice != null) {
+            if (newPrice < 0) {
+                throw new IllegalArgumentException("Price cannot be negative");
+            }
+            ticket.setPrice(newPrice);
+        }
+        if (newQuota != null) {
+            if (newQuota < 0) {
+                throw new IllegalArgumentException("Quota cannot be negative");
+            }
+            ticket.setQuota(newQuota);
+        }
+        ticketRepository.update(ticket);
+        return ticket;
+    }
+
     public boolean deleteTicket(UUID ticketId) {
         return ticketRepository.delete(ticketId);
     }
