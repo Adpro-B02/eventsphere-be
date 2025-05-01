@@ -55,6 +55,14 @@ public class TicketRepositoryTest {
     }
 
     @Test
+    void testFindMissingTicket() {
+        UUID missingTicketId = UUID.randomUUID();
+        Ticket retrievedTicket = ticketRepository.findById(missingTicketId);
+
+        assertNull(retrievedTicket);
+    }
+
+    @Test
     void testDeleteTicket() {
         UUID eventId = UUID.randomUUID();
         Ticket ticket = ticketFactory.createTicket(eventId, "VIP", 100.0, 50);
@@ -62,6 +70,13 @@ public class TicketRepositoryTest {
 
         assertTrue(ticketRepository.delete(ticket.getId()));
         assertNull(ticketRepository.findById(ticket.getId())); // Should not find ticket after deletion
+    }
+
+    @Test
+    void testDeleteMissingTicket() {
+        UUID missingTicketId = UUID.randomUUID();
+
+        assertFalse(ticketRepository.delete(missingTicketId));
     }
 
     @Test
