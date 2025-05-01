@@ -3,10 +3,12 @@ package backend.eventsphere.service;
 import backend.eventsphere.model.Ticket;
 import backend.eventsphere.model.TicketFactory;
 import backend.eventsphere.repository.TicketRepository;
+import org.springframework.stereotype.Service;
 
 import java.util.Map;
 import java.util.UUID;
 
+@Service
 public class TicketService {
     private final TicketRepository ticketRepository;
     private final TicketFactory ticketFactory;
