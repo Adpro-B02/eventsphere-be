@@ -22,6 +22,13 @@ public class TicketRepository {
         return ticketStorage.get(id);
     }
 
+    public void update(Ticket ticket) {
+        if (!ticketStorage.containsKey(ticket.getId())) {
+            throw new IllegalArgumentException("Ticket not found with ID: " + ticket.getId());
+        }
+        ticketStorage.put(ticket.getId(), ticket);
+    }
+
     public boolean delete(UUID id) {
         return ticketStorage.remove(id) != null;
     }
