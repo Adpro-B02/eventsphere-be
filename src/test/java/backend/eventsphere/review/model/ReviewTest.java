@@ -3,14 +3,21 @@ package backend.eventsphere.review.model;
 import java.util.UUID;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import static org.junit.jupiter.api.Assertions.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ReviewTest {
 
-    private final UUID customEventUUID = UUID.fromString("7e4a8c42-0b1f-4c3a-a85f-cb61b0b8e9d2");
-    private final UUID customUserUUID = UUID.fromString("6d823b96-7e9e-4217-89a5-029a2f67b4ad");
+    private UUID customEventUUID;
+    private UUID customUserUUID;
+
+    @BeforeEach
+    void setUp() {
+        customEventUUID = UUID.randomUUID();
+        customUserUUID = UUID.randomUUID();
+    }
 
     @Test
     void createValidReview() {
