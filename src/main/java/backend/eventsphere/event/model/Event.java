@@ -1,4 +1,4 @@
-package backend.eventsphere.model;
+package backend.eventsphere.event.model;
 
 import lombok.Getter;
 import lombok.Setter;

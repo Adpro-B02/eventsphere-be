@@ -1,8 +1,8 @@
-package backend.eventsphere.service;
+package backend.eventsphere.event.service;
 
-import backend.eventsphere.model.Event;
-import backend.eventsphere.repository.EventRepository;
-import backend.eventsphere.service.strategy.ValidationStrategy;
+import backend.eventsphere.event.model.Event;
+import backend.eventsphere.event.repository.EventRepository;
+import backend.eventsphere.event.service.strategy.ValidationStrategy;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
