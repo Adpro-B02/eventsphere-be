@@ -15,24 +15,9 @@ public class Review {
     private final LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public Review(UUID eventId, UUID userId, String comment, int rating) {
-        this.id = UUID.randomUUID();
-        validateEventId(eventId);
-        validateUserId(userId);
-        validateComment(comment);
-        validateRating(rating);
-
-        this.eventId = eventId;
-        this.userId = userId;
-        this.comment = comment;
-        this.rating = rating;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
-    }
-
-    public Review(UUID eventId, UUID userId, String comment, int rating,
-                  LocalDateTime createdAt, LocalDateTime updatedAt) {
-        this.id = UUID.randomUUID();
+    public Review(UUID id, UUID eventId, UUID userId, String comment, int rating,
+                LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.id = id != null ? id : UUID.randomUUID();
         validateEventId(eventId);
         validateUserId(userId);
         validateComment(comment);

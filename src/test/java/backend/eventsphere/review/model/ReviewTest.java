@@ -23,7 +23,7 @@ public class ReviewTest {
     void createValidReview() {
         LocalDateTime now = LocalDateTime.now();
         
-        Review review = new Review(customEventUUID, customUserUUID, "Excellent event!", 5, now, now);
+        Review review = new Review(null, customEventUUID, customUserUUID, "Excellent event!", 5, now, now);
 
         assertNotNull(review.getId());
         assertEquals(customEventUUID, review.getEventId());
@@ -37,7 +37,7 @@ public class ReviewTest {
     @Test
     void createInvalidReview() {
         assertThrows(IllegalArgumentException.class, () -> {
-            new Review(null, null, null, 0);
+            new Review(null, null, null, null, 0, null, null);
         });
     }
 
@@ -49,21 +49,21 @@ public class ReviewTest {
         }
 
         assertThrows(IllegalArgumentException.class, () -> {
-            new Review(customEventUUID, customUserUUID, longComment.toString(), 5);
+            new Review(null, customEventUUID, customUserUUID, longComment.toString(), 5, null, null);
         });
     }
 
     @Test
     void validateRatingOutOfRange() {
         assertThrows(IllegalArgumentException.class, () -> {
-            new Review(customEventUUID, customUserUUID, "Excellent event!", 6);
+            new Review(null, customEventUUID, customUserUUID, "Excellent event!", 6, null, null);
         });
     }
     
     @Test
     void setValidReview() {
-        LocalDateTime previous = LocalDateTime.now();
-        Review review = new Review(customEventUUID, customUserUUID, "Excellent event!", 5, previous, previous);
+        LocalDateTime now = LocalDateTime.now();
+        Review review = new Review(null, customEventUUID, customUserUUID, "Excellent event!", 5, now, now);
         review.setComment("Valid Update");
         review.setRating(4);
 
@@ -73,8 +73,8 @@ public class ReviewTest {
 
     @Test
     void setInvalidReview() {
-        LocalDateTime previous = LocalDateTime.now();
-        Review review = new Review(customEventUUID, customUserUUID, "Excellent event!", 5, previous, previous);
+        LocalDateTime now = LocalDateTime.now();
+        Review review = new Review(null, customEventUUID, customUserUUID, "Excellent event!", 5, now, now);
 
         assertThrows(IllegalArgumentException.class, () -> {
             StringBuilder longComment = new StringBuilder();
