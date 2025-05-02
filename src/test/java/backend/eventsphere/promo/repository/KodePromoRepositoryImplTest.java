@@ -1,6 +1,8 @@
-package backend.eventsphere.repository;
+package backend.eventsphere.promo.repository;
 
-import backend.eventsphere.model.KodePromo;
+import backend.eventsphere.promo.model.KodePromo;
+import backend.eventsphere.promo.repository.KodePromoRepository;
+import backend.eventsphere.promo.repository.KodePromoRepositoryImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

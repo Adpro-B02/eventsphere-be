@@ -1,7 +1,7 @@
-package backend.eventsphere.controller;
+package backend.eventsphere.promo.controller;
 
-import backend.eventsphere.model.KodePromo;
-import backend.eventsphere.service.KodePromoService;
+import backend.eventsphere.promo.model.KodePromo;
+import backend.eventsphere.promo.service.KodePromoService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

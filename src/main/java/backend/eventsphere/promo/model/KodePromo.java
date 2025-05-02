@@ -1,4 +1,4 @@
-package backend.eventsphere.model;
+package backend.eventsphere.promo.model;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -1,6 +1,6 @@
-package backend.eventsphere.repository;
+package backend.eventsphere.promo.repository;
 
-import backend.eventsphere.model.KodePromo;
+import backend.eventsphere.promo.model.KodePromo;
 
 import java.util.List;
 import java.util.Optional;

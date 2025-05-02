@@ -1,9 +1,10 @@
-package backend.eventsphere.service;
+package backend.eventsphere.promo.service;
 
-import backend.eventsphere.model.KodePromo;
-import backend.eventsphere.repository.KodePromoRepository;
-import backend.eventsphere.factory.PromoFactory;
-import backend.eventsphere.factory.DiskonPromoFactory;
+import backend.eventsphere.promo.model.KodePromo;
+import backend.eventsphere.promo.repository.KodePromoRepository;
+import backend.eventsphere.promo.factory.PromoFactory;
+import backend.eventsphere.promo.factory.DiskonPromoFactory;
+import backend.eventsphere.promo.service.KodePromoService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

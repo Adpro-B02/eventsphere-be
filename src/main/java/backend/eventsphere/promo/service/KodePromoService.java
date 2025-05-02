@@ -1,8 +1,8 @@
-package backend.eventsphere.service;
+package backend.eventsphere.promo.service;
 
-import backend.eventsphere.factory.PromoFactory;
-import backend.eventsphere.model.KodePromo;
-import backend.eventsphere.repository.KodePromoRepository;
+import backend.eventsphere.promo.factory.PromoFactory;
+import backend.eventsphere.promo.model.KodePromo;
+import backend.eventsphere.promo.repository.KodePromoRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;

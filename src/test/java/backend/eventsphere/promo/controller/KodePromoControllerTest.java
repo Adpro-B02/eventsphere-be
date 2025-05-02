@@ -1,7 +1,7 @@
-package backend.eventsphere.controller;
+package backend.eventsphere.promo.controller;
 
-import backend.eventsphere.model.KodePromo;
-import backend.eventsphere.service.KodePromoService;
+import backend.eventsphere.promo.model.KodePromo;
+import backend.eventsphere.promo.service.KodePromoService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;

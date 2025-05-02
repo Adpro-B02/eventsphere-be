@@ -1,6 +1,6 @@
-package backend.eventsphere.factory;
+package backend.eventsphere.promo.factory;
 
-import backend.eventsphere.model.KodePromo;
+import backend.eventsphere.promo.model.KodePromo;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
