@@ -110,4 +110,34 @@ class KodePromoServiceTest {
         assertEquals(1, result.size());
         assertEquals("A", result.get(0).getCode());
     }
+
+    @Test
+    void testCreatePromo_ShouldThrowException_WhenCodeAlreadyExists() {
+        LocalDate start = LocalDate.now();
+        LocalDate end = start.plusDays(5);
+
+        when(repository.findPromoByCode("DUPLICATE")).thenReturn(Optional.of(
+                new KodePromo(UUID.randomUUID(), "DUPLICATE", BigDecimal.ONE, start, end, eventId, userId)
+        ));
+
+        assertThrows(IllegalArgumentException.class, () ->
+                service.createPromo("DUPLICATE", BigDecimal.valueOf(0.1), start, end, eventId, userId)
+        );
+
+        verify(repository, never()).save(any());
+    }
+
+
+    @Test
+    void testCreatePromo_ShouldThrowException_WhenEndDateBeforeStartDate() {
+        LocalDate start = LocalDate.now();
+        LocalDate end = start.minusDays(1);
+
+        assertThrows(IllegalArgumentException.class, () ->
+                service.createPromo("INVALID_DATE", BigDecimal.valueOf(0.1), start, end, eventId, userId)
+        );
+
+        verify(repository, never()).save(any());
+    }
+
 }
