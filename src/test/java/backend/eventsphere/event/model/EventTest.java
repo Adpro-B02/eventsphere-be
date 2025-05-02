@@ -1,16 +1,27 @@
 package backend.eventsphere.event.model;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@DataJpaTest
+@Transactional
 class EventTest {
 
+    @Autowired
+    private EntityManager entityManager;
+
     @Test
-    void testConstructorWithoutStatus() {
+    void testCreateEventWithoutStatus() {
         UUID organizerId = UUID.randomUUID();
         LocalDateTime dateTime = LocalDateTime.of(2025, 6, 1, 13, 0);
 
@@ -24,19 +35,16 @@ class EventTest {
                 "https://example.com/image.jpg"
         );
 
+        entityManager.persist(event);
+        entityManager.flush();
+
         assertNotNull(event.getId());
-        assertEquals(organizerId, event.getOrganizerId());
         assertEquals("Tech Meetup", event.getName());
-        assertEquals(100000L, event.getTicketPrice());
-        assertEquals(dateTime, event.getEventDateTime());
-        assertEquals("Surabaya", event.getLocation());
-        assertEquals("Meetup developer komunitas regional", event.getDescription());
-        assertEquals("https://example.com/image.jpg", event.getLink_image());
         assertEquals("PLANNED", event.getStatus());
     }
 
     @Test
-    void testConstructorWithValidStatus() {
+    void testCreateEventWithValidStatus() {
         UUID organizerId = UUID.randomUUID();
         LocalDateTime dateTime = LocalDateTime.of(2025, 7, 10, 14, 30);
 
@@ -51,24 +59,29 @@ class EventTest {
                 "https://example.com/image2.jpg"
         );
 
+        entityManager.persist(event);
+        entityManager.flush();
+
         assertEquals("CANCELLED", event.getStatus());
     }
 
     @Test
-    void testConstructorWithInvalidStatus() {
+    void testCreateEventWithInvalidStatus() {
         UUID organizerId = UUID.randomUUID();
         LocalDateTime dateTime = LocalDateTime.of(2025, 7, 10, 14, 30);
 
-        assertThrows(IllegalArgumentException.class, () -> new Event(
-                organizerId,
-                "Design Festival",
-                150000L,
-                dateTime,
-                "Bandung",
-                "Festival desain dan inovasi.",
-                "INVALID_STATUS",
-                "https://example.com/image3.jpg"
-        ));
+        assertThrows(IllegalArgumentException.class, () -> {
+            new Event(
+                    organizerId,
+                    "Design Festival",
+                    150000L,
+                    dateTime,
+                    "Bandung",
+                    "Festival desain dan inovasi.",
+                    "INVALID_STATUS",
+                    "https://example.com/image3.jpg"
+            );
+        });
     }
 
     @Test

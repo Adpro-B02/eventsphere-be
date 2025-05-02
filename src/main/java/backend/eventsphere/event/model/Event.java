@@ -47,7 +47,6 @@ public class Event {
 
     public Event(UUID organizerId, String name, Long ticketPrice, LocalDateTime eventDateTime,
                  String location, String description, String link_image) {
-        this.id = UUID.randomUUID();
         this.organizerId = organizerId;
         this.name = name;
         this.ticketPrice = ticketPrice;
