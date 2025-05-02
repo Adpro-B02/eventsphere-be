@@ -1,8 +1,6 @@
 package backend.eventsphere.promo.repository;
 
 import backend.eventsphere.promo.model.KodePromo;
-import backend.eventsphere.promo.repository.KodePromoRepository;
-import backend.eventsphere.promo.repository.KodePromoRepositoryImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -74,4 +72,11 @@ public class KodePromoRepositoryImplTest {
 
         assertFalse(repository.findPromoById(promo.getId()).isPresent());
     }
+
+    @Test
+    void testFindPromoByCode_ReturnsEmpty_WhenNotFound() {
+        Optional<KodePromo> result = repository.findPromoByCode("NOT_EXIST");
+        assertTrue(result.isEmpty());
+    }
+
 }
