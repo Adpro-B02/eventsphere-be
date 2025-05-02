@@ -1,1 +1,1 @@
-Link deployment: http://ec2-3-87-169-12.compute-1.amazonaws.com:8080/
+Link deployment: http://ec2-52-86-194-154.compute-1.amazonaws.com:8080/
