@@ -1,15 +1,9 @@
 package backend.eventsphere.review.model;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
-
-import javax.validation.ConstraintViolation;
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
+import java.util.UUID;
 import java.time.LocalDateTime;
-import java.util.Set;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -26,7 +20,7 @@ public class ReviewTest {
 
         assertNotNull(review.getId());
         assertEquals(customEventUUID, review.getEventId());
-        assertEquals(customUserUUID, review.getAttendeeId());
+        assertEquals(customUserUUID, review.getUserId());
         assertEquals("Excellent event!", review.getComment());
         assertEquals(5, review.getRating());
         assertEquals(now, review.getCreatedAt());
@@ -59,13 +53,12 @@ public class ReviewTest {
         });
     }
     
-
     @Test
-    void updateValidReview() {
+    void setValidReview() {
         LocalDateTime previous = LocalDateTime.now();
         Review review = new Review(customEventUUID, customUserUUID, "Excellent event!", 5, previous, previous);
         review.setEventId(customUserUUID);
-        review.setAttendeeId(customEventUUID);
+        review.setUserId(customEventUUID);
         review.setComment("Valid Update");
         review.setRating(4);
                 
@@ -73,7 +66,7 @@ public class ReviewTest {
         review.setUpdatedAt(after);
 
         assertEquals(customUserUUID, review.getEventId());
-        assertEquals(customEventUUID, review.getAttendeeId());
+        assertEquals(customEventUUID, review.getUserId());
         assertEquals("Valid Update", review.getComment());
         assertEquals(4, review.getRating());
         assertEquals(previous, review.getCreatedAt());
@@ -81,29 +74,29 @@ public class ReviewTest {
     }
 
     @Test
-    void updateInvalidReview() {
+    void setInvalidReview() {
         LocalDateTime previous = LocalDateTime.now();
         Review review = new Review(customEventUUID, customUserUUID, "Excellent event!", 5, previous, previous);
-        review.setEventId();
-        review.setAttendeeId();
-
-        StringBuilder longComment = new StringBuilder();
-        for (int i = 0; i < 101; i++) {
-            longComment.append("0123456789");
-        }
         
-        review.setComment(longComment.toString());
-        review.setRating(6);
-                
-        LocalDateTime after = LocalDateTime.now();
-        review.setUpdatedAt(after);
+        assertThrows(IllegalArgumentException.class, () -> {
+            review.setEventId(null);
+        });
 
-        assertNotNull(review.getId());
-        assertEquals(customUserUUID, review.getEventId());
-        assertEquals(customEventUUID, review.getAttendeeId());
-        assertEquals("Valid Update", review.getComment());
-        assertEquals(4, review.getRating());
-        assertEquals(previous, review.getCreatedAt());
-        assertEquals(after, review.getUpdatedAt());
+        assertThrows(IllegalArgumentException.class, () -> {
+            review.setUserId(null);
+        });
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            StringBuilder longComment = new StringBuilder();
+            for (int i = 0; i < 101; i++) {
+                longComment.append("0123456789");
+            }
+            
+            review.setComment(longComment.toString());
+        });
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            review.setRating(6);
+        });
     }
 }
