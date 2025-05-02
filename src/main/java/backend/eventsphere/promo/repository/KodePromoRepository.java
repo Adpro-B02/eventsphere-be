@@ -2,6 +2,7 @@ package backend.eventsphere.promo.repository;
 
 import backend.eventsphere.promo.model.KodePromo;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -12,4 +13,6 @@ public interface KodePromoRepository {
     Optional<KodePromo> findPromoByCode(String code);
     List<KodePromo> findAllByEventId(UUID eventId);
     void deletePromoById(UUID id);
+    List<KodePromo> findActivePromos(UUID eventId, LocalDate today);
+    boolean existsByCode(String code);
 }

@@ -3,6 +3,7 @@ package backend.eventsphere.promo.repository;
 import backend.eventsphere.promo.model.KodePromo;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -42,5 +43,20 @@ public class KodePromoRepositoryImpl implements KodePromoRepository {
     @Override
     public void deletePromoById(UUID id) {
         storage.remove(id);
+    }
+
+    @Override
+    public List<KodePromo> findActivePromos(UUID eventId, LocalDate today) {
+        return storage.values()
+                .stream()
+                .filter(p -> p.getEventId().equals(eventId) && p.isValid())
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean existsByCode(String code) {
+        return storage.values()
+                .stream()
+                .anyMatch(p -> p.getCode().equalsIgnoreCase(code));
     }
 }
