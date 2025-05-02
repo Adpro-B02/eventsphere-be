@@ -1,14 +1,37 @@
 name: Continuous Integration (CI)
 
-## Run CI jobs on all branches by default
 on:
   push:
   pull_request:
+
+permissions:
+  contents: read
 
 jobs:
   test:
     name: Run tests
     runs-on: ubuntu-22.04
+
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: eventsphere
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DB_URL: jdbc:postgresql://localhost:5432/eventsphere
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+
     steps:
       - name: Check out the Git repository
         uses: actions/checkout@v4
@@ -22,6 +45,14 @@ jobs:
 
       - name: Grant execute permission to Gradle wrapper
         run: chmod +x gradlew
+
+      - name: Wait for Postgres to be ready
+        run: |
+          for i in {1..10}; do
+            nc -z localhost 5432 && echo "Postgres is up" && break
+            echo "Waiting for Postgres..."
+            sleep 3
+          done
 
       - name: Run unit tests
         run: ./gradlew test

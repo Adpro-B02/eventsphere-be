@@ -1,6 +1,6 @@
-package backend.eventsphere.service.strategy;
+package backend.eventsphere.event.service.strategy;
 
-import backend.eventsphere.model.Event;
+import backend.eventsphere.event.model.Event;
 
 public class EventDataValidation implements ValidationStrategy {
 

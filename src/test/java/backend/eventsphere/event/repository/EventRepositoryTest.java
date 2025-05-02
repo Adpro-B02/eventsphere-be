@@ -1,8 +1,8 @@
-package backend.eventsphere.repository;
+package backend.eventsphere.event.repository;
 
-import backend.eventsphere.repository.EventRepository;
-import backend.eventsphere.repository.EventRepositoryImpl;
-import backend.eventsphere.model.Event;
+import backend.eventsphere.event.model.Event;
+import backend.eventsphere.event.repository.EventRepository;
+import backend.eventsphere.event.repository.EventRepositoryImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
