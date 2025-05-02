@@ -1,39 +1,52 @@
 package backend.eventsphere.event.model;
 
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.UUID;
 
+@Entity
+@Table(name = "events")
 @Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Event {
 
-    private final UUID id;
-    private final UUID organizerId;
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
 
-    @Setter
+    @Column(nullable = false)
+    private UUID organizerId;
+
+    @Column(nullable = false)
     private String name;
 
-    @Setter
+    @Column(nullable = false)
     private Long ticketPrice;
 
-    @Setter
+    @Column(nullable = false)
     private LocalDateTime eventDateTime;
 
-    @Setter
+    @Column(nullable = false)
     private String location;
 
-    @Setter
+    @Column(nullable = false)
     private String description;
 
-    @Setter
+    @Column(nullable = false)
     private String link_image;
 
+    @Column(nullable = false)
     private String status;
 
-    public Event(UUID organizerId, String name, Long ticketPrice, LocalDateTime eventDateTime, String location, String description, String link_image) {
+    public Event(UUID organizerId, String name, Long ticketPrice, LocalDateTime eventDateTime,
+                 String location, String description, String link_image) {
         this.id = UUID.randomUUID();
         this.organizerId = organizerId;
         this.name = name;
@@ -42,12 +55,13 @@ public class Event {
         this.location = location;
         this.description = description;
         this.link_image = link_image;
-        this.status = "PLANNED"; // default status
+        this.status = "PLANNED";
     }
 
-    public Event(UUID organizerId, String name, Long ticketPrice, LocalDateTime eventDateTime, String location, String description, String status, String link_image) {
+    public Event(UUID organizerId, String name, Long ticketPrice, LocalDateTime eventDateTime,
+                 String location, String description, String status, String link_image) {
         this(organizerId, name, ticketPrice, eventDateTime, location, description, link_image);
-        setStatus(status); // validasi dilakukan di setter
+        setStatus(status);
     }
 
     public void setStatus(String status) {
