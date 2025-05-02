@@ -1,6 +1,5 @@
 package backend.eventsphere.event.model;
 
-import backend.eventsphere.event.model.Event;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -21,7 +20,8 @@ class EventTest {
                 100000L,
                 dateTime,
                 "Surabaya",
-                "Meetup developer komunitas regional"
+                "Meetup developer komunitas regional",
+                "https://example.com/image.jpg"
         );
 
         assertNotNull(event.getId());
@@ -31,6 +31,7 @@ class EventTest {
         assertEquals(dateTime, event.getEventDateTime());
         assertEquals("Surabaya", event.getLocation());
         assertEquals("Meetup developer komunitas regional", event.getDescription());
+        assertEquals("https://example.com/image.jpg", event.getLink_image());
         assertEquals("PLANNED", event.getStatus());
     }
 
@@ -46,7 +47,8 @@ class EventTest {
                 dateTime,
                 "Bandung",
                 "Festival desain dan inovasi.",
-                "CANCELLED"
+                "CANCELLED",
+                "https://example.com/image2.jpg"
         );
 
         assertEquals("CANCELLED", event.getStatus());
@@ -64,7 +66,8 @@ class EventTest {
                 dateTime,
                 "Bandung",
                 "Festival desain dan inovasi.",
-                "UNKNOWN_STATUS"
+                "INVALID_STATUS",
+                "https://example.com/image3.jpg"
         ));
     }
 
@@ -76,7 +79,8 @@ class EventTest {
                 120000L,
                 LocalDateTime.now(),
                 "Jakarta",
-                "Test"
+                "Test description",
+                "https://example.com/test.jpg"
         );
 
         event.setStatus("COMPLETED");
@@ -91,27 +95,25 @@ class EventTest {
                 120000L,
                 LocalDateTime.now(),
                 "Jakarta",
-                "Test"
+                "Test description",
+                "https://example.com/test.jpg"
         );
 
         assertThrows(IllegalArgumentException.class, () -> event.setStatus("INVALID"));
     }
 
     @Test
-    void testToStringContainsValues() {
-        UUID organizerId = UUID.randomUUID();
-        LocalDateTime dateTime = LocalDateTime.of(2025, 8, 20, 10, 0);
-
+    void testToStringReturnsName() {
         Event event = new Event(
-                organizerId,
+                UUID.randomUUID(),
                 "Startup Day",
                 200000L,
-                dateTime,
+                LocalDateTime.of(2025, 8, 20, 10, 0),
                 "Jakarta",
-                "Pameran startup dari seluruh Indonesia"
+                "Pameran startup dari seluruh Indonesia",
+                "https://example.com/startup.jpg"
         );
 
-        String output = event.toString();
-        assertTrue(output.contains("Startup Day"));
+        assertEquals("Startup Day", event.toString());
     }
 }
