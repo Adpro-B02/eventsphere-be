@@ -23,8 +23,14 @@ public class KodePromoService {
     }
 
     public KodePromo createPromo(String code, BigDecimal discount, LocalDate startDate,
-                                 LocalDate endDate, UUID eventId, UUID createdBy) {
-        KodePromo promo = promoFactory.createPromo(code, discount, startDate, endDate, eventId, createdBy);
+                                 LocalDate endDate, UUID eventId, UUID userId) {
+
+        Optional<KodePromo> existingPromo = repository.findPromoByCode(code);
+        if (existingPromo.isPresent()) {
+            throw new IllegalArgumentException("Kode promo sudah digunakan");
+        }
+
+        KodePromo promo = promoFactory.createPromo(code, discount, startDate, endDate, eventId, userId);
         return repository.save(promo);
     }
 
