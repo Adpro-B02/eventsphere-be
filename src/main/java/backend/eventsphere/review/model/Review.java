@@ -1,19 +1,18 @@
 package backend.eventsphere.review.model;
 
 import lombok.Getter;
-import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Getter @Setter
+@Getter
 public class Review {
-    private UUID id;
-    private UUID eventId;
-    private UUID userId;
+    private final UUID id;
+    private final UUID eventId;
+    private final UUID userId;
     private String comment;
     private int rating;
-    private LocalDateTime createdAt;
+    private final LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     public Review(UUID eventId, UUID userId, String comment, int rating) {
@@ -22,7 +21,7 @@ public class Review {
         validateUserId(userId);
         validateComment(comment);
         validateRating(rating);
-        
+
         this.eventId = eventId;
         this.userId = userId;
         this.comment = comment;
@@ -31,14 +30,14 @@ public class Review {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public Review(UUID eventId, UUID userId, String comment, int rating, 
+    public Review(UUID eventId, UUID userId, String comment, int rating,
                   LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = UUID.randomUUID();
         validateEventId(eventId);
         validateUserId(userId);
         validateComment(comment);
         validateRating(rating);
-        
+
         this.eventId = eventId;
         this.userId = userId;
         this.comment = comment;
@@ -71,23 +70,15 @@ public class Review {
         }
     }
 
-    public void setEventId(UUID eventId) {
-        validateEventId(eventId);
-        this.eventId = eventId;
-    }
-
-    public void setUserId(UUID userId) {
-        validateUserId(userId);
-        this.userId = userId;
-    }
-
     public void setComment(String comment) {
         validateComment(comment);
         this.comment = comment;
+        this.updatedAt = LocalDateTime.now();
     }
 
     public void setRating(int rating) {
         validateRating(rating);
         this.rating = rating;
+        this.updatedAt = LocalDateTime.now();
     }
 }

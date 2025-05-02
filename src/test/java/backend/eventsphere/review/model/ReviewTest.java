@@ -64,34 +64,17 @@ public class ReviewTest {
     void setValidReview() {
         LocalDateTime previous = LocalDateTime.now();
         Review review = new Review(customEventUUID, customUserUUID, "Excellent event!", 5, previous, previous);
-        review.setEventId(customUserUUID);
-        review.setUserId(customEventUUID);
         review.setComment("Valid Update");
         review.setRating(4);
-                
-        LocalDateTime after = LocalDateTime.now();
-        review.setUpdatedAt(after);
 
-        assertEquals(customUserUUID, review.getEventId());
-        assertEquals(customEventUUID, review.getUserId());
         assertEquals("Valid Update", review.getComment());
         assertEquals(4, review.getRating());
-        assertEquals(previous, review.getCreatedAt());
-        assertEquals(after, review.getUpdatedAt());
     }
 
     @Test
     void setInvalidReview() {
         LocalDateTime previous = LocalDateTime.now();
         Review review = new Review(customEventUUID, customUserUUID, "Excellent event!", 5, previous, previous);
-        
-        assertThrows(IllegalArgumentException.class, () -> {
-            review.setEventId(null);
-        });
-
-        assertThrows(IllegalArgumentException.class, () -> {
-            review.setUserId(null);
-        });
 
         assertThrows(IllegalArgumentException.class, () -> {
             StringBuilder longComment = new StringBuilder();
