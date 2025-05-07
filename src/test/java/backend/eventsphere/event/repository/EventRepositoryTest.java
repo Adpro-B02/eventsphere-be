@@ -56,7 +56,7 @@ public class EventRepositoryTest {
         eventRepository.save(event1);
         eventRepository.save(event2);
         List<Event> events = eventRepository.findAll();
-        assertThat(events).hasSize(3);
+        assertThat(events).hasSize(2);
     }
 
     @Test
