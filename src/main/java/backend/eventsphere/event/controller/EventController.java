@@ -1,13 +1,13 @@
-package backend.eventsphere.controller;
+package backend.eventsphere.event.controller;
 
-import backend.eventsphere.model.Event;
+import backend.eventsphere.event.model.Event;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import backend.eventsphere.service.EventService;
-import backend.eventsphere.service.strategy.DeletionValidation;
-import backend.eventsphere.service.strategy.EventDataValidation;
-import backend.eventsphere.service.strategy.EventExistValidation;
-import backend.eventsphere.service.strategy.ValidationStrategy;
+import backend.eventsphere.event.service.EventService;
+import backend.eventsphere.event.service.strategy.DeletionValidation;
+import backend.eventsphere.event.service.strategy.EventDataValidation;
+import backend.eventsphere.event.service.strategy.EventExistValidation;
+import backend.eventsphere.event.service.strategy.ValidationStrategy;
 
 import java.util.List;
 import java.util.UUID;

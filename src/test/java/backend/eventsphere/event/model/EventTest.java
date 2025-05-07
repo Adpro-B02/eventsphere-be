@@ -1,6 +1,6 @@
-package backend.eventsphere.model;
+package backend.eventsphere.event.model;
 
-import backend.eventsphere.model.Event;
+import backend.eventsphere.event.model.Event;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
