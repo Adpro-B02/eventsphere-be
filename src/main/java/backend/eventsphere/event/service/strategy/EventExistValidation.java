@@ -1,21 +1,21 @@
 package backend.eventsphere.event.service.strategy;
 
+import backend.eventsphere.event.client.EventClient;
 import backend.eventsphere.event.model.Event;
-import backend.eventsphere.event.repository.EventRepository;
 import org.springframework.stereotype.Component;
 
 @Component
 public class EventExistValidation implements ValidationStrategy {
 
-    private final EventRepository eventRepository;
+    private final EventClient eventClient;
 
-    public EventExistValidation(EventRepository eventRepository) {
-        this.eventRepository = eventRepository;
+    public EventExistValidation(EventClient eventClient) {
+        this.eventClient = eventClient;
     }
 
     @Override
     public void validate(Event event) {
-        boolean exists = eventRepository.findAll().stream().anyMatch(
+        boolean exists = eventClient.getAllEvents().stream().anyMatch(
                 e -> e.getName().equalsIgnoreCase(event.getName()) &&
                         e.getEventDateTime().equals(event.getEventDateTime())
         );
