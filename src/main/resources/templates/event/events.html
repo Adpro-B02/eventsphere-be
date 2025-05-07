@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Daftar Event</title>
+</head>
+<body>
+<h1>Daftar Event</h1>
+<table border="1">
+    <thead>
+    <tr>
+        <th>Nama</th>
+        <th>Harga Tiket</th>
+        <th>Tanggal & Waktu</th>
+        <th>Lokasi</th>
+        <th>Deskripsi</th>
+        <th>Gambar</th>
+        <th>Status</th>
+        <th>Organizer ID</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="event : ${events}">
+        <td th:text="${event.name}"></td>
+        <td th:text="${event.ticketPrice}"></td>
+        <td th:text="${#dates.format(event.eventDateTime, 'yyyy-MM-dd HH:mm:ss')}"></td>
+        <td th:text="${event.location}"></td>
+        <td th:text="${event.description}"></td>
+        <td><img th:src="@{${event.link_image}}" alt="Event Image" width="100"></td>
+        <td th:text="${event.status}"></td>
+        <td th:text="${event.organizerId}"></td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>
