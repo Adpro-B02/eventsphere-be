@@ -51,4 +51,38 @@ public class EventServiceTest {
         assertThat(events).isEmpty();
         verify(eventRepository, times(1)).findAll();
     }
+
+    @Test
+    public void testAddEvent_setsPlannedStatusIfNull_andRunsValidation_andSaves() {
+        Event event = new Event(null, "Test Event", 10000L,
+                LocalDateTime.of(2025, 8, 1, 14, 0), "Jakarta", "Desc", "https://img.com");
+        event.setOrganizerId(UUID.randomUUID());
+        event.setStatus(null);
+
+        when(eventRepository.save(event)).thenReturn(event);
+
+        Event saved = eventService.addEvent(event);
+
+        assertThat(saved.getStatus()).isEqualTo("PLANNED");
+        verify(validationStrategy1).validate(event);
+        verify(validationStrategy2).validate(event);
+        verify(eventRepository).save(event);
+    }
+
+    @Test
+    public void testAddEvent_preservesStatusIfSet_andRunsValidation_andSaves() {
+        Event event = new Event(null, "Event with Status", 50000L,
+                LocalDateTime.of(2025, 9, 1, 19, 0), "Bandung", "Desc", "https://img.com");
+        event.setOrganizerId(UUID.randomUUID());
+        event.setStatus("PUBLISHED");
+
+        when(eventRepository.save(event)).thenReturn(event);
+
+        Event saved = eventService.addEvent(event);
+
+        assertThat(saved.getStatus()).isEqualTo("PUBLISHED");
+        verify(validationStrategy1).validate(event);
+        verify(validationStrategy2).validate(event);
+        verify(eventRepository).save(event);
+    }
 }
