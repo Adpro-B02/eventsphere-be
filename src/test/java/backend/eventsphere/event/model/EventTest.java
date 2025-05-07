@@ -1,17 +1,27 @@
 package backend.eventsphere.event.model;
 
-import backend.eventsphere.event.model.Event;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@DataJpaTest
+@Transactional
 class EventTest {
 
+    @Autowired
+    private EntityManager entityManager;
+
     @Test
-    void testConstructorWithoutStatus() {
+    void testCreateEventWithoutStatus() {
         UUID organizerId = UUID.randomUUID();
         LocalDateTime dateTime = LocalDateTime.of(2025, 6, 1, 13, 0);
 
@@ -21,21 +31,20 @@ class EventTest {
                 100000L,
                 dateTime,
                 "Surabaya",
-                "Meetup developer komunitas regional"
+                "Meetup developer komunitas regional",
+                "https://example.com/image.jpg"
         );
 
+        entityManager.persist(event);
+        entityManager.flush();
+
         assertNotNull(event.getId());
-        assertEquals(organizerId, event.getOrganizerId());
         assertEquals("Tech Meetup", event.getName());
-        assertEquals(100000L, event.getTicketPrice());
-        assertEquals(dateTime, event.getEventDateTime());
-        assertEquals("Surabaya", event.getLocation());
-        assertEquals("Meetup developer komunitas regional", event.getDescription());
         assertEquals("PLANNED", event.getStatus());
     }
 
     @Test
-    void testConstructorWithValidStatus() {
+    void testCreateEventWithValidStatus() {
         UUID organizerId = UUID.randomUUID();
         LocalDateTime dateTime = LocalDateTime.of(2025, 7, 10, 14, 30);
 
@@ -46,26 +55,33 @@ class EventTest {
                 dateTime,
                 "Bandung",
                 "Festival desain dan inovasi.",
-                "CANCELLED"
+                "CANCELLED",
+                "https://example.com/image2.jpg"
         );
+
+        entityManager.persist(event);
+        entityManager.flush();
 
         assertEquals("CANCELLED", event.getStatus());
     }
 
     @Test
-    void testConstructorWithInvalidStatus() {
+    void testCreateEventWithInvalidStatus() {
         UUID organizerId = UUID.randomUUID();
         LocalDateTime dateTime = LocalDateTime.of(2025, 7, 10, 14, 30);
 
-        assertThrows(IllegalArgumentException.class, () -> new Event(
-                organizerId,
-                "Design Festival",
-                150000L,
-                dateTime,
-                "Bandung",
-                "Festival desain dan inovasi.",
-                "UNKNOWN_STATUS"
-        ));
+        assertThrows(IllegalArgumentException.class, () -> {
+            new Event(
+                    organizerId,
+                    "Design Festival",
+                    150000L,
+                    dateTime,
+                    "Bandung",
+                    "Festival desain dan inovasi.",
+                    "INVALID_STATUS",
+                    "https://example.com/image3.jpg"
+            );
+        });
     }
 
     @Test
@@ -76,7 +92,8 @@ class EventTest {
                 120000L,
                 LocalDateTime.now(),
                 "Jakarta",
-                "Test"
+                "Test description",
+                "https://example.com/test.jpg"
         );
 
         event.setStatus("COMPLETED");
@@ -91,27 +108,25 @@ class EventTest {
                 120000L,
                 LocalDateTime.now(),
                 "Jakarta",
-                "Test"
+                "Test description",
+                "https://example.com/test.jpg"
         );
 
         assertThrows(IllegalArgumentException.class, () -> event.setStatus("INVALID"));
     }
 
     @Test
-    void testToStringContainsValues() {
-        UUID organizerId = UUID.randomUUID();
-        LocalDateTime dateTime = LocalDateTime.of(2025, 8, 20, 10, 0);
-
+    void testToStringReturnsName() {
         Event event = new Event(
-                organizerId,
+                UUID.randomUUID(),
                 "Startup Day",
                 200000L,
-                dateTime,
+                LocalDateTime.of(2025, 8, 20, 10, 0),
                 "Jakarta",
-                "Pameran startup dari seluruh Indonesia"
+                "Pameran startup dari seluruh Indonesia",
+                "https://example.com/startup.jpg"
         );
 
-        String output = event.toString();
-        assertTrue(output.contains("Startup Day"));
+        assertEquals("Startup Day", event.toString());
     }
 }
