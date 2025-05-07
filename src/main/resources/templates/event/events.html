@@ -6,6 +6,13 @@
 </head>
 <body>
 <h1>Daftar Event</h1>
+
+<a th:href="@{/events/create}">
+    <button>+ Tambah Event</button>
+</a>
+
+<br><br>
+
 <table border="1">
     <thead>
     <tr>
@@ -23,10 +30,12 @@
     <tr th:each="event : ${events}">
         <td th:text="${event.name}"></td>
         <td th:text="${event.ticketPrice}"></td>
-        <td th:text="${#dates.format(event.eventDateTime, 'yyyy-MM-dd HH:mm:ss')}"></td>
+        <td th:text="${event.eventDateTime}"></td>
         <td th:text="${event.location}"></td>
         <td th:text="${event.description}"></td>
-        <td><img th:src="@{${event.link_image}}" alt="Event Image" width="100"></td>
+        <td>
+            <img th:src="@{${event.link_image}}" alt="Event Image" width="100">
+        </td>
         <td th:text="${event.status}"></td>
         <td th:text="${event.organizerId}"></td>
     </tr>
