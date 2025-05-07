@@ -13,7 +13,6 @@ import java.util.UUID;
 @Table(name = "events")
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
 public class Event {
 
@@ -44,6 +43,10 @@ public class Event {
 
     @Column(nullable = false)
     private String status;
+
+    public Event() {
+        this.status = "PLANNED";
+    }
 
     public Event(UUID organizerId, String name, Long ticketPrice, LocalDateTime eventDateTime,
                  String location, String description, String link_image) {
