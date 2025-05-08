@@ -15,6 +15,9 @@ public class KodePromoRepositoryImpl implements KodePromoRepository {
 
     @Override
     public KodePromo save(KodePromo promo) {
+        if (promo.getId() == null) {
+            promo.setId(UUID.randomUUID());
+        }
         storage.put(promo.getId(), promo);
         return promo;
     }
