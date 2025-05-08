@@ -81,4 +81,16 @@ public class EventControllerTest {
 
         verify(eventService).addEvent(Mockito.any(Event.class));
     }
+
+    @Test
+    void testDeleteEvent_DeletesEventAndRedirects() throws Exception {
+        UUID eventId = UUID.randomUUID();
+
+        mockMvc.perform(post("/events/delete")
+                        .param("id", eventId.toString()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/events"));
+
+        verify(eventService).deleteEventById(eventId);
+    }
 }
