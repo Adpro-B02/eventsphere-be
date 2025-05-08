@@ -4,7 +4,6 @@ import backend.eventsphere.promo.model.KodePromo;
 import backend.eventsphere.promo.repository.KodePromoRepository;
 import backend.eventsphere.promo.factory.PromoFactory;
 import backend.eventsphere.promo.factory.DiskonPromoFactory;
-import backend.eventsphere.promo.service.KodePromoService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -22,6 +21,7 @@ class KodePromoServiceTest {
     private UUID promoId;
     private UUID eventId;
     private UUID userId;
+    private LocalDate today;
 
     @BeforeEach
     void setUp() {
@@ -32,33 +32,110 @@ class KodePromoServiceTest {
         promoId = UUID.randomUUID();
         eventId = UUID.randomUUID();
         userId = UUID.randomUUID();
+        today = LocalDate.now();
+    }
+
+    private KodePromo createSamplePromo(String code, BigDecimal discount,
+                                        KodePromo.DiscountType discountType) {
+        return new KodePromo(
+                promoId,
+                code,
+                discount,
+                discountType,
+                today,
+                today.plusDays(7),
+                eventId,
+                userId
+        );
     }
 
     @Test
-    void testCreatePromo() {
-        LocalDate start = LocalDate.now();
-        LocalDate end = start.plusDays(7);
+    void testCreatePromo_PercentageDiscount() {
+        KodePromo promo = createSamplePromo("DISC10", new BigDecimal("0.1"),
+                KodePromo.DiscountType.PERCENTAGE);
 
-        KodePromo promo = new KodePromo(null, "DISC10", new BigDecimal("0.1"), start, end, eventId, userId);
-
+        when(repository.existsByCode("DISC10")).thenReturn(false);
         when(repository.save(any(KodePromo.class))).thenReturn(promo);
 
-        KodePromo created = service.createPromo("DISC10", new BigDecimal("0.1"), start, end, eventId, userId);
+        KodePromo created = service.createPromo(
+                "DISC10",
+                new BigDecimal("0.1"),
+                KodePromo.DiscountType.PERCENTAGE,
+                today,
+                today.plusDays(7),
+                eventId,
+                userId
+        );
 
         assertEquals("DISC10", created.getCode());
-        verify(repository, times(1)).save(any(KodePromo.class));
+        assertEquals(KodePromo.DiscountType.PERCENTAGE, created.getDiscountType());
+        verify(repository).save(any(KodePromo.class));
+    }
+
+    @Test
+    void testCreatePromo_FixedAmountDiscount() {
+        KodePromo promo = createSamplePromo("CASH50", new BigDecimal("50000"),
+                KodePromo.DiscountType.FIXED_AMOUNT);
+
+        when(repository.existsByCode("CASH50")).thenReturn(false);
+        when(repository.save(any(KodePromo.class))).thenReturn(promo);
+
+        KodePromo created = service.createPromo(
+                "CASH50",
+                new BigDecimal("50000"),
+                KodePromo.DiscountType.FIXED_AMOUNT,
+                today,
+                today.plusDays(30),
+                eventId,
+                userId
+        );
+
+        assertEquals("CASH50", created.getCode());
+        assertEquals(KodePromo.DiscountType.FIXED_AMOUNT, created.getDiscountType());
+        verify(repository).save(any(KodePromo.class));
+    }
+
+    @Test
+    void testCreatePromo_ShouldThrowWhenFixedAmountHasDecimal() {
+        assertThrows(IllegalArgumentException.class, () ->
+                service.createPromo(
+                        "INVALID",
+                        new BigDecimal("50000.50"),
+                        KodePromo.DiscountType.FIXED_AMOUNT,
+                        today,
+                        today.plusDays(1),
+                        eventId,
+                        userId
+                )
+        );
+    }
+
+    @Test
+    void testCreatePromo_ShouldThrowWhenDiscountZero() {
+        assertThrows(IllegalArgumentException.class, () ->
+                service.createPromo(
+                        "ZERO",
+                        BigDecimal.ZERO,
+                        KodePromo.DiscountType.PERCENTAGE,
+                        today,
+                        today.plusDays(1),
+                        eventId,
+                        userId
+                )
+        );
     }
 
     @Test
     void testGetPromoByIdFound() {
-        KodePromo promo = new KodePromo(promoId, "CODE", new BigDecimal("0.2"),
-                LocalDate.now(), LocalDate.now().plusDays(5), eventId, userId);
+        KodePromo promo = createSamplePromo("CODE", new BigDecimal("0.2"),
+                KodePromo.DiscountType.PERCENTAGE);
         when(repository.findPromoById(promoId)).thenReturn(Optional.of(promo));
 
         Optional<KodePromo> found = service.getPromoById(promoId);
 
         assertTrue(found.isPresent());
         assertEquals("CODE", found.get().getCode());
+        assertEquals(KodePromo.DiscountType.PERCENTAGE, found.get().getDiscountType());
     }
 
     @Test
@@ -71,17 +148,45 @@ class KodePromoServiceTest {
     }
 
     @Test
-    void testUpdatePromo() {
-        KodePromo existing = new KodePromo(promoId, "OLDCODE", new BigDecimal("0.1"),
-                LocalDate.now(), LocalDate.now().plusDays(3), eventId, userId);
+    void testUpdatePromo_ChangeDiscountType() {
+        KodePromo existing = createSamplePromo("OLD", new BigDecimal("0.1"),
+                KodePromo.DiscountType.PERCENTAGE);
+
         when(repository.findPromoById(promoId)).thenReturn(Optional.of(existing));
+        when(repository.existsByCode("NEW")).thenReturn(false);
         when(repository.save(any(KodePromo.class))).thenReturn(existing);
 
-        KodePromo updated = service.updatePromo(promoId, "NEWCODE", new BigDecimal("0.3"),
-                LocalDate.now().plusDays(1), LocalDate.now().plusDays(5));
+        KodePromo updated = service.updatePromo(
+                promoId,
+                "NEW",
+                new BigDecimal("50000"),
+                KodePromo.DiscountType.FIXED_AMOUNT,
+                today,
+                today.plusDays(5)
+        );
 
-        assertEquals("NEWCODE", updated.getCode());
-        assertEquals(new BigDecimal("0.3"), updated.getDiscount());
+        assertEquals(KodePromo.DiscountType.FIXED_AMOUNT, updated.getDiscountType());
+        assertEquals(new BigDecimal("50000"), updated.getDiscount());
+    }
+
+    @Test
+    void testUpdatePromo_WhenNewCodeExists() {
+        KodePromo existing = createSamplePromo("OLDCODE", new BigDecimal("0.1"),
+                KodePromo.DiscountType.PERCENTAGE);
+        when(repository.findPromoById(promoId)).thenReturn(Optional.of(existing));
+        when(repository.existsByCode("EXISTING_CODE")).thenReturn(true);
+
+        assertThrows(IllegalArgumentException.class, () ->
+                service.updatePromo(
+                        promoId,
+                        "EXISTING_CODE",
+                        new BigDecimal("0.3"),
+                        KodePromo.DiscountType.PERCENTAGE,
+                        today.plusDays(1),
+                        today.plusDays(5))
+        );
+
+        verify(repository, never()).save(any());
     }
 
     @Test
@@ -89,7 +194,14 @@ class KodePromoServiceTest {
         when(repository.findPromoById(promoId)).thenReturn(Optional.empty());
 
         assertThrows(IllegalArgumentException.class, () ->
-                service.updatePromo(promoId, "X", BigDecimal.ONE, LocalDate.now(), LocalDate.now()));
+                service.updatePromo(
+                        promoId,
+                        "X",
+                        BigDecimal.ONE,
+                        KodePromo.DiscountType.PERCENTAGE,
+                        today,
+                        today)
+        );
     }
 
     @Test
@@ -100,44 +212,71 @@ class KodePromoServiceTest {
 
     @Test
     void testGetPromosByEvent() {
-        List<KodePromo> promos = List.of(
-                new KodePromo(null, "A", BigDecimal.ONE, LocalDate.now(), LocalDate.now(), eventId, userId)
+        List<KodePromo> promos = Arrays.asList(
+                createSamplePromo("A", BigDecimal.ONE, KodePromo.DiscountType.PERCENTAGE),
+                createSamplePromo("B", new BigDecimal("20000"), KodePromo.DiscountType.FIXED_AMOUNT)
         );
         when(repository.findAllByEventId(eventId)).thenReturn(promos);
 
         List<KodePromo> result = service.getPromosByEvent(eventId);
 
-        assertEquals(1, result.size());
-        assertEquals("A", result.get(0).getCode());
+        assertEquals(2, result.size());
+        assertTrue(result.stream().anyMatch(p -> p.getDiscountType() == KodePromo.DiscountType.FIXED_AMOUNT));
+    }
+
+    @Test
+    void testGetActivePromosByEvent() {
+        List<KodePromo> activePromos = Arrays.asList(
+                createSamplePromo("ACTIVE1", new BigDecimal("0.1"), KodePromo.DiscountType.PERCENTAGE),
+                createSamplePromo("ACTIVE2", new BigDecimal("20000"), KodePromo.DiscountType.FIXED_AMOUNT)
+        );
+
+        when(repository.findActivePromos(eventId, today)).thenReturn(activePromos);
+
+        List<KodePromo> result = service.getActivePromosByEvent(eventId);
+
+        assertEquals(2, result.size());
+        assertTrue(result.stream().anyMatch(p -> p.getDiscountType() == KodePromo.DiscountType.FIXED_AMOUNT));
     }
 
     @Test
     void testCreatePromo_ShouldThrowException_WhenCodeAlreadyExists() {
-        LocalDate start = LocalDate.now();
-        LocalDate end = start.plusDays(5);
-
-        when(repository.findPromoByCode("DUPLICATE")).thenReturn(Optional.of(
-                new KodePromo(UUID.randomUUID(), "DUPLICATE", BigDecimal.ONE, start, end, eventId, userId)
-        ));
+        when(repository.existsByCode("DUPLICATE")).thenReturn(true);
 
         assertThrows(IllegalArgumentException.class, () ->
-                service.createPromo("DUPLICATE", BigDecimal.valueOf(0.1), start, end, eventId, userId)
+                service.createPromo(
+                        "DUPLICATE",
+                        new BigDecimal("0.1"),
+                        KodePromo.DiscountType.PERCENTAGE,
+                        today,
+                        today.plusDays(1),
+                        eventId,
+                        userId)
         );
 
         verify(repository, never()).save(any());
     }
-
 
     @Test
     void testCreatePromo_ShouldThrowException_WhenEndDateBeforeStartDate() {
-        LocalDate start = LocalDate.now();
-        LocalDate end = start.minusDays(1);
-
         assertThrows(IllegalArgumentException.class, () ->
-                service.createPromo("INVALID_DATE", BigDecimal.valueOf(0.1), start, end, eventId, userId)
+                service.createPromo(
+                        "INVALID_DATE",
+                        new BigDecimal("0.1"),
+                        KodePromo.DiscountType.PERCENTAGE,
+                        today,
+                        today.minusDays(1),
+                        eventId,
+                        userId)
         );
-
-        verify(repository, never()).save(any());
     }
 
+    @Test
+    void testIsPromoCodeExists() {
+        when(repository.existsByCode("TEST_CODE")).thenReturn(true);
+        assertTrue(service.isPromoCodeExists("TEST_CODE"));
+
+        when(repository.existsByCode("NON_EXISTENT")).thenReturn(false);
+        assertFalse(service.isPromoCodeExists("NON_EXISTENT"));
+    }
 }
