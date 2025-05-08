@@ -24,6 +24,7 @@
         <th>Gambar</th>
         <th>Status</th>
         <th>Organizer ID</th>
+        <th>Aksi</th>
     </tr>
     </thead>
     <tbody>
@@ -38,6 +39,12 @@
         </td>
         <td th:text="${event.status}"></td>
         <td th:text="${event.organizerId}"></td>
+        <td>
+            <form th:action="@{/events/delete}" method="post" style="display:inline;">
+                <input type="hidden" name="id" th:value="${event.id}" />
+                <button type="submit">Delete</button>
+            </form>
+        </td>
     </tr>
     </tbody>
 </table>
