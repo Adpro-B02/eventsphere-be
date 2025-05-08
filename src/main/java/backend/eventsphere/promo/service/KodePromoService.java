@@ -22,16 +22,42 @@ public class KodePromoService {
         this.promoFactory = promoFactory;
     }
 
-    public KodePromo createPromo(String code, BigDecimal discount, LocalDate startDate,
-                                 LocalDate endDate, UUID eventId, UUID userId) {
+    public KodePromo createPromo(String code, BigDecimal discount, KodePromo.DiscountType discountType,
+                                 LocalDate startDate, LocalDate endDate, UUID eventId, UUID userId) {
 
-        Optional<KodePromo> existingPromo = repository.findPromoByCode(code);
-        if (existingPromo.isPresent()) {
+        validatePromoCreation(code, discount, discountType, startDate, endDate);
+
+        KodePromo promo = promoFactory.createPromo(
+                code,
+                discount,
+                discountType,
+                startDate,
+                endDate,
+                eventId,
+                userId
+        );
+
+        return repository.save(promo);
+    }
+
+    private void validatePromoCreation(String code, BigDecimal discount,
+                                       KodePromo.DiscountType discountType,
+                                       LocalDate startDate, LocalDate endDate) {
+        if (repository.existsByCode(code)) {
             throw new IllegalArgumentException("Kode promo sudah digunakan");
         }
 
-        KodePromo promo = promoFactory.createPromo(code, discount, startDate, endDate, eventId, userId);
-        return repository.save(promo);
+        if (endDate.isBefore(startDate)) {
+            throw new IllegalArgumentException("Tanggal berakhir tidak boleh sebelum tanggal mulai");
+        }
+
+        if (discountType == KodePromo.DiscountType.FIXED_AMOUNT && discount.scale() > 0) {
+            throw new IllegalArgumentException("Diskon nominal tetap harus dalam bilangan bulat");
+        }
+
+        if (discount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Discount harus lebih besar dari 0");
+        }
     }
 
     public Optional<KodePromo> getPromoById(UUID id) {
@@ -46,23 +72,47 @@ public class KodePromoService {
         return repository.findAllByEventId(eventId);
     }
 
+    public List<KodePromo> getActivePromosByEvent(UUID eventId) {
+        return repository.findActivePromos(eventId, LocalDate.now());
+    }
+
     public void deletePromo(UUID id) {
         repository.deletePromoById(id);
     }
 
     public KodePromo updatePromo(UUID id, String newCode, BigDecimal newDiscount,
+                                 KodePromo.DiscountType newDiscountType,
                                  LocalDate newStartDate, LocalDate newEndDate) {
-        Optional<KodePromo> existingPromo = repository.findPromoById(id);
-        if (existingPromo.isEmpty()) {
-            throw new IllegalArgumentException("Promo not found");
-        }
+        KodePromo promo = repository.findPromoById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Promo not found"));
 
-        KodePromo promo = existingPromo.get();
+        validatePromoUpdate(promo, newCode, newDiscount, newDiscountType);
+
         promo.setCode(newCode);
         promo.setDiscount(newDiscount);
+        promo.setDiscountType(newDiscountType);
         promo.setStartDate(newStartDate);
         promo.setEndDate(newEndDate);
 
         return repository.save(promo);
+    }
+
+    private void validatePromoUpdate(KodePromo existingPromo, String newCode,
+                                     BigDecimal newDiscount, KodePromo.DiscountType newDiscountType) {
+        if (!existingPromo.getCode().equalsIgnoreCase(newCode) && repository.existsByCode(newCode)) {
+            throw new IllegalArgumentException("Kode promo sudah digunakan");
+        }
+
+        if (newDiscountType == KodePromo.DiscountType.FIXED_AMOUNT && newDiscount.scale() > 0) {
+            throw new IllegalArgumentException("Diskon nominal tetap harus dalam bilangan bulat");
+        }
+
+        if (newDiscount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Discount harus lebih besar dari 0");
+        }
+    }
+
+    public boolean isPromoCodeExists(String code) {
+        return repository.existsByCode(code);
     }
 }
