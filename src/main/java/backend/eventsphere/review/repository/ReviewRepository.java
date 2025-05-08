@@ -29,9 +29,9 @@ public class ReviewRepository {
 
         if (review.getId() == null) {
             review = new Review(
-                null,
-                review.getUserId(),
+                UUID.randomUUID(),
                 review.getEventId(),
+                review.getUserId(),
                 review.getComment(),
                 review.getRating(),
                 LocalDateTime.now(),
@@ -87,8 +87,8 @@ public class ReviewRepository {
 
         Review updatedReview = new Review(
             reviewToUpdate.getId(),
-            reviewToUpdate.getUserId(),
             reviewToUpdate.getEventId(),
+            reviewToUpdate.getUserId(),
             comment,
             rating,
             reviewToUpdate.getCreatedAt(),

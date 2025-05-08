@@ -17,7 +17,8 @@ public class Review {
 
     public Review(UUID id, UUID eventId, UUID userId, String comment, int rating,
                 LocalDateTime createdAt, LocalDateTime updatedAt) {
-        this.id = id != null ? id : UUID.randomUUID();
+        // this.id = id != null ? id : UUID.randomUUID();
+        this.id = id;
         validateEventId(eventId);
         validateUserId(userId);
         validateComment(comment);

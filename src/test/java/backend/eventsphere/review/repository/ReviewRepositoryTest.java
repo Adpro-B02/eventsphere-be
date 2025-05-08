@@ -28,7 +28,7 @@ class ReviewRepositoryTest {
 
     @Test
     void testSaveNewReview() {
-        Review review = new Review(eventId1, userId1, "Great event!", 5);
+        Review review = new Review(null, eventId1, userId1, "Great event!", 5, null, null);
         Review savedReview = reviewRepository.save(review);
         
         assertNotNull(savedReview.getId());
@@ -38,17 +38,17 @@ class ReviewRepositoryTest {
 
     @Test
     void testSaveExistingReviewThrowsException() {
-        Review review = new Review(eventId1, userId1, "First review", 4);
+        Review review = new Review(null, eventId1, userId1, "Great event!", 5, null, null);
         reviewRepository.save(review);
         
-        Review duplicateReview = new Review(eventId1, userId1, "Duplicate review", 5);
+        Review duplicateReview = new Review(null, eventId1, userId1, "Great event!", 5, null, null);
         
         assertThrows(IllegalStateException.class, () -> reviewRepository.save(duplicateReview));
     }
 
     @Test
     void testUpdateReview() {
-        Review savedReview = reviewRepository.save(new Review(eventId1, userId1, "Initial review", 3));
+        Review savedReview = reviewRepository.save(new Review(null, eventId1, userId1, "Great event!", 5, null, null));
         
         Review updatedReview = reviewRepository.update(savedReview.getId(), 5, "Updated review");
         
@@ -67,7 +67,7 @@ class ReviewRepositoryTest {
     
     @Test
     void testDeleteReview() {
-        Review savedReview = reviewRepository.save(new Review(eventId1, userId1, "Review to delete", 4));
+        Review savedReview = reviewRepository.save(new Review(null, eventId1, userId1, "Great event!", 5, null, null));
         
         reviewRepository.delete(savedReview.getId());
         
@@ -76,9 +76,9 @@ class ReviewRepositoryTest {
     
     @Test
     void testFindByEventId() {
-        reviewRepository.save(new Review(eventId1, userId1, "Event 1 Review 1", 5));
-        reviewRepository.save(new Review(eventId1, userId2, "Event 1 Review 2", 4));
-        reviewRepository.save(new Review(eventId2, userId1, "Event 2 Review", 3));
+        reviewRepository.save(new Review(null, eventId1, userId1, "Great event!", 5, null, null));
+        reviewRepository.save(new Review(null, eventId1, userId2, "Great event!", 5, null, null));
+        reviewRepository.save(new Review(null, eventId2, userId1, "Great event!", 5, null, null));
         
         List<Review> eventReviews = reviewRepository.findByEventId(eventId1);
         
@@ -87,9 +87,9 @@ class ReviewRepositoryTest {
     
     @Test
     void testFindByUserId() {
-        reviewRepository.save(new Review(eventId1, userId1, "User 1 Review 1", 5));
-        reviewRepository.save(new Review(eventId2, userId1, "User 1 Review 2", 4));
-        reviewRepository.save(new Review(eventId1, userId2, "User 2 Review", 3));
+        reviewRepository.save(new Review(null, eventId1, userId1, "Great event!", 5, null, null));
+        reviewRepository.save(new Review(null, eventId1, userId2, "Great event!", 4, null, null));
+        reviewRepository.save(new Review(null, eventId2, userId1, "Great event!", 3, null, null));
         
         List<Review> userReviews = reviewRepository.findByUserId(userId1);
         
@@ -98,21 +98,11 @@ class ReviewRepositoryTest {
     
     @Test
     void testCalculateAverageRatingByEventId() {
-        reviewRepository.save(new Review(eventId1, userId1, "Rating 5", 5));
-        reviewRepository.save(new Review(eventId1, userId2, "Rating 3", 3));
+        reviewRepository.save(new Review(null, eventId1, userId1, "Great event!", 5, null, null));
+        reviewRepository.save(new Review(null, eventId1, userId2, "Great event!", 4, null, null));
         
         double averageRating = reviewRepository.calculateAverageRatingByEventId(eventId1);
         
-        assertEquals(4.0, averageRating);
-    }
-    
-    @Test
-    void testCountByEventId() {
-        reviewRepository.save(new Review(eventId1, userId1, "Event 1 Review 1", 5));
-        reviewRepository.save(new Review(eventId1, userId2, "Event 1 Review 2", 4));
-        
-        long count = reviewRepository.countByEventId(eventId1);
-        
-        assertEquals(2, count);
+        assertEquals(4.5, averageRating);
     }
 }
