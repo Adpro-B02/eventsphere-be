@@ -11,8 +11,8 @@ import java.util.UUID;
 public class DiskonPromoFactory implements PromoFactory {
 
     @Override
-    public KodePromo createPromo(String code, BigDecimal discount, LocalDate startDate,
-                                 LocalDate endDate, UUID eventId, UUID createdBy) {
-        return new KodePromo(null, code, discount, startDate, endDate, eventId, createdBy);
+    public KodePromo createPromo(String code, BigDecimal discount, KodePromo.DiscountType discountType,
+                                 LocalDate startDate, LocalDate endDate, UUID eventId, UUID createdBy) {
+        return new KodePromo(null, code, discount, discountType, startDate, endDate, eventId, createdBy);
     }
 }

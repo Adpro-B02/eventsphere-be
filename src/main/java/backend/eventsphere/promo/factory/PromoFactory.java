@@ -7,5 +7,6 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 public interface PromoFactory {
-    KodePromo createPromo(String code, BigDecimal discount, LocalDate startDate, LocalDate endDate, UUID eventId, UUID createdBy);
+    KodePromo createPromo(String code, BigDecimal discount, KodePromo.DiscountType discountType,
+                          LocalDate startDate, LocalDate endDate, UUID eventId, UUID createdBy);
 }
