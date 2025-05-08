@@ -4,10 +4,7 @@ import backend.eventsphere.event.model.Event;
 import backend.eventsphere.event.service.EventService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -40,6 +37,12 @@ public class EventController {
     @PostMapping("/create")
     public String createEventPost(@ModelAttribute Event event) {
         eventService.addEvent(event);
+        return "redirect:/events";
+    }
+
+    @PostMapping("/delete")
+    public String deleteEvent(@RequestParam("id") UUID eventId) {
+        eventService.deleteEventById(eventId);
         return "redirect:/events";
     }
 }
