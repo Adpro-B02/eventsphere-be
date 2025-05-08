@@ -5,6 +5,8 @@ import backend.eventsphere.promo.service.KodePromoService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,14 +21,23 @@ public class KodePromoController {
     }
 
     @PostMapping
-    public ResponseEntity<KodePromo> createPromo(@RequestBody KodePromo promo) {
+    public ResponseEntity<KodePromo> createPromo(
+            @RequestParam String code,
+            @RequestParam BigDecimal discount,
+            @RequestParam KodePromo.DiscountType discountType,
+            @RequestParam LocalDate startDate,
+            @RequestParam LocalDate endDate,
+            @RequestParam UUID eventId,
+            @RequestParam UUID createdBy) {
+
         KodePromo created = promoService.createPromo(
-                promo.getCode(),
-                promo.getDiscount(),
-                promo.getStartDate(),
-                promo.getEndDate(),
-                promo.getEventId(),
-                promo.getCreatedBy()
+                code,
+                discount,
+                discountType,
+                startDate,
+                endDate,
+                eventId,
+                createdBy
         );
         return ResponseEntity.ok(created);
     }
@@ -44,6 +55,12 @@ public class KodePromoController {
         return ResponseEntity.ok(promos);
     }
 
+    @GetMapping("/active/event/{eventId}")
+    public ResponseEntity<List<KodePromo>> getActivePromosByEvent(@PathVariable UUID eventId) {
+        List<KodePromo> promos = promoService.getActivePromosByEvent(eventId);
+        return ResponseEntity.ok(promos);
+    }
+
     @GetMapping("/code/{code}")
     public ResponseEntity<KodePromo> getPromoByCode(@PathVariable String code) {
         return promoService.getPromoByCode(code)
@@ -54,13 +71,19 @@ public class KodePromoController {
     @PutMapping("/{id}")
     public ResponseEntity<KodePromo> updatePromo(
             @PathVariable UUID id,
-            @RequestBody KodePromo promo) {
+            @RequestParam(required = false) String code,
+            @RequestParam(required = false) BigDecimal discount,
+            @RequestParam(required = false) KodePromo.DiscountType discountType,
+            @RequestParam(required = false) LocalDate startDate,
+            @RequestParam(required = false) LocalDate endDate) {
+
         KodePromo updated = promoService.updatePromo(
                 id,
-                promo.getCode(),
-                promo.getDiscount(),
-                promo.getStartDate(),
-                promo.getEndDate()
+                code,
+                discount,
+                discountType,
+                startDate,
+                endDate
         );
         return ResponseEntity.ok(updated);
     }
