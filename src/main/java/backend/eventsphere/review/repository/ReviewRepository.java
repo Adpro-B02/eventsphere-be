@@ -14,75 +14,36 @@ public class ReviewRepository {
     private final Map<UUID, List<Review>> userReviews = new HashMap<>();
 
     public Review save(Review review) {
-        boolean hasExistingReview = false;
-        for (Review r : reviewData) {
-            if (r.getUserId().equals(review.getUserId()) &&
-                r.getEventId().equals(review.getEventId())) {
-                hasExistingReview = true;
-                break;
-            }
-        }
+        UUID reviewId = review.getId() != null ? review.getId() : UUID.randomUUID();
 
-        if (hasExistingReview && review.getId() == null) {
-            throw new IllegalStateException("User already has a review for this event");
-        }
+        review = new Review(
+            reviewId,
+            review.getEventId(),
+            review.getUserId(),
+            review.getComment(),
+            review.getRating(),
+            LocalDateTime.now(),
+            LocalDateTime.now()
+        );
 
-        if (review.getId() == null) {
-            review = new Review(
-                UUID.randomUUID(),
-                review.getEventId(),
-                review.getUserId(),
-                review.getComment(),
-                review.getRating(),
-                LocalDateTime.now(),
-                LocalDateTime.now()
-            );
+        reviewData.add(review);
 
-            reviewData.add(review);
+        eventReviews
+            .computeIfAbsent(review.getEventId(), k -> new ArrayList<>())
+            .add(review);
 
-            eventReviews
-                .computeIfAbsent(review.getEventId(), k -> new ArrayList<>())
-                .add(review);
+        userReviews
+            .computeIfAbsent(review.getUserId(), k -> new ArrayList<>())
+            .add(review);
 
-            userReviews
-                .computeIfAbsent(review.getUserId(), k -> new ArrayList<>())
-                .add(review);
-        } else {
-            for (int i = 0; i < reviewData.size(); i++) {
-                if (reviewData.get(i).getId().equals(review.getId())) {
-                    reviewData.set(i, review);
-
-                    List<Review> eventReviewsList = eventReviews.get(review.getEventId());
-                    if (eventReviewsList != null) {
-                        for (int j = 0; j < eventReviewsList.size(); j++) {
-                            if (eventReviewsList.get(j).getId().equals(review.getId())) {
-                                eventReviewsList.set(j, review);
-                                break;
-                            }
-                        }
-                    }
-
-                    List<Review> userReviewsList = userReviews.get(review.getUserId());
-                    if (userReviewsList != null) {
-                        for (int j = 0; j < userReviewsList.size(); j++) {
-                            if (userReviewsList.get(j).getId().equals(review.getId())) {
-                                userReviewsList.set(j, review);
-                                break;
-                            }
-                        }
-                    }
-
-                    break;
-                }
-            }
-        }
         return review;
     }
+    
 
     public Review update(UUID reviewId, int rating, String comment) {
         Review reviewToUpdate = findById(reviewId);
         if (reviewToUpdate == null) {
-            throw new IllegalArgumentException("Review not found");
+            return null;
         }
 
         Review updatedReview = new Review(
@@ -95,14 +56,38 @@ public class ReviewRepository {
             LocalDateTime.now()
         );
 
-        return save(updatedReview);
+        for (int i = 0; i < reviewData.size(); i++) {
+            if (reviewData.get(i).getId().equals(updatedReview.getId())) {
+                reviewData.set(i, updatedReview);
+
+                List<Review> eventReviewsList = eventReviews.get(updatedReview.getEventId());
+                if (eventReviewsList != null) {
+                    for (int j = 0; j < eventReviewsList.size(); j++) {
+                        if (eventReviewsList.get(j).getId().equals(updatedReview.getId())) {
+                            eventReviewsList.set(j, updatedReview);
+                            break;
+                        }
+                    }
+                }
+
+                List<Review> userReviewsList = userReviews.get(updatedReview.getUserId());
+                if (userReviewsList != null) {
+                    for (int j = 0; j < userReviewsList.size(); j++) {
+                        if (userReviewsList.get(j).getId().equals(updatedReview.getId())) {
+                            userReviewsList.set(j, updatedReview);
+                            break;
+                        }
+                    }
+                }
+
+                break;
+            }
+        }
+        return updatedReview;
     }
 
     public void delete(UUID reviewId) {
         Review reviewToDelete = findById(reviewId);
-        if (reviewToDelete == null) {
-            throw new IllegalArgumentException("Review not found");
-        }
 
         for (int i = 0; i < reviewData.size(); i++) {
             if (reviewData.get(i).getId().equals(reviewId)) {

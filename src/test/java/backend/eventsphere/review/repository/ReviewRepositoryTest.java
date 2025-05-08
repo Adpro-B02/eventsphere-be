@@ -10,7 +10,6 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ReviewRepositoryTest {
-
     private ReviewRepository reviewRepository;
     private UUID userId1;
     private UUID userId2;
@@ -30,79 +29,94 @@ class ReviewRepositoryTest {
     void testSaveNewReview() {
         Review review = new Review(null, eventId1, userId1, "Great event!", 5, null, null);
         Review savedReview = reviewRepository.save(review);
-        
+
         assertNotNull(savedReview.getId());
         assertEquals(eventId1, savedReview.getEventId());
         assertEquals(userId1, savedReview.getUserId());
-    }
-
-    @Test
-    void testSaveExistingReviewThrowsException() {
-        Review review = new Review(null, eventId1, userId1, "Great event!", 5, null, null);
-        reviewRepository.save(review);
-        
-        Review duplicateReview = new Review(null, eventId1, userId1, "Great event!", 5, null, null);
-        
-        assertThrows(IllegalStateException.class, () -> reviewRepository.save(duplicateReview));
+        assertNotNull(reviewRepository.findById(savedReview.getId()));
     }
 
     @Test
     void testUpdateReview() {
-        Review savedReview = reviewRepository.save(new Review(null, eventId1, userId1, "Great event!", 5, null, null));
-        
-        Review updatedReview = reviewRepository.update(savedReview.getId(), 5, "Updated review");
-        
-        assertEquals("Updated review", updatedReview.getComment());
-        assertEquals(5, updatedReview.getRating());
-        assertEquals(savedReview.getId(), updatedReview.getId());
-    }
+        Review savedReview = reviewRepository.save(new Review(null, eventId1, userId1, "Nice", 3, null, null));
+
+        Review updated = reviewRepository.update(savedReview.getId(), 4, "Improved");
+        assertNotNull(updated);
+        assertEquals(4, updated.getRating());
+        assertEquals("Improved", updated.getComment());
+        assertEquals(savedReview.getId(), updated.getId());
     
-    @Test
-    void testUpdateNonExistentReview() {
-        UUID nonExistentId = UUID.randomUUID();
-        
-        assertThrows(IllegalArgumentException.class, () -> 
-            reviewRepository.update(nonExistentId, 4, "Updated review"));
+        Review retrieved = reviewRepository.findById(savedReview.getId());
+        assertEquals(4, retrieved.getRating());
+        assertEquals("Improved", retrieved.getComment());
     }
-    
+
     @Test
     void testDeleteReview() {
-        Review savedReview = reviewRepository.save(new Review(null, eventId1, userId1, "Great event!", 5, null, null));
-        
-        reviewRepository.delete(savedReview.getId());
-        
-        assertNull(reviewRepository.findById(savedReview.getId()));
+        Review saved = reviewRepository.save(new Review(null, eventId1, userId1, "Good", 4, null, null));
+
+        reviewRepository.delete(saved.getId());
+
+        assertNull(reviewRepository.findById(saved.getId()));
+        assertTrue(reviewRepository.findByEventId(eventId1).isEmpty());
+        assertTrue(reviewRepository.findByUserId(userId1).isEmpty());
     }
-    
+
     @Test
     void testFindByEventId() {
-        reviewRepository.save(new Review(null, eventId1, userId1, "Great event!", 5, null, null));
-        reviewRepository.save(new Review(null, eventId1, userId2, "Great event!", 5, null, null));
-        reviewRepository.save(new Review(null, eventId2, userId1, "Great event!", 5, null, null));
-        
-        List<Review> eventReviews = reviewRepository.findByEventId(eventId1);
-        
-        assertEquals(2, eventReviews.size());
+        reviewRepository.save(new Review(null, eventId1, userId1, "A", 5, null, null));
+        reviewRepository.save(new Review(null, eventId1, userId2, "B", 4, null, null));
+        reviewRepository.save(new Review(null, eventId2, userId1, "C", 3, null, null));
+
+        List<Review> results = reviewRepository.findByEventId(eventId1);
+        assertEquals(2, results.size());
     }
-    
+
     @Test
     void testFindByUserId() {
-        reviewRepository.save(new Review(null, eventId1, userId1, "Great event!", 5, null, null));
-        reviewRepository.save(new Review(null, eventId1, userId2, "Great event!", 4, null, null));
-        reviewRepository.save(new Review(null, eventId2, userId1, "Great event!", 3, null, null));
-        
-        List<Review> userReviews = reviewRepository.findByUserId(userId1);
-        
-        assertEquals(2, userReviews.size());
+        reviewRepository.save(new Review(null, eventId1, userId1, "A", 5, null, null));
+        reviewRepository.save(new Review(null, eventId2, userId1, "B", 4, null, null));
+        reviewRepository.save(new Review(null, eventId1, userId2, "C", 3, null, null));
+
+        List<Review> results = reviewRepository.findByUserId(userId1);
+        assertEquals(2, results.size());
+    }
+
+    @Test
+    void testFindByUserIdAndEventId() {
+        reviewRepository.save(new Review(null, eventId1, userId1, "Hi", 4, null, null));
+        Review result = reviewRepository.findByUserIdAndEventId(userId1, eventId1);
+        assertNotNull(result);
+        assertEquals(4, result.getRating());
+    }
+
+    @Test
+    void testFindByUserIdAndEventIdWithNoMatch() {
+        Review result = reviewRepository.findByUserIdAndEventId(userId1, eventId1);
+        assertNull(result);
+    }
+
+    @Test
+    void testCalculateAverageRatingByEventId() {
+        reviewRepository.save(new Review(null, eventId1, userId1, "Nice", 4, null, null));
+        reviewRepository.save(new Review(null, eventId1, userId2, "Better", 2, null, null));
+
+        double avg = reviewRepository.calculateAverageRatingByEventId(eventId1);
+        assertEquals(3.0, avg);
     }
     
     @Test
-    void testCalculateAverageRatingByEventId() {
-        reviewRepository.save(new Review(null, eventId1, userId1, "Great event!", 5, null, null));
-        reviewRepository.save(new Review(null, eventId1, userId2, "Great event!", 4, null, null));
+    void testCalculateAverageRatingByEventIdWithNoReviews() {
+        double avg = reviewRepository.calculateAverageRatingByEventId(eventId1);
+        assertEquals(0.0, avg);
+    }
+    
+    @Test
+    void testFindAll() {
+        reviewRepository.save(new Review(null, eventId1, userId1, "A", 5, null, null));
+        reviewRepository.save(new Review(null, eventId2, userId2, "B", 4, null, null));
         
-        double averageRating = reviewRepository.calculateAverageRatingByEventId(eventId1);
-        
-        assertEquals(4.5, averageRating);
+        List<Review> results = reviewRepository.findAll();
+        assertEquals(2, results.size());
     }
 }
