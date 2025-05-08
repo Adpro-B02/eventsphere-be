@@ -2,6 +2,7 @@ package backend.eventsphere.event.service;
 
 import backend.eventsphere.event.model.Event;
 import backend.eventsphere.event.repository.EventRepository;
+import backend.eventsphere.event.service.strategy.DeletionValidation;
 import backend.eventsphere.event.service.strategy.ValidationStrategy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
