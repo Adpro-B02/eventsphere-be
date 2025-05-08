@@ -1,5 +1,6 @@
 package backend.eventsphere.promo.model;
 
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -9,18 +10,35 @@ import java.util.UUID;
 
 @Getter
 @Setter
+@Entity
+@Table(name = "kode_promo")
 public class KodePromo {
+
     public enum DiscountType {
         PERCENTAGE,
         FIXED_AMOUNT
     }
 
+    @Id
+    @GeneratedValue
     private UUID id;
+
+    @Column(nullable = false, unique = true)
     private String code;
+
+    @Column(nullable = false)
     private BigDecimal discount;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private DiscountType discountType;
+
+    @Column(nullable = false)
     private LocalDate startDate;
+
+    @Column(nullable = false)
     private LocalDate endDate;
+
     private UUID eventId;
     private UUID createdBy;
 
