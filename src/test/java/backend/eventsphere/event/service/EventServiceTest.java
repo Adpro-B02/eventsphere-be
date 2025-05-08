@@ -30,6 +30,9 @@ public class EventServiceTest {
     @Mock
     private ValidationStrategy validationStrategy2;
 
+    @Mock
+    private DeletionValidation deletionValidation;
+
     private EventService eventService;
 
     private Event event1;
@@ -123,5 +126,49 @@ public class EventServiceTest {
         verify(validationStrategy1).validate(event);
         verify(validationStrategy2).validate(event);
         verify(eventRepository).save(event);
+    }
+
+    @Test
+    public void testDeleteEventById_validStatus_shouldDelete() {
+        UUID eventId = UUID.randomUUID();
+        event1.setStatus("CANCELLED");
+
+        when(eventRepository.findById(eventId)).thenReturn(java.util.Optional.of(event1));
+
+        eventService = new EventService(eventRepository, List.of(deletionValidation, validationStrategy1));
+
+        eventService.deleteEventById(eventId);
+
+        verify(deletionValidation).validate(event1);
+        verify(eventRepository).deleteById(eventId);
+    }
+
+    @Test
+    public void testDeleteEventById_eventNotFound_shouldThrow() {
+        UUID eventId = UUID.randomUUID();
+
+        when(eventRepository.findById(eventId)).thenReturn(java.util.Optional.empty());
+
+        assertThatThrownBy(() -> eventService.deleteEventById(eventId))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Event tidak ditemukan");
+
+        verify(eventRepository, never()).deleteById(any());
+    }
+
+    @Test
+    public void testDeleteEventById_otherStrategiesShouldNotRun() {
+        UUID eventId = UUID.randomUUID();
+        event1.setStatus("COMPLETED");
+
+        when(eventRepository.findById(eventId)).thenReturn(java.util.Optional.of(event1));
+
+        eventService = new EventService(eventRepository, List.of(validationStrategy1, deletionValidation));
+
+        eventService.deleteEventById(eventId);
+
+        verify(deletionValidation).validate(event1);
+        verify(validationStrategy1, never()).validate(event1);
+        verify(eventRepository).deleteById(eventId);
     }
 }
