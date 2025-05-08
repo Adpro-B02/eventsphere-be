@@ -17,7 +17,7 @@ public class EventExistValidation implements ValidationStrategy {
     public void validate(Event event) {
         boolean exists = eventClient.getAllEvents().stream().anyMatch(
                 e -> e.getName().equalsIgnoreCase(event.getName()) &&
-                        e.getEventDateTime().equals(event.getEventDateTime())
+                        e.getEventDateTime().equals(event.getEventDateTime()) && e.getId() != event.getId()
         );
         if (exists) {
             throw new IllegalArgumentException("Event dengan nama dan tanggal tersebut sudah ada.");
