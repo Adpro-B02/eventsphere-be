@@ -4,6 +4,7 @@ import backend.eventsphere.promo.factory.PromoFactory;
 import backend.eventsphere.promo.model.KodePromo;
 import backend.eventsphere.promo.repository.KodePromoRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -12,6 +13,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@Transactional
 public class KodePromoService {
 
     private final KodePromoRepository repository;
@@ -43,7 +45,7 @@ public class KodePromoService {
     private void validatePromoCreation(String code, BigDecimal discount,
                                        KodePromo.DiscountType discountType,
                                        LocalDate startDate, LocalDate endDate) {
-        if (repository.existsByCode(code)) {
+        if (repository.existsByCodeIgnoreCase(code)) {
             throw new IllegalArgumentException("Kode promo sudah digunakan");
         }
 
@@ -60,30 +62,34 @@ public class KodePromoService {
         }
     }
 
+    @Transactional(readOnly = true)
     public Optional<KodePromo> getPromoById(UUID id) {
-        return repository.findPromoById(id);
+        return repository.findById(id);
     }
 
+    @Transactional(readOnly = true)
     public Optional<KodePromo> getPromoByCode(String code) {
-        return repository.findPromoByCode(code);
+        return repository.findByCodeIgnoreCase(code);
     }
 
+    @Transactional(readOnly = true)
     public List<KodePromo> getPromosByEvent(UUID eventId) {
-        return repository.findAllByEventId(eventId);
+        return repository.findByEventId(eventId);
     }
 
+    @Transactional(readOnly = true)
     public List<KodePromo> getActivePromosByEvent(UUID eventId) {
         return repository.findActivePromos(eventId, LocalDate.now());
     }
 
     public void deletePromo(UUID id) {
-        repository.deletePromoById(id);
+        repository.deleteById(id);
     }
 
     public KodePromo updatePromo(UUID id, String newCode, BigDecimal newDiscount,
                                  KodePromo.DiscountType newDiscountType,
                                  LocalDate newStartDate, LocalDate newEndDate) {
-        KodePromo promo = repository.findPromoById(id)
+        KodePromo promo = repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Promo not found"));
 
         validatePromoUpdate(promo, newCode, newDiscount, newDiscountType);
@@ -99,7 +105,7 @@ public class KodePromoService {
 
     private void validatePromoUpdate(KodePromo existingPromo, String newCode,
                                      BigDecimal newDiscount, KodePromo.DiscountType newDiscountType) {
-        if (!existingPromo.getCode().equalsIgnoreCase(newCode) && repository.existsByCode(newCode)) {
+        if (!existingPromo.getCode().equalsIgnoreCase(newCode) && repository.existsByCodeIgnoreCase(newCode)) {
             throw new IllegalArgumentException("Kode promo sudah digunakan");
         }
 
@@ -112,7 +118,8 @@ public class KodePromoService {
         }
     }
 
+    @Transactional(readOnly = true)
     public boolean isPromoCodeExists(String code) {
-        return repository.existsByCode(code);
+        return repository.existsByCodeIgnoreCase(code);
     }
 }

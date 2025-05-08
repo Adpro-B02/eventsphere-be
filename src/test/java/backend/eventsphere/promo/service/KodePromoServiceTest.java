@@ -54,7 +54,7 @@ class KodePromoServiceTest {
         KodePromo promo = createSamplePromo("DISC10", new BigDecimal("0.1"),
                 KodePromo.DiscountType.PERCENTAGE);
 
-        when(repository.existsByCode("DISC10")).thenReturn(false);
+        when(repository.existsByCodeIgnoreCase("DISC10")).thenReturn(false);
         when(repository.save(any(KodePromo.class))).thenReturn(promo);
 
         KodePromo created = service.createPromo(
@@ -77,7 +77,7 @@ class KodePromoServiceTest {
         KodePromo promo = createSamplePromo("CASH50", new BigDecimal("50000"),
                 KodePromo.DiscountType.FIXED_AMOUNT);
 
-        when(repository.existsByCode("CASH50")).thenReturn(false);
+        when(repository.existsByCodeIgnoreCase("CASH50")).thenReturn(false);
         when(repository.save(any(KodePromo.class))).thenReturn(promo);
 
         KodePromo created = service.createPromo(
@@ -129,7 +129,7 @@ class KodePromoServiceTest {
     void testGetPromoByIdFound() {
         KodePromo promo = createSamplePromo("CODE", new BigDecimal("0.2"),
                 KodePromo.DiscountType.PERCENTAGE);
-        when(repository.findPromoById(promoId)).thenReturn(Optional.of(promo));
+        when(repository.findById(promoId)).thenReturn(Optional.of(promo));
 
         Optional<KodePromo> found = service.getPromoById(promoId);
 
@@ -140,7 +140,7 @@ class KodePromoServiceTest {
 
     @Test
     void testGetPromoByIdNotFound() {
-        when(repository.findPromoById(promoId)).thenReturn(Optional.empty());
+        when(repository.findById(promoId)).thenReturn(Optional.empty());
 
         Optional<KodePromo> found = service.getPromoById(promoId);
 
@@ -152,8 +152,8 @@ class KodePromoServiceTest {
         KodePromo existing = createSamplePromo("OLD", new BigDecimal("0.1"),
                 KodePromo.DiscountType.PERCENTAGE);
 
-        when(repository.findPromoById(promoId)).thenReturn(Optional.of(existing));
-        when(repository.existsByCode("NEW")).thenReturn(false);
+        when(repository.findById(promoId)).thenReturn(Optional.of(existing));
+        when(repository.existsByCodeIgnoreCase("NEW")).thenReturn(false);
         when(repository.save(any(KodePromo.class))).thenReturn(existing);
 
         KodePromo updated = service.updatePromo(
@@ -173,8 +173,8 @@ class KodePromoServiceTest {
     void testUpdatePromo_WhenNewCodeExists() {
         KodePromo existing = createSamplePromo("OLDCODE", new BigDecimal("0.1"),
                 KodePromo.DiscountType.PERCENTAGE);
-        when(repository.findPromoById(promoId)).thenReturn(Optional.of(existing));
-        when(repository.existsByCode("EXISTING_CODE")).thenReturn(true);
+        when(repository.findById(promoId)).thenReturn(Optional.of(existing));
+        when(repository.existsByCodeIgnoreCase("EXISTING_CODE")).thenReturn(true);
 
         assertThrows(IllegalArgumentException.class, () ->
                 service.updatePromo(
@@ -191,7 +191,7 @@ class KodePromoServiceTest {
 
     @Test
     void testUpdatePromo_NotFound() {
-        when(repository.findPromoById(promoId)).thenReturn(Optional.empty());
+        when(repository.findById(promoId)).thenReturn(Optional.empty());
 
         assertThrows(IllegalArgumentException.class, () ->
                 service.updatePromo(
@@ -207,7 +207,7 @@ class KodePromoServiceTest {
     @Test
     void testDeletePromo() {
         service.deletePromo(promoId);
-        verify(repository, times(1)).deletePromoById(promoId);
+        verify(repository, times(1)).deleteById(promoId);
     }
 
     @Test
@@ -216,7 +216,7 @@ class KodePromoServiceTest {
                 createSamplePromo("A", BigDecimal.ONE, KodePromo.DiscountType.PERCENTAGE),
                 createSamplePromo("B", new BigDecimal("20000"), KodePromo.DiscountType.FIXED_AMOUNT)
         );
-        when(repository.findAllByEventId(eventId)).thenReturn(promos);
+        when(repository.findByEventId(eventId)).thenReturn(promos);
 
         List<KodePromo> result = service.getPromosByEvent(eventId);
 
@@ -241,7 +241,7 @@ class KodePromoServiceTest {
 
     @Test
     void testCreatePromo_ShouldThrowException_WhenCodeAlreadyExists() {
-        when(repository.existsByCode("DUPLICATE")).thenReturn(true);
+        when(repository.existsByCodeIgnoreCase("DUPLICATE")).thenReturn(true);
 
         assertThrows(IllegalArgumentException.class, () ->
                 service.createPromo(
@@ -273,10 +273,10 @@ class KodePromoServiceTest {
 
     @Test
     void testIsPromoCodeExists() {
-        when(repository.existsByCode("TEST_CODE")).thenReturn(true);
+        when(repository.existsByCodeIgnoreCase("TEST_CODE")).thenReturn(true);
         assertTrue(service.isPromoCodeExists("TEST_CODE"));
 
-        when(repository.existsByCode("NON_EXISTENT")).thenReturn(false);
+        when(repository.existsByCodeIgnoreCase("NON_EXISTENT")).thenReturn(false);
         assertFalse(service.isPromoCodeExists("NON_EXISTENT"));
     }
 }
