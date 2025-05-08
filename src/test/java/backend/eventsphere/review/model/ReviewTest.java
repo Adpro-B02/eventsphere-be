@@ -8,26 +8,26 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ReviewTest {
 
-    private UUID customReviewUUID;
-    private UUID customEventUUID;
-    private UUID customUserUUID;
+    private UUID reviewId;
+    private UUID eventId;
+    private UUID userId;
 
     @BeforeEach
     void setUp() {
-        customReviewUUID = UUID.randomUUID();
-        customEventUUID = UUID.randomUUID();
-        customUserUUID = UUID.randomUUID();
+        reviewId = UUID.randomUUID();
+        eventId = UUID.randomUUID();
+        userId = UUID.randomUUID();
     }
 
     @Test
     void createValidReview() {
         LocalDateTime now = LocalDateTime.now();
         
-        Review review = new Review(customReviewUUID, customEventUUID, customUserUUID, "Excellent event!", 5, now, now);
+        Review review = new Review(reviewId, eventId, userId, "Excellent event!", 5, now, now);
 
-        assertEquals(customReviewUUID, review.getId());
-        assertEquals(customEventUUID, review.getEventId());
-        assertEquals(customUserUUID, review.getUserId());
+        assertEquals(reviewId, review.getId());
+        assertEquals(eventId, review.getEventId());
+        assertEquals(userId, review.getUserId());
         assertEquals("Excellent event!", review.getComment());
         assertEquals(5, review.getRating());
         assertEquals(now, review.getCreatedAt());
@@ -49,21 +49,21 @@ public class ReviewTest {
         }
 
         assertThrows(IllegalArgumentException.class, () -> {
-            new Review(customReviewUUID, customEventUUID, customUserUUID, longComment.toString(), 5, null, null);
+            new Review(reviewId, eventId, userId, longComment.toString(), 5, null, null);
         });
     }
 
     @Test
     void validateRatingOutOfRange() {
         assertThrows(IllegalArgumentException.class, () -> {
-            new Review(customReviewUUID, customEventUUID, customUserUUID, "Excellent event!", 6, null, null);
+            new Review(reviewId, eventId, userId, "Excellent event!", 6, null, null);
         });
     }
     
     @Test
     void setValidReview() {
         LocalDateTime now = LocalDateTime.now();
-        Review review = new Review(customReviewUUID, customEventUUID, customUserUUID, "Excellent event!", 5, now, now);
+        Review review = new Review(reviewId, eventId, userId, "Excellent event!", 5, now, now);
         review.setComment("Valid Update");
         review.setRating(4);
 
@@ -74,7 +74,7 @@ public class ReviewTest {
     @Test
     void setInvalidReview() {
         LocalDateTime now = LocalDateTime.now();
-        Review review = new Review(customReviewUUID, customEventUUID, customUserUUID, "Excellent event!", 5, now, now);
+        Review review = new Review(reviewId, eventId, userId, "Excellent event!", 5, now, now);
 
         assertThrows(IllegalArgumentException.class, () -> {
             StringBuilder longComment = new StringBuilder();
