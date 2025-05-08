@@ -64,19 +64,23 @@ public class ReviewService {
         reviewRepository.delete(reviewId);
     }
 
-    public Review getReviewByUserAndEvent(UUID userId, UUID eventId) {
+    public Review findById(UUID reviewId) {
+        return reviewRepository.findById(reviewId);
+    }
+
+    public Review findByUserIdAndEventId(UUID userId, UUID eventId) {
         return reviewRepository.findByUserIdAndEventId(userId, eventId);
     }
 
-    public List<Review> getReviewsByEventId(UUID eventId) {
+    public List<Review> findByEventId(UUID eventId) {
         return reviewRepository.findByEventId(eventId);
     }
 
-    public List<Review> getReviewsByUserId(UUID userId) {
+    public List<Review> findByUserId(UUID userId) {
         return reviewRepository.findByUserId(userId);
     }
 
-    public double getAverageRatingForEvent(UUID eventId) {
+    public double calculateAverageRatingByEventId(UUID eventId) {
         return reviewRepository.calculateAverageRatingByEventId(eventId);
     }
 }

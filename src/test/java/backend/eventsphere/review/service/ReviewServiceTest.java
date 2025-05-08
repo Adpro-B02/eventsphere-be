@@ -8,6 +8,7 @@ import org.mockito.Mockito;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -123,8 +124,16 @@ class ReviewServiceTest {
         Review review = new Review(reviewId, eventId, userId, "Hi", 5, null, null);
         when(reviewRepository.findByUserIdAndEventId(userId, eventId)).thenReturn(review);
 
-        Review result = reviewService.getReviewByUserAndEvent(userId, eventId);
+        Review result = reviewService.findByUserIdAndEventId(userId, eventId);
         assertEquals(review, result);
+    }
+
+    @Test
+    void testGetReviewByUserAndEventReturnsNullIfNotFound() {
+        when(reviewRepository.findByUserIdAndEventId(userId, eventId)).thenReturn(null);
+
+        Review result = reviewService.findByUserIdAndEventId(userId, eventId);
+        assertNull(result); // Assert that the result is null if the review doesn't exist
     }
 
     @Test
@@ -135,28 +144,52 @@ class ReviewServiceTest {
         );
         when(reviewRepository.findByEventId(eventId)).thenReturn(reviews);
 
-        List<Review> result = reviewService.getReviewsByEventId(eventId);
+        List<Review> result = reviewService.findByEventId(eventId);
         assertEquals(2, result.size());
+    }
+
+    @Test
+    void testGetReviewsByEventIdReturnsEmptyListIfNoReviews() {
+        when(reviewRepository.findByEventId(eventId)).thenReturn(Collections.emptyList());
+
+        List<Review> result = reviewService.findByEventId(eventId);
+        assertTrue(result.isEmpty()); // Assert that the result is an empty list
     }
 
     @Test
     void testGetReviewsByUserId() {
         List<Review> reviews = Arrays.asList(
             new Review(reviewId, eventId, userId, "Nice!", 5, LocalDateTime.now(), LocalDateTime.now()), 
-            new Review(UUID.randomUUID(), UUID.randomUUID(), userId, "Bad!", 1, LocalDateTime.now(), LocalDateTime.now()),
-            new Review(UUID.randomUUID(), UUID.randomUUID(), userId, "Meh.", 3, LocalDateTime.now(), LocalDateTime.now())
+            new Review(UUID.randomUUID(), eventId, UUID.randomUUID(), "Bad!", 1, LocalDateTime.now(), LocalDateTime.now()),
+            new Review(UUID.randomUUID(), eventId, userId, "Meh.", 3, LocalDateTime.now(), LocalDateTime.now())
         );
         when(reviewRepository.findByUserId(userId)).thenReturn(reviews);
 
-        List<Review> result = reviewService.getReviewsByUserId(userId);
+        List<Review> result = reviewService.findByUserId(userId);
         assertEquals(3, result.size());
     }
 
     @Test
-    void testGetAverageRatingForEvent() {
+    void testGetReviewsByUserIdReturnsEmptyListIfNoReviews() {
+        when(reviewRepository.findByUserId(userId)).thenReturn(Collections.emptyList());
+
+        List<Review> result = reviewService.findByUserId(userId);
+        assertTrue(result.isEmpty()); // Assert that the result is an empty list
+    }
+
+    @Test
+    void testCalculateAverageRatingForEvent() {
         when(reviewRepository.calculateAverageRatingByEventId(eventId)).thenReturn(4.2);
 
-        double avg = reviewService.getAverageRatingForEvent(eventId);
+        double avg = reviewService.calculateAverageRatingByEventId(eventId);
         assertEquals(4.2, avg);
+    }
+
+    @Test
+    void testCalculateAverageRatingForEventReturnsZeroIfNoReviews() {
+        when(reviewRepository.calculateAverageRatingByEventId(eventId)).thenReturn(0.0);
+
+        double avg = reviewService.calculateAverageRatingByEventId(eventId);
+        assertEquals(0.0, avg); // Assert that the average is 0 when there are no reviews
     }
 }
