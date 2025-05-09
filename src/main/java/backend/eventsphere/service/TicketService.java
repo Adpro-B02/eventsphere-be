@@ -3,24 +3,41 @@ package backend.eventsphere.service;
 import backend.eventsphere.model.Ticket;
 import backend.eventsphere.model.TicketFactory;
 import backend.eventsphere.repository.TicketRepository;
+import backend.eventsphere.model.TicketObserver;
+import enums.TicketEventType;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class TicketService {
     private final TicketRepository ticketRepository;
     private final TicketFactory ticketFactory;
+    private final List<TicketObserver> observers = new ArrayList<>();
 
     public TicketService(TicketRepository ticketRepository, TicketFactory ticketFactory) {
         this.ticketRepository = ticketRepository;
         this.ticketFactory = ticketFactory;
     }
 
+    public void registerObserver(TicketObserver observer) {
+        observers.add(observer);
+    }
+
+    public void removeObserver(TicketObserver observer) {
+        observers.remove(observer);
+    }
+
+    private void notifyTicketEvent(Ticket ticket, TicketEventType eventType) {
+        for (TicketObserver observer : observers) {
+            observer.onTicketEvent(ticket, eventType);
+        }
+    }
+
     public Ticket createTicket(UUID eventId, String ticketType, Double price, Integer quota) {
         Ticket ticket = ticketFactory.createTicket(eventId, ticketType, price, quota);
         ticketRepository.save(ticket);
+        notifyTicketEvent(ticket, TicketEventType.CREATED);
         return ticket;
     }
 
@@ -46,10 +63,19 @@ public class TicketService {
             ticket.setQuota(newQuota);
         }
         ticketRepository.update(ticket);
+        notifyTicketEvent(ticket, TicketEventType.UPDATED);
         return ticket;
     }
 
     public boolean deleteTicket(UUID ticketId) {
-        return ticketRepository.delete(ticketId);
+        Ticket ticket = ticketRepository.findById(ticketId);
+        if (ticket == null) {
+            return false;
+        }
+        boolean deleted = ticketRepository.delete(ticketId);
+        if (deleted) {
+            notifyTicketEvent(ticket, TicketEventType.DELETED);
+        }
+        return deleted;
     }
 }
