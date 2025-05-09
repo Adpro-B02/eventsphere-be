@@ -23,22 +23,21 @@ public class KodePromoController {
     @PostMapping
     public ResponseEntity<KodePromo> createPromo(
             @RequestParam String code,
-            @RequestParam BigDecimal discount,
-            @RequestParam KodePromo.DiscountType discountType,
+            @RequestParam BigDecimal amount,
+            @RequestParam String promoType,
             @RequestParam LocalDate startDate,
             @RequestParam LocalDate endDate,
             @RequestParam UUID eventId,
             @RequestParam UUID createdBy) {
 
-        KodePromo created = promoService.createPromo(
-                code,
-                discount,
-                discountType,
-                startDate,
-                endDate,
-                eventId,
-                createdBy
-        );
+        KodePromo created;
+        if ("percentage".equalsIgnoreCase(promoType)) {
+            created = promoService.createPercentagePromo(
+                    code, amount, startDate, endDate, eventId, createdBy);
+        } else {
+            created = promoService.createFixedAmountPromo(
+                    code, amount, startDate, endDate, eventId, createdBy);
+        }
         return ResponseEntity.ok(created);
     }
 
