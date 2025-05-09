@@ -24,15 +24,15 @@ public class KodePromoService {
         this.promoFactory = promoFactory;
     }
 
-    public KodePromo createPromo(String code, BigDecimal discount, KodePromo.DiscountType discountType,
-                                 LocalDate startDate, LocalDate endDate, UUID eventId, UUID userId) {
+    public KodePromo createPercentagePromo(String code, BigDecimal percentage,
+                                           LocalDate startDate, LocalDate endDate,
+                                           UUID eventId, UUID userId) {
 
-        validatePromoCreation(code, discount, discountType, startDate, endDate);
+        validatePromoCreation(code, startDate, endDate);
 
-        KodePromo promo = promoFactory.createPromo(
+        KodePromo promo = promoFactory.createPercentageDiscount(
                 code,
-                discount,
-                discountType,
+                percentage,
                 startDate,
                 endDate,
                 eventId,
@@ -42,8 +42,25 @@ public class KodePromoService {
         return repository.save(promo);
     }
 
-    private void validatePromoCreation(String code, BigDecimal discount,
-                                       KodePromo.DiscountType discountType,
+    public KodePromo createFixedAmountPromo(String code, BigDecimal fixedAmount,
+                                            LocalDate startDate, LocalDate endDate,
+                                            UUID eventId, UUID userId) {
+
+        validatePromoCreation(code, startDate, endDate);
+
+        KodePromo promo = promoFactory.createFixedAmountDiscount(
+                code,
+                fixedAmount,
+                startDate,
+                endDate,
+                eventId,
+                userId
+        );
+
+        return repository.save(promo);
+    }
+
+    private void validatePromoCreation(String code,
                                        LocalDate startDate, LocalDate endDate) {
         if (repository.existsByCodeIgnoreCase(code)) {
             throw new IllegalArgumentException("Kode promo sudah digunakan");
@@ -51,14 +68,6 @@ public class KodePromoService {
 
         if (endDate.isBefore(startDate)) {
             throw new IllegalArgumentException("Tanggal berakhir tidak boleh sebelum tanggal mulai");
-        }
-
-        if (discountType == KodePromo.DiscountType.FIXED_AMOUNT && discount.scale() > 0) {
-            throw new IllegalArgumentException("Diskon nominal tetap harus dalam bilangan bulat");
-        }
-
-        if (discount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Discount harus lebih besar dari 0");
         }
     }
 
