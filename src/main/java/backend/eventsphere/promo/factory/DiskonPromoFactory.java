@@ -11,8 +11,33 @@ import java.util.UUID;
 public class DiskonPromoFactory implements PromoFactory {
 
     @Override
-    public KodePromo createPromo(String code, BigDecimal discount, KodePromo.DiscountType discountType,
-                                 LocalDate startDate, LocalDate endDate, UUID eventId, UUID createdBy) {
-        return new KodePromo(null, code, discount, discountType, startDate, endDate, eventId, createdBy);
+    public KodePromo createPercentageDiscount(String code, BigDecimal percentage,
+                                              LocalDate startDate, LocalDate endDate,
+                                              UUID eventId, UUID createdBy) {
+        if (percentage.compareTo(BigDecimal.ZERO) <= 0 ||
+                percentage.compareTo(BigDecimal.ONE) > 0) {
+            throw new IllegalArgumentException("Percentage must be between 0 and 1 (100%)");
+        }
+
+        return new KodePromo(
+                null, code, percentage,
+                KodePromo.DiscountType.PERCENTAGE,
+                startDate, endDate, eventId, createdBy
+        );
+    }
+
+    @Override
+    public KodePromo createFixedAmountDiscount(String code, BigDecimal fixedAmount,
+                                               LocalDate startDate, LocalDate endDate,
+                                               UUID eventId, UUID createdBy) {
+        if (fixedAmount.scale() > 0) {
+            throw new IllegalArgumentException("Fixed amount must be a whole number");
+        }
+
+        return new KodePromo(
+                null, code, fixedAmount,
+                KodePromo.DiscountType.FIXED_AMOUNT,
+                startDate, endDate, eventId, createdBy
+        );
     }
 }
