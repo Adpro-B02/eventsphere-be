@@ -7,7 +7,7 @@ import backend.eventsphere.event.service.strategy.ValidationStrategy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
+import java.util.*;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 

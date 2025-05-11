@@ -51,4 +51,30 @@ public class EventService {
 
         eventRepository.deleteById(eventId);
     }
+
+    public Event updateEvent(UUID eventId, Event updatedEvent) {
+        Event existingEvent = eventRepository.findById(eventId)
+                .orElseThrow(() -> new IllegalArgumentException("Event tidak ditemukan"));
+
+        existingEvent.setName(updatedEvent.getName());
+        existingEvent.setTicketPrice(updatedEvent.getTicketPrice());
+        existingEvent.setEventDateTime(updatedEvent.getEventDateTime());
+        existingEvent.setLocation(updatedEvent.getLocation());
+        existingEvent.setDescription(updatedEvent.getDescription());
+        existingEvent.setLink_image(updatedEvent.getLink_image());
+        existingEvent.setStatus(updatedEvent.getStatus());
+
+        for (ValidationStrategy strategy : validationStrategies) {
+            if (!(strategy instanceof DeletionValidation)) {
+                strategy.validate(existingEvent);
+            }
+        }
+
+        return eventRepository.save(existingEvent);
+    }
+
+    public Event getEventById(UUID id) {
+        return eventRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Event tidak ditemukan"));
+    }
 }
