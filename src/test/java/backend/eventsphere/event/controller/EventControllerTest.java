@@ -93,4 +93,49 @@ public class EventControllerTest {
 
         verify(eventService).deleteEventById(eventId);
     }
+
+    @Test
+    void testUpdateEventPage_ReturnsUpdateFormWithModel() throws Exception {
+        UUID eventId = UUID.randomUUID();
+        Event event = new Event(
+                eventId,
+                "Sample Event",
+                15000L,
+                LocalDateTime.of(2025, 8, 20, 14, 30),
+                "Surabaya",
+                "Event Description",
+                "PLANNED",
+                "http://example.com/image.jpg"
+        );
+
+        when(eventService.getEventById(eventId)).thenReturn(event);
+
+        mockMvc.perform(get("/events/update").param("id", eventId.toString()))
+                .andExpect(status().isOk())
+                .andExpect(view().name("event/updateEvent"))
+                .andExpect(model().attributeExists("event"))
+                .andExpect(model().attributeExists("formattedEventDateTime"))
+                .andExpect(model().attribute("event", event));
+    }
+
+    @Test
+    void testUpdateEventPost_UpdatesEventAndRedirects() throws Exception {
+        UUID eventId = UUID.randomUUID();
+
+        mockMvc.perform(post("/events/update")
+                        .param("id", eventId.toString())
+                        .param("organizerId", "00000000-0000-0000-0000-000000000001")
+                        .param("name", "Updated Event")
+                        .param("ticketPrice", "30000")
+                        .param("eventDateTime", "2025-08-25T10:00")
+                        .param("location", "Bandung")
+                        .param("description", "Updated Desc")
+                        .param("link_image", "http://img.com/updated.jpg")
+                        .param("status", "COMPLETED")
+                )
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/events"));
+
+        verify(eventService).updateEvent(Mockito.eq(eventId), Mockito.any(Event.class));
+    }
 }
