@@ -1,9 +1,11 @@
 package backend.eventsphere.event.service;
 
+import backend.eventsphere.event.event_driven.EventCreatedEvent;
 import backend.eventsphere.event.model.Event;
 import backend.eventsphere.event.repository.EventRepository;
 import backend.eventsphere.event.service.strategy.DeletionValidation;
 import backend.eventsphere.event.service.strategy.ValidationStrategy;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -14,12 +16,14 @@ import java.util.UUID;
 @Service
 public class EventService {
 
+    private final ApplicationEventPublisher publisher;
     private final EventRepository eventRepository;
     private final List<ValidationStrategy> validationStrategies;
 
-    public EventService(EventRepository eventRepository, List<ValidationStrategy> validationStrategies) {
+    public EventService(EventRepository eventRepository, List<ValidationStrategy> validationStrategies, ApplicationEventPublisher publisher) {
         this.eventRepository = eventRepository;
         this.validationStrategies = validationStrategies;
+        this.publisher = publisher;
     }
 
     public List<Event> getAllEvents() {
@@ -36,7 +40,9 @@ public class EventService {
                 strategy.validate(event);
             }
         }
-        return eventRepository.save(event);
+        Event savedEvent = eventRepository.save(event);
+        publisher.publishEvent(new EventCreatedEvent(savedEvent));
+        return savedEvent;
     }
 
     public void deleteEventById(UUID eventId) {
