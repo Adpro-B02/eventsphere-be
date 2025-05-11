@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Event</title>
+</head>
+<body>
+<h1>Edit Event</h1>
+
+<form th:action="@{/events/update}" th:object="${event}" method="post">
+    <input type="hidden" th:field="*{id}" />
+
+    <label>Nama:</label>
+    <input type="text" th:field="*{name}" required /><br><br>
+
+    <label>Harga Tiket:</label>
+    <input type="number" th:field="*{ticketPrice}" required /><br><br>
+
+    <label>Tanggal & Waktu:</label>
+    <input type="datetime-local" th:field="*{eventDateTime}" required />
+
+    <label>Lokasi:</label>
+    <input type="text" th:field="*{location}" required /><br><br>
+
+    <label>Deskripsi:</label>
+    <textarea th:field="*{description}" required></textarea><br><br>
+
+    <label>Link Gambar:</label>
+    <input type="text" th:field="*{link_image}" required /><br><br>
+
+    <label>Status:</label>
+    <select th:field="*{status}">
+        <option value="PLANNED" th:selected="${event.status == 'PLANNED'}">PLANNED</option>
+        <option value="CANCELLED" th:selected="${event.status == 'CANCELLED'}">CANCELLED</option>
+        <option value="COMPLETED" th:selected="${event.status == 'COMPLETED'}">COMPLETED</option>
+    </select><br><br>
+
+    <input type="hidden" th:field="*{organizerId}" />
+
+    <button type="submit">Perbarui</button>
+</form>
+
+<br>
+<a th:href="@{/events}">Kembali ke daftar event</a>
+
+</body>
+</html>

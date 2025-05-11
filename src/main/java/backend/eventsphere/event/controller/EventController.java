@@ -6,6 +6,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 
@@ -43,6 +44,25 @@ public class EventController {
     @PostMapping("/delete")
     public String deleteEvent(@RequestParam("id") UUID eventId) {
         eventService.deleteEventById(eventId);
+        return "redirect:/events";
+    }
+
+    @GetMapping("/update")
+    public String updateEventPage(@RequestParam("id") UUID id, Model model) {
+        Event event = eventService.getEventById(id);
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+        String formattedDateTime = event.getEventDateTime().format(formatter);
+
+        model.addAttribute("formattedEventDateTime", formattedDateTime);
+        model.addAttribute("event", event);
+
+        return "event/updateEvent";
+    }
+
+    @PostMapping("/update")
+    public String updateEvent(@ModelAttribute Event event) {
+        eventService.updateEvent(event.getId(), event);
         return "redirect:/events";
     }
 }
