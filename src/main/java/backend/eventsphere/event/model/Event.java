@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.UUID;
@@ -29,7 +30,10 @@ public class Event {
     @Column(nullable = false)
     private Long ticketPrice;
 
+    @Setter
+    @Getter
     @Column(nullable = false)
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime eventDateTime;
 
     @Column(nullable = false)
