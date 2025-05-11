@@ -172,4 +172,41 @@ public class EventServiceTest {
         verify(validationStrategy1, never()).validate(event1);
         verify(eventRepository).deleteById(eventId);
     }
+
+    @Test
+    public void testUpdateEvent_shouldUpdateFields_andRunValidation_andSave() {
+        UUID eventId = UUID.randomUUID();
+        Event existingEvent = new Event(
+                UUID.randomUUID(), "Old Name", 10000L,
+                LocalDateTime.of(2025, 6, 1, 12, 0),
+                "Old Location", "Old Description",
+                "http://old.image.jpg"
+        );
+        existingEvent.setStatus("PLANNED");
+
+        Event updatedEvent = new Event(
+                existingEvent.getOrganizerId(), "New Name", 20000L,
+                LocalDateTime.of(2025, 6, 2, 14, 0),
+                "New Location", "New Description",
+                "http://new.image.jpg"
+        );
+        updatedEvent.setStatus("COMPLETED");
+
+        when(eventRepository.findById(eventId)).thenReturn(Optional.of(existingEvent));
+        when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Event result = eventService.updateEvent(eventId, updatedEvent);
+
+        assertThat(result.getName()).isEqualTo("New Name");
+        assertThat(result.getTicketPrice()).isEqualTo(20000L);
+        assertThat(result.getEventDateTime()).isEqualTo(LocalDateTime.of(2025, 6, 2, 14, 0));
+        assertThat(result.getLocation()).isEqualTo("New Location");
+        assertThat(result.getDescription()).isEqualTo("New Description");
+        assertThat(result.getLink_image()).isEqualTo("http://new.image.jpg");
+        assertThat(result.getStatus()).isEqualTo("COMPLETED");
+
+        verify(validationStrategy1).validate(existingEvent);
+        verify(validationStrategy2).validate(existingEvent);
+        verify(eventRepository).save(existingEvent);
+    }
 }
