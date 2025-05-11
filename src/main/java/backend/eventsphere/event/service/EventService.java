@@ -1,6 +1,7 @@
 package backend.eventsphere.event.service;
 
 import backend.eventsphere.event.event_driven.EventCreatedEvent;
+import backend.eventsphere.event.event_driven.EventDeletedEvent;
 import backend.eventsphere.event.event_driven.EventUpdatedEvent;
 import backend.eventsphere.event.model.Event;
 import backend.eventsphere.event.repository.EventRepository;
@@ -57,6 +58,7 @@ public class EventService {
         }
 
         eventRepository.deleteById(eventId);
+        publisher.publishEvent(new EventDeletedEvent(eventId));
     }
 
     public Event updateEvent(UUID eventId, Event updatedEvent) {
