@@ -5,6 +5,8 @@ import backend.eventsphere.event.repository.EventRepository;
 import backend.eventsphere.event.service.strategy.DeletionValidation;
 import backend.eventsphere.event.service.strategy.ValidationStrategy;
 import org.springframework.stereotype.Service;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import java.util.List;
 import java.util.UUID;
@@ -30,7 +32,9 @@ public class EventService {
         }
 
         for (ValidationStrategy strategy : validationStrategies) {
-            strategy.validate(event);
+            if (!(strategy instanceof DeletionValidation)) {
+                strategy.validate(event);
+            }
         }
         return eventRepository.save(event);
     }
