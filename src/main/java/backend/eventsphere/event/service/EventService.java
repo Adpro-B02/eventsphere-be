@@ -1,6 +1,7 @@
 package backend.eventsphere.event.service;
 
 import backend.eventsphere.event.event_driven.EventCreatedEvent;
+import backend.eventsphere.event.event_driven.EventUpdatedEvent;
 import backend.eventsphere.event.model.Event;
 import backend.eventsphere.event.repository.EventRepository;
 import backend.eventsphere.event.service.strategy.DeletionValidation;
@@ -76,7 +77,9 @@ public class EventService {
             }
         }
 
-        return eventRepository.save(existingEvent);
+        Event saved = eventRepository.save(existingEvent);
+        publisher.publishEvent(new EventUpdatedEvent(saved));
+        return saved;
     }
 
     public Event getEventById(UUID id) {
