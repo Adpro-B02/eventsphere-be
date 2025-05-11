@@ -1,5 +1,7 @@
 package backend.eventsphere.event.service;
 
+import backend.eventsphere.event.event_driven.EventDeletedEvent;
+import backend.eventsphere.event.event_driven.EventUpdatedEvent;
 import backend.eventsphere.event.model.Event;
 import backend.eventsphere.event.repository.EventRepository;
 import backend.eventsphere.event.service.strategy.DeletionValidation;
@@ -10,6 +12,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import java.util.*;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
+import backend.eventsphere.event.event_driven.EventCreatedEvent;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -34,6 +38,9 @@ public class EventServiceTest {
     @Mock
     private DeletionValidation deletionValidation;
 
+    @Mock
+    private ApplicationEventPublisher publisher;
+
     private EventService eventService;
 
     private Event event1;
@@ -41,7 +48,7 @@ public class EventServiceTest {
 
     @BeforeEach
     public void setUp() {
-        eventService = new EventService(eventRepository, List.of(validationStrategy1, validationStrategy2));
+        eventService = new EventService(eventRepository, List.of(validationStrategy1, validationStrategy2), publisher);
 
         UUID organizerId = UUID.randomUUID();
         event1 = new Event(
@@ -103,6 +110,7 @@ public class EventServiceTest {
         verify(validationStrategy1).validate(event);
         verify(validationStrategy2).validate(event);
         verify(eventRepository).save(event);
+        verify(publisher).publishEvent(any(EventCreatedEvent.class));
     }
 
     @Test
@@ -136,12 +144,13 @@ public class EventServiceTest {
 
         when(eventRepository.findById(eventId)).thenReturn(java.util.Optional.of(event1));
 
-        eventService = new EventService(eventRepository, List.of(deletionValidation, validationStrategy1));
+        eventService = new EventService(eventRepository, List.of(deletionValidation, validationStrategy1), publisher);
 
         eventService.deleteEventById(eventId);
 
         verify(deletionValidation).validate(event1);
         verify(eventRepository).deleteById(eventId);
+        verify(publisher).publishEvent(any(EventDeletedEvent.class));
     }
 
     @Test
@@ -164,7 +173,7 @@ public class EventServiceTest {
 
         when(eventRepository.findById(eventId)).thenReturn(java.util.Optional.of(event1));
 
-        eventService = new EventService(eventRepository, List.of(validationStrategy1, deletionValidation));
+        eventService = new EventService(eventRepository, List.of(deletionValidation, validationStrategy1), publisher);
 
         eventService.deleteEventById(eventId);
 
@@ -208,5 +217,6 @@ public class EventServiceTest {
         verify(validationStrategy1).validate(existingEvent);
         verify(validationStrategy2).validate(existingEvent);
         verify(eventRepository).save(existingEvent);
+        verify(publisher).publishEvent(any(EventUpdatedEvent.class));
     }
 }
