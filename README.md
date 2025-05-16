@@ -12,3 +12,7 @@ Link deployment: http://ec2-52-86-194-154.compute-1.amazonaws.com:8080/
 ![Post-context Diagram](resources/diagram/assets/Post-context%20diagram.drawio.png)
 ## Post-container Diagram
 ![Post-container Diagram](resources/diagram/assets/Post-container%20diagram.drawio.png)
+
+## Code Diagram
+### Event
+![Code diagram event](resources/diagram/assets/event.png)
