@@ -36,3 +36,10 @@ Untuk mengatasi risiko ini, kami memutuskan untuk menambahkan modul autentikasi 
 
 #### Code
 ![Code diagram review](resources/diagram/assets/review_code.png)
+
+### Promo
+#### Component
+![Promo Component Diagram](resources/diagram/assets/promo_component_diagram.png)
+
+#### Code
+![Promo Code Diagram](resources/diagram/assets/promo_code_diagram.png)
