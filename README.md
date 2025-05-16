@@ -16,3 +16,10 @@ Link deployment: http://ec2-52-86-194-154.compute-1.amazonaws.com:8080/
 ## Code Diagram
 ### Event
 ![Code diagram event](resources/diagram/assets/event.png)
+
+### Review
+#### Component
+![Component diagram review](resources/diagram/assets/review_comp.png)
+
+#### Code
+![Code diagram review](resources/diagram/assets/review_code.png)
