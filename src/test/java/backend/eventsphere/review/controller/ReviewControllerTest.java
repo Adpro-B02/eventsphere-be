@@ -1,223 +1,177 @@
 package backend.eventsphere.review.controller;
 
-import backend.eventsphere.review.dto.ReviewCreateRequest;
-import backend.eventsphere.review.dto.ReviewResponse;
-import backend.eventsphere.review.dto.ReviewUpdateRequest;
+import backend.eventsphere.review.model.Review;
 import backend.eventsphere.review.service.ReviewService;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.mockito.Mockito;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
+import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
-public class ReviewControllerTest {
+class ReviewControllerTest {
 
-    private MockMvc mockMvc;
-
-    @Mock
     private ReviewService reviewService;
-
-    @InjectMocks
     private ReviewController reviewController;
 
-    private ObjectMapper objectMapper;
-    private ReviewCreateRequest validCreateRequest;
-    private ReviewUpdateRequest validUpdateRequest;
-    private ReviewResponse validReviewResponse;
+    private UUID userId;
+    private UUID eventId;
+    private UUID reviewId;
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(reviewController).build();
-        objectMapper = new ObjectMapper();
+        reviewService = mock(ReviewService.class);
+        reviewController = new ReviewController(reviewService);
 
-        // Setup test data
-        validCreateRequest = new ReviewCreateRequest(1L, 1L, 5, "Excellent event!");
-        validUpdateRequest = new ReviewUpdateRequest(4, "Good event, but could be better.");
-        validReviewResponse = new ReviewResponse(1L, 1L, 1L, 5, "Excellent event!");
+        userId = UUID.randomUUID();
+        eventId = UUID.randomUUID();
+        reviewId = UUID.randomUUID();
     }
 
     @Test
-    void createReview_ValidRequest_ReturnsCreatedReview() throws Exception {
-        // Arrange
-        when(reviewService.createReview(any(ReviewCreateRequest.class)))
-                .thenReturn(Optional.of(validReviewResponse));
-
-        // Act & Assert
-        mockMvc.perform(post("/api/reviews")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(validCreateRequest)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(validReviewResponse.getId()))
-                .andExpect(jsonPath("$.eventId").value(validReviewResponse.getEventId()))
-                .andExpect(jsonPath("$.userId").value(validReviewResponse.getUserId()))
-                .andExpect(jsonPath("$.rating").value(validReviewResponse.getRating()))
-                .andExpect(jsonPath("$.comment").value(validReviewResponse.getComment()));
-    }
-
-    @Test
-    void createReview_InvalidRequest_ReturnsBadRequest() throws Exception {
-        // Arrange
-        when(reviewService.createReview(any(ReviewCreateRequest.class)))
-                .thenReturn(Optional.empty());
-
-        // Act & Assert
-        mockMvc.perform(post("/api/reviews")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(validCreateRequest)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Failed to create review"))
-                .andExpect(jsonPath("$.status").value(400));
-    }
-
-    @Test
-    void updateReview_ValidRequest_ReturnsUpdatedReview() throws Exception {
-        // Arrange
-        ReviewResponse updatedResponse = new ReviewResponse(
-                1L, 1L, 1L, validUpdateRequest.getRating(), validUpdateRequest.getComment());
-        
-        when(reviewService.updateReview(anyLong(), any(ReviewUpdateRequest.class)))
-                .thenReturn(Optional.of(updatedResponse));
-
-        // Act & Assert
-        mockMvc.perform(put("/api/reviews/1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(validUpdateRequest)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(updatedResponse.getId()))
-                .andExpect(jsonPath("$.rating").value(updatedResponse.getRating()))
-                .andExpect(jsonPath("$.comment").value(updatedResponse.getComment()));
-    }
-
-    @Test
-    void updateReview_ReviewNotFound_ReturnsNotFound() throws Exception {
-        // Arrange
-        when(reviewService.updateReview(anyLong(), any(ReviewUpdateRequest.class)))
-                .thenReturn(Optional.empty());
-
-        // Act & Assert
-        mockMvc.perform(put("/api/reviews/1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(validUpdateRequest)))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Review not found"))
-                .andExpect(jsonPath("$.status").value(404));
-    }
-
-    @Test
-    void deleteReview_ReviewExists_ReturnsNoContent() throws Exception {
-        // Arrange
-        when(reviewService.deleteReview(anyLong())).thenReturn(true);
-
-        // Act & Assert
-        mockMvc.perform(delete("/api/reviews/1"))
-                .andExpect(status().isNoContent());
-    }
-
-    @Test
-    void deleteReview_ReviewNotFound_ReturnsNotFound() throws Exception {
-        // Arrange
-        when(reviewService.deleteReview(anyLong())).thenReturn(false);
-
-        // Act & Assert
-        mockMvc.perform(delete("/api/reviews/1"))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Review not found"))
-                .andExpect(jsonPath("$.status").value(404));
-    }
-
-    @Test
-    void getReviewById_ReviewExists_ReturnsReview() throws Exception {
-        // Arrange
-        when(reviewService.getReviewById(anyLong())).thenReturn(Optional.of(validReviewResponse));
-
-        // Act & Assert
-        mockMvc.perform(get("/api/reviews/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(validReviewResponse.getId()))
-                .andExpect(jsonPath("$.eventId").value(validReviewResponse.getEventId()))
-                .andExpect(jsonPath("$.userId").value(validReviewResponse.getUserId()))
-                .andExpect(jsonPath("$.rating").value(validReviewResponse.getRating()))
-                .andExpect(jsonPath("$.comment").value(validReviewResponse.getComment()));
-    }
-
-    @Test
-    void getReviewById_ReviewNotFound_ReturnsNotFound() throws Exception {
-        // Arrange
-        when(reviewService.getReviewById(anyLong())).thenReturn(Optional.empty());
-
-        // Act & Assert
-        mockMvc.perform(get("/api/reviews/1"))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    void getReviewsByEventId_ReturnsReviews() throws Exception {
-        // Arrange
-        List<ReviewResponse> reviews = Arrays.asList(
-                new ReviewResponse(1L, 1L, 1L, 5, "Great event!"),
-                new ReviewResponse(2L, 1L, 2L, 4, "Good event!")
+    void testGetEventReviewsReturnsReviewsWhenFound() {
+        List<Review> reviews = Arrays.asList(
+            new Review(reviewId, eventId, userId, "Great event!", 5, LocalDateTime.now(), LocalDateTime.now()),
+            new Review(UUID.randomUUID(), eventId, UUID.randomUUID(), "Good experience", 4, LocalDateTime.now(), LocalDateTime.now())
         );
+        when(reviewService.findByEventId(eventId)).thenReturn(reviews);
         
-        when(reviewService.getReviewsByEventId(anyLong())).thenReturn(reviews);
-
-        // Act & Assert
-        mockMvc.perform(get("/api/reviews/event/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(reviews.get(0).getId()))
-                .andExpect(jsonPath("$[1].id").value(reviews.get(1).getId()))
-                .andExpect(jsonPath("$[0].comment").value(reviews.get(0).getComment()))
-                .andExpect(jsonPath("$[1].comment").value(reviews.get(1).getComment()));
+        ResponseEntity<List<Review>> response = reviewController.getEventReviews(eventId);
+        
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(2, response.getBody().size());
+        verify(reviewService).findByEventId(eventId);
     }
 
     @Test
-    void getReviewsByUserId_ReturnsReviews() throws Exception {
-        // Arrange
-        List<ReviewResponse> reviews = Arrays.asList(
-                new ReviewResponse(1L, 1L, 1L, 5, "Great event!"),
-                new ReviewResponse(2L, 2L, 1L, 4, "Good event!")
-        );
+    void testGetEventReviewsReturnsNotFoundWhenEmpty() {
+        when(reviewService.findByEventId(eventId)).thenReturn(Collections.emptyList());
         
-        when(reviewService.getReviewsByUserId(anyLong())).thenReturn(reviews);
-
-        // Act & Assert
-        mockMvc.perform(get("/api/reviews/user/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(reviews.get(0).getId()))
-                .andExpect(jsonPath("$[1].id").value(reviews.get(1).getId()))
-                .andExpect(jsonPath("$[0].comment").value(reviews.get(0).getComment()))
-                .andExpect(jsonPath("$[1].comment").value(reviews.get(1).getComment()));
+        ResponseEntity<List<Review>> response = reviewController.getEventReviews(eventId);
+        
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertNull(response.getBody());
+        verify(reviewService).findByEventId(eventId);
     }
 
     @Test
-    void getReviewByUserIdAndEventId_ReviewExists_ReturnsReview() throws Exception {
-        // Arrange
-        when(reviewService.getReviewByUserIdAndEventId(anyLong(), anyLong()))
-                .thenReturn(Optional.of(validReviewResponse));
+    void testGetReviewReturnsReviewWhenFound() {
+        Review review = new Review(reviewId, eventId, userId, "Detailed feedback", 4, LocalDateTime.now(), LocalDateTime.now());
+        when(reviewService.findById(reviewId)).thenReturn(review);
+        
+        ResponseEntity<Review> response = reviewController.getReview(reviewId);
+        
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(reviewId, response.getBody().getId());
+        verify(reviewService).findById(reviewId);
+    }
 
-        // Act & Assert
-        mockMvc.perform(get("/api/reviews/user/1/event/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(validReviewResponse.getId()))
-                .andExpect(jsonPath("$.eventId").value(validReviewResponse.getEventId()))
-                .andExpect(jsonPath("$.userId").value(validReviewResponse.getUserId()))
-                .andExpect(jsonPath("$.rating").value(validReviewResponse.getRating()))
-                .andExpect(jsonPath("$.comment").value(validReviewResponse.getComment()));
+    @Test
+    void testGetReviewReturnsNotFoundWhenMissing() {
+        when(reviewService.findById(reviewId)).thenReturn(null);
+        
+        ResponseEntity<Review> response = reviewController.getReview(reviewId);
+        
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertNull(response.getBody());
+        verify(reviewService).findById(reviewId);
+    }
+
+    @Test
+    void testCreateReviewSuccessfully() {
+        Review created = new Review(reviewId, eventId, userId, "New review", 5, LocalDateTime.now(), LocalDateTime.now());
+        when(reviewService.createReview(eventId, userId, "New review", 5)).thenReturn(created);
+        
+        ResponseEntity<Review> response = reviewController.createReview(eventId, userId, "New review", 5);
+        
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertEquals("New review", response.getBody().getComment());
+        assertEquals(5, response.getBody().getRating());
+        verify(reviewService).createReview(eventId, userId, "New review", 5);
+    }
+
+    @Test
+    void testCreateReviewHandlesException() {
+        when(reviewService.createReview(eq(eventId), eq(userId), any(), anyInt()))
+                .thenThrow(new IllegalStateException("User already reviewed this event"));
+        
+        ResponseEntity<Review> response = reviewController.createReview(eventId, userId, "Duplicate", 4);
+        
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNull(response.getBody());
+    }
+
+    @Test
+    void testUpdateReviewSuccessfully() {
+        Review updated = new Review(reviewId, eventId, userId, "Updated content", 3, 
+                LocalDateTime.now(), LocalDateTime.now());
+        when(reviewService.updateReview(reviewId, userId, "Updated content", 3)).thenReturn(updated);
+        
+        ResponseEntity<Review> response = reviewController.updateReview(reviewId, userId, "Updated content", 3);
+        
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("Updated content", response.getBody().getComment());
+        assertEquals(3, response.getBody().getRating());
+        verify(reviewService).updateReview(reviewId, userId, "Updated content", 3);
+    }
+
+    @Test
+    void testUpdateReviewHandlesNotFoundException() {
+        when(reviewService.updateReview(eq(reviewId), eq(userId), any(), anyInt()))
+                .thenThrow(new IllegalArgumentException("Review not found"));
+        
+        ResponseEntity<Review> response = reviewController.updateReview(reviewId, userId, "Won't update", 2);
+        
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNull(response.getBody());
+    }
+
+    @Test
+    void testUpdateReviewHandlesUserMismatchException() {
+        when(reviewService.updateReview(eq(reviewId), eq(userId), any(), anyInt()))
+                .thenThrow(new IllegalArgumentException("User doesn't own this review"));
+        
+        ResponseEntity<Review> response = reviewController.updateReview(reviewId, userId, "Not mine", 2);
+        
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNull(response.getBody());
+    }
+
+    @Test
+    void testDeleteReviewSuccessfully() {
+        doNothing().when(reviewService).deleteReview(reviewId, userId);
+        
+        ResponseEntity<Void> response = reviewController.deleteReview(reviewId, userId);
+        
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+        verify(reviewService).deleteReview(reviewId, userId);
+    }
+
+    @Test
+    void testDeleteReviewHandlesNotFoundException() {
+        doThrow(new IllegalArgumentException("Review not found")).when(reviewService).deleteReview(reviewId, userId);
+        
+        ResponseEntity<Void> response = reviewController.deleteReview(reviewId, userId);
+        
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void testDeleteReviewHandlesUserMismatchException() {
+        doThrow(new IllegalArgumentException("User doesn't own this review")).when(reviewService).deleteReview(reviewId, userId);
+        
+        ResponseEntity<Void> response = reviewController.deleteReview(reviewId, userId);
+        
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 }
