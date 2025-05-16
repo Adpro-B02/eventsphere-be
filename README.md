@@ -17,6 +17,13 @@ Link deployment: http://ec2-52-86-194-154.compute-1.amazonaws.com:8080/
 #### Code
 ![Code diagram event](resources/diagram/assets/event.png)
 
+### Ticket
+#### Component
+![Ticket Component Diagram](resources/diagram/assets/Ticket_Component_Diagram.png)
+
+#### Code
+![Ticket Code Diagram](resources/diagram/assets/Ticket_Code_Diagram.png)
+
 ### Review
 #### Component
 ![Component diagram review](resources/diagram/assets/review_comp.png)
