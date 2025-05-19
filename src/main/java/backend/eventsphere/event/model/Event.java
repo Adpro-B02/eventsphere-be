@@ -12,6 +12,7 @@ import java.util.UUID;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Future;
 
 @Entity
 @Table(name = "events")
@@ -37,6 +38,8 @@ public class Event {
 
     @Setter
     @Getter
+    @NotNull(message = "Tanggal dan waktu event tidak boleh kosong")
+    @Future(message = "Tanggal dan waktu event harus di masa depan")
     @Column(nullable = false)
     @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime eventDateTime;
