@@ -27,7 +27,7 @@ public class EventRepositoryTest {
                 UUID.randomUUID(),
                 "Concert",
                 50000L,
-                LocalDateTime.of(2025, 5, 7, 18, 0),
+                LocalDateTime.now().plusDays(1),
                 "Stadium",
                 "Music concert",
                 "http://example.com/image.jpg"
@@ -78,5 +78,52 @@ public class EventRepositoryTest {
         assertThat(updatedEvent.getName()).isEqualTo("Updated Event");
         assertThat(updatedEvent.getTicketPrice()).isEqualTo(60000L);
         assertThat(updatedEvent.getLocation()).isEqualTo("Updated Location");
+    }
+
+    @Test
+    public void testDefaultStatusIsPlanned() {
+        Event savedEvent = eventRepository.save(event);
+        assertThat(savedEvent.getStatus()).isEqualTo("PLANNED");
+    }
+
+    @Test
+    public void testDeleteAll() {
+        Event event1 = eventRepository.save(new Event(UUID.randomUUID(), "E1", 10000L, LocalDateTime.of(2025, 6, 1, 10, 0), "Loc1", "Desc1", "http://img1.jpg"));
+        Event event2 = eventRepository.save(new Event(UUID.randomUUID(), "E2", 20000L, LocalDateTime.of(2025, 6, 2, 11, 0), "Loc2", "Desc2", "http://img2.jpg"));
+
+        eventRepository.deleteAll();
+        List<Event> events = eventRepository.findAll();
+        assertThat(events).isEmpty();
+    }
+
+    @Test
+    public void testExistsById() {
+        Event savedEvent = eventRepository.save(event);
+        boolean exists = eventRepository.existsById(savedEvent.getId());
+        assertThat(exists).isTrue();
+    }
+
+    @Test
+    public void testCount() {
+        eventRepository.save(event);
+        long count = eventRepository.count();
+        assertThat(count).isEqualTo(1);
+    }
+
+    @Test
+    public void testSaveEventWithCompletedStatus() {
+        Event customStatusEvent = new Event(
+                UUID.randomUUID(),
+                "Workshop",
+                40000L,
+                LocalDateTime.of(2025, 10, 1, 14, 0),
+                "Coworking Space",
+                "Workshop coding",
+                "COMPLETED",
+                "http://example.com/workshop.jpg"
+        );
+
+        Event saved = eventRepository.save(customStatusEvent);
+        assertThat(saved.getStatus()).isEqualTo("COMPLETED");
     }
 }
