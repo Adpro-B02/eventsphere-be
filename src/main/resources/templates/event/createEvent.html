@@ -17,6 +17,7 @@
 
     <label>Tanggal & Waktu:</label>
     <input type="datetime-local" th:field="*{eventDateTime}" required /><br><br>
+    <div th:if="${#fields.hasErrors('eventDateTime')}" th:errors="*{eventDateTime}" style="color:red"></div><br>
 
     <label>Lokasi:</label>
     <input type="text" th:field="*{location}" required /><br><br>
