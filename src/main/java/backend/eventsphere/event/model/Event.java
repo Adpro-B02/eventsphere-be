@@ -9,6 +9,9 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.UUID;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 @Entity
 @Table(name = "events")
@@ -27,6 +30,8 @@ public class Event {
     @Column(nullable = false)
     private String name;
 
+    @NotNull(message = "Harga tiket tidak boleh kosong")
+    @Min(value = 0, message = "Harga tiket harus positif")
     @Column(nullable = false)
     private Long ticketPrice;
 
