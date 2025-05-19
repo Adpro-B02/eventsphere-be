@@ -13,6 +13,18 @@
 
 <br><br>
 
+<div th:if="${successMessage}" style="color:green">
+    <p th:text="${successMessage}"></p>
+</div>
+
+<div th:if="${warningMessage}" style="color:red">
+    <p th:text="${warningMessage}"></p>
+</div>
+
+<div th:if="${errorMessage}" style="color:red">
+    <p th:text="${errorMessage}"></p>
+</div>
+
 <table border="1">
     <thead>
     <tr>
