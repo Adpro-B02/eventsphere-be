@@ -41,12 +41,19 @@ public class EventController {
     }
 
     @PostMapping("/create")
-    public String createEvent(@Valid @ModelAttribute("event") Event event, BindingResult result, Model model) {
+    public String createEvent(@Valid @ModelAttribute("event") Event event,
+                              BindingResult result, Model model) {
         if (result.hasErrors()) {
             return "event/createEvent";
         }
 
-        eventService.addEvent(event);
+        try {
+            eventService.addEvent(event);
+        } catch (IllegalArgumentException e) {
+            result.rejectValue("name", "duplicate", e.getMessage());
+            return "event/createEvent";
+        }
+
         return "redirect:/events";
     }
 
@@ -86,12 +93,19 @@ public class EventController {
     }
 
     @PostMapping("/update")
-    public String updateEvent(@Valid @ModelAttribute("event") Event event, BindingResult result, Model model) {
+    public String updateEvent(@Valid @ModelAttribute("event") Event event,
+                              BindingResult result, Model model) {
         if (result.hasErrors()) {
             return "event/updateEvent";
         }
 
-        eventService.updateEvent(event.getId(), event);
+        try {
+            eventService.updateEvent(event.getId(), event);
+        } catch (IllegalArgumentException e) {
+            result.rejectValue("name", "duplicate", e.getMessage());
+            return "event/updateEvent";
+        }
+
         return "redirect:/events";
     }
 }
