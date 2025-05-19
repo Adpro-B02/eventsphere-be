@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 @Controller
 @RequestMapping("/events")
@@ -21,8 +23,9 @@ public class EventController {
     }
 
     @GetMapping
-    public String listEvents(Model model) {
-        List<Event> events = eventService.getAllEvents();
+    public String listEvents(Model model) throws ExecutionException, InterruptedException {
+        CompletableFuture<List<Event>> futureEvents = eventService.getAllEventsAsync();
+        List<Event> events = futureEvents.get();
         model.addAttribute("events", events);
         return "event/events";
     }

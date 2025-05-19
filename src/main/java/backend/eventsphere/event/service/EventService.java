@@ -8,12 +8,14 @@ import backend.eventsphere.event.repository.EventRepository;
 import backend.eventsphere.event.service.strategy.DeletionValidation;
 import backend.eventsphere.event.service.strategy.ValidationStrategy;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 public class EventService {
@@ -28,8 +30,10 @@ public class EventService {
         this.publisher = publisher;
     }
 
-    public List<Event> getAllEvents() {
-        return eventRepository.findAll();
+    @Async
+    public CompletableFuture<List<Event>> getAllEventsAsync() {
+        List<Event> events = eventRepository.findAll();
+        return CompletableFuture.completedFuture(events);
     }
 
     public Event addEvent(Event event) {
