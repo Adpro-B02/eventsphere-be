@@ -12,6 +12,7 @@
 
     <label>Nama:</label>
     <input type="text" th:field="*{name}" required /><br><br>
+    <div th:if="${#fields.hasErrors('name')}" th:errors="*{name}" style="color:red"></div>
 
     <label>Harga Tiket:</label>
     <input type="number" th:field="*{ticketPrice}" required /><br><br>
@@ -23,12 +24,15 @@
 
     <label>Lokasi:</label>
     <input type="text" th:field="*{location}" required /><br><br>
+    <div th:if="${#fields.hasErrors('location')}" th:errors="*{location}" style="color:red"></div>
 
     <label>Deskripsi:</label>
     <textarea th:field="*{description}" required></textarea><br><br>
+    <div th:if="${#fields.hasErrors('description')}" th:errors="*{description}" style="color:red"></div>
 
     <label>Link Gambar:</label>
     <input type="text" th:field="*{link_image}" required /><br><br>
+    <div th:if="${#fields.hasErrors('link_image')}" th:errors="*{link_image}" style="color:red"></div>
 
     <label>Status:</label>
     <select th:field="*{status}">
