@@ -144,4 +144,100 @@ public class EventControllerTest {
 
         verify(eventService).updateEvent(Mockito.eq(eventId), Mockito.any(Event.class));
     }
+
+    @Test
+    void testCreateEventPost_HasValidationErrors_ReturnsForm() throws Exception {
+        mockMvc.perform(post("/events/create")
+                        .param("name", "")
+                        .param("ticketPrice", "-1")
+                        .param("eventDateTime", "2020-01-01T10:00")
+                        .param("location", "")
+                        .param("description", "")
+                        .param("link_image", "")
+                        .param("status", "")
+                        .param("organizerId", "00000000-0000-0000-0000-000000000001"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("event/createEvent"))
+                .andExpect(model().attributeHasFieldErrors("event", "name", "ticketPrice", "eventDateTime", "location", "description", "link_image", "status"));
+    }
+
+    @Test
+    void testCreateEventPost_ThrowsIllegalArgumentException_ReturnsFormWithError() throws Exception {
+        Mockito.doThrow(new IllegalArgumentException("Event dengan nama dan tanggal tersebut sudah ada."))
+                .when(eventService).addEvent(Mockito.any(Event.class));
+
+        mockMvc.perform(post("/events/create")
+                        .param("organizerId", "00000000-0000-0000-0000-000000000001")
+                        .param("name", "Test Event")
+                        .param("ticketPrice", "25000")
+                        .param("eventDateTime", "2025-08-15T18:00")
+                        .param("location", "Jakarta")
+                        .param("description", "Event Desc")
+                        .param("link_image", "http://img.com/img.jpg")
+                        .param("status", "PLANNED"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("event/createEvent"))
+                .andExpect(model().attributeHasFieldErrors("event", "name"));
+    }
+
+    @Test
+    void testUpdateEventPost_HasValidationErrors_ReturnsForm() throws Exception {
+        mockMvc.perform(post("/events/update")
+                        .param("id", UUID.randomUUID().toString())
+                        .param("name", "")
+                        .param("ticketPrice", "-1")
+                        .param("eventDateTime", "2020-08-15T18:00")
+                        .param("location", "")
+                        .param("description", "")
+                        .param("link_image", "")
+                        .param("status", "")
+                        .param("organizerId", "00000000-0000-0000-0000-000000000001"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("event/updateEvent"))
+                .andExpect(model().attributeHasFieldErrors("event", "name", "ticketPrice", "eventDateTime", "location", "description", "link_image", "status"));
+    }
+
+    @Test
+    void testUpdateEventPost_ThrowsIllegalArgumentException_ReturnsFormWithError() throws Exception {
+        UUID id = UUID.randomUUID();
+
+        Mockito.doThrow(new IllegalArgumentException("Event sudah ada."))
+                .when(eventService).updateEvent(Mockito.eq(id), Mockito.any(Event.class));
+
+        mockMvc.perform(post("/events/update")
+                        .param("id", id.toString())
+                        .param("organizerId", "00000000-0000-0000-0000-000000000001")
+                        .param("name", "Conflict Event")
+                        .param("ticketPrice", "50000")
+                        .param("eventDateTime", "2025-12-15T18:00")
+                        .param("location", "Bali")
+                        .param("description", "Description")
+                        .param("link_image", "http://img.com/img.jpg")
+                        .param("status", "PLANNED"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("event/updateEvent"))
+                .andExpect(model().attributeHasFieldErrors("event", "name"));
+    }
+
+    @Test
+    void testDeleteEvent_ThrowsIllegalStateException_RedirectsWithWarning() throws Exception {
+        UUID id = UUID.randomUUID();
+        Mockito.doThrow(new IllegalStateException("Tidak bisa dihapus."))
+                .when(eventService).deleteEventById(id);
+
+        mockMvc.perform(post("/events/delete").param("id", id.toString()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/events"));
+    }
+
+    @Test
+    void testDeleteEvent_ThrowsGenericException_RedirectsWithError() throws Exception {
+        UUID id = UUID.randomUUID();
+        Mockito.doThrow(new RuntimeException("Unknown error"))
+                .when(eventService).deleteEventById(id);
+
+        mockMvc.perform(post("/events/delete").param("id", id.toString()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/events"));
+    }
 }
