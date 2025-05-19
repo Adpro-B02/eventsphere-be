@@ -2,8 +2,10 @@ package backend.eventsphere.event.controller;
 
 import backend.eventsphere.event.model.Event;
 import backend.eventsphere.event.service.EventService;
+import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.format.DateTimeFormatter;
@@ -39,7 +41,11 @@ public class EventController {
     }
 
     @PostMapping("/create")
-    public String createEventPost(@ModelAttribute Event event) {
+    public String createEvent(@Valid @ModelAttribute("event") Event event, BindingResult result, Model model) {
+        if (result.hasErrors()) {
+            return "event/createEvent";
+        }
+
         eventService.addEvent(event);
         return "redirect:/events";
     }
@@ -64,7 +70,11 @@ public class EventController {
     }
 
     @PostMapping("/update")
-    public String updateEvent(@ModelAttribute Event event) {
+    public String updateEvent(@Valid @ModelAttribute("event") Event event, BindingResult result, Model model) {
+        if (result.hasErrors()) {
+            return "event/updateEvent";
+        }
+
         eventService.updateEvent(event.getId(), event);
         return "redirect:/events";
     }
