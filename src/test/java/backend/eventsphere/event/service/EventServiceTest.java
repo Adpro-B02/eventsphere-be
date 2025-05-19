@@ -86,7 +86,7 @@ public class EventServiceTest {
             assertThat(events).containsExactlyInAnyOrder(event1, event2);
             verify(eventRepository, times(1)).findAll();
         } catch (InterruptedException | ExecutionException e) {
-            fail("Async call failed with exception: " + e.getMessage());
+            throw new RuntimeException(e);
         }
     }
 
@@ -101,7 +101,7 @@ public class EventServiceTest {
             assertThat(events).isEmpty();
             verify(eventRepository, times(1)).findAll();
         } catch (InterruptedException | ExecutionException e) {
-            fail("Async call failed with exception: " + e.getMessage());
+            throw new RuntimeException(e);
         }
     }
 
@@ -234,5 +234,28 @@ public class EventServiceTest {
         verify(validationStrategy2).validate(existingEvent);
         verify(eventRepository).save(existingEvent);
         verify(publisher).publishEvent(any(EventUpdatedEvent.class));
+    }
+
+    @Test
+    public void testGetEventById_eventFound_shouldReturnEvent() {
+        UUID eventId = UUID.randomUUID();
+        when(eventRepository.findById(eventId)).thenReturn(Optional.of(event1));
+
+        Event found = eventService.getEventById(eventId);
+
+        assertThat(found).isEqualTo(event1);
+        verify(eventRepository).findById(eventId);
+    }
+
+    @Test
+    public void testGetEventById_eventNotFound_shouldThrow() {
+        UUID eventId = UUID.randomUUID();
+        when(eventRepository.findById(eventId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> eventService.getEventById(eventId))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Event tidak ditemukan");
+
+        verify(eventRepository).findById(eventId);
     }
 }
