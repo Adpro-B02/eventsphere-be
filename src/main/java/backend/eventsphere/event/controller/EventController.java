@@ -51,9 +51,25 @@ public class EventController {
     }
 
     @PostMapping("/delete")
-    public String deleteEvent(@RequestParam("id") UUID eventId) {
-        eventService.deleteEventById(eventId);
-        return "redirect:/events";
+    public String deleteEvent(@RequestParam("id") UUID eventId, Model model) {
+        try {
+            eventService.deleteEventById(eventId);
+            model.addAttribute("successMessage", "Event berhasil dihapus.");
+        } catch (IllegalStateException e) {
+            model.addAttribute("warningMessage", e.getMessage());
+        } catch (Exception e) {
+            model.addAttribute("errorMessage", "Terjadi kesalahan saat menghapus event.");
+        }
+
+        try {
+            List<Event> events = eventService.getAllEventsAsync().get();
+            model.addAttribute("events", events);
+        } catch (InterruptedException | ExecutionException e) {
+            model.addAttribute("errorMessage", "Gagal memuat daftar event.");
+            Thread.currentThread().interrupt(); // reset interrupt status
+        }
+
+        return "event/events";
     }
 
     @GetMapping("/update")

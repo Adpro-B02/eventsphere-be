@@ -31,15 +31,15 @@ public class Event {
     @Column(nullable = false)
     private String name;
 
-    @NotNull(message = "Harga tiket tidak boleh kosong")
-    @Min(value = 0, message = "Harga tiket harus positif")
+    @NotNull(message = "Harga tiket tidak boleh kosong.")
+    @Min(value = 0, message = "Harga tiket harus positif.")
     @Column(nullable = false)
     private Long ticketPrice;
 
     @Setter
     @Getter
-    @NotNull(message = "Tanggal dan waktu event tidak boleh kosong")
-    @Future(message = "Tanggal dan waktu event harus di masa depan")
+    @NotNull(message = "Tanggal dan waktu event tidak boleh kosong.")
+    @Future(message = "Tanggal dan waktu event harus di masa depan.")
     @Column(nullable = false)
     @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime eventDateTime;
