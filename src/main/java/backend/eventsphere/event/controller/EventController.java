@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/events")
@@ -58,26 +59,19 @@ public class EventController {
     }
 
     @PostMapping("/delete")
-    public String deleteEvent(@RequestParam("id") UUID eventId, Model model) {
+    public String deleteEvent(@RequestParam("id") UUID eventId, RedirectAttributes redirectAttributes) {
         try {
             eventService.deleteEventById(eventId);
-            model.addAttribute("successMessage", "Event berhasil dihapus.");
+            redirectAttributes.addFlashAttribute("successMessage", "Event berhasil dihapus.");
         } catch (IllegalStateException e) {
-            model.addAttribute("warningMessage", e.getMessage());
+            redirectAttributes.addFlashAttribute("warningMessage", e.getMessage());
         } catch (Exception e) {
-            model.addAttribute("errorMessage", "Terjadi kesalahan saat menghapus event.");
+            redirectAttributes.addFlashAttribute("errorMessage", "Terjadi kesalahan saat menghapus event.");
         }
 
-        try {
-            List<Event> events = eventService.getAllEventsAsync().get();
-            model.addAttribute("events", events);
-        } catch (InterruptedException | ExecutionException e) {
-            model.addAttribute("errorMessage", "Gagal memuat daftar event.");
-            Thread.currentThread().interrupt(); // reset interrupt status
-        }
-
-        return "event/events";
+        return "redirect:/events";
     }
+
 
     @GetMapping("/update")
     public String updateEventPage(@RequestParam("id") UUID id, Model model) {
