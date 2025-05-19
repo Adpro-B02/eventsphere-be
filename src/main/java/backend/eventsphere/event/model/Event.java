@@ -28,6 +28,7 @@ public class Event {
     @Column(nullable = false)
     private UUID organizerId;
 
+    @NotBlank(message = "Nama event tidak boleh kosong.")
     @Column(nullable = false)
     private String name;
 
@@ -44,12 +45,15 @@ public class Event {
     @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime eventDateTime;
 
+    @NotBlank(message = "Lokasi event tidak boleh kosong.")
     @Column(nullable = false)
     private String location;
 
+    @NotBlank(message = "Deskripsi event tidak boleh kosong.")
     @Column(nullable = false)
     private String description;
 
+    @NotBlank(message = "Gambar event tidak boleh kosong.")
     @Column(nullable = false)
     private String link_image;
 
