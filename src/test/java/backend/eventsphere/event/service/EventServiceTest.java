@@ -19,6 +19,8 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 import static org.mockito.Mockito.*;
 import static org.assertj.core.api.Assertions.*;
@@ -73,20 +75,34 @@ public class EventServiceTest {
     }
 
     @Test
-    public void testGetAllEvents() {
+    public void testGetAllEventsAsync() {
         when(eventRepository.findAll()).thenReturn(Arrays.asList(event1, event2));
-        List<Event> events = eventService.getAllEvents();
-        assertThat(events).hasSize(2);
-        assertThat(events).containsExactlyInAnyOrder(event1, event2);
-        verify(eventRepository, times(1)).findAll();
+
+        try {
+            CompletableFuture<List<Event>> futureEvents = eventService.getAllEventsAsync();
+            List<Event> events = futureEvents.get();
+
+            assertThat(events).hasSize(2);
+            assertThat(events).containsExactlyInAnyOrder(event1, event2);
+            verify(eventRepository, times(1)).findAll();
+        } catch (InterruptedException | ExecutionException e) {
+            fail("Async call failed with exception: " + e.getMessage());
+        }
     }
 
     @Test
-    public void testGetAllEventsWhenNoEvents() {
+    public void testGetAllEventsAsyncWhenNoEvents() {
         when(eventRepository.findAll()).thenReturn(List.of());
-        List<Event> events = eventService.getAllEvents();
-        assertThat(events).isEmpty();
-        verify(eventRepository, times(1)).findAll();
+
+        try {
+            CompletableFuture<List<Event>> futureEvents = eventService.getAllEventsAsync();
+            List<Event> events = futureEvents.get();
+
+            assertThat(events).isEmpty();
+            verify(eventRepository, times(1)).findAll();
+        } catch (InterruptedException | ExecutionException e) {
+            fail("Async call failed with exception: " + e.getMessage());
+        }
     }
 
     @Test

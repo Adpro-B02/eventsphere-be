@@ -3,9 +3,12 @@ package backend.eventsphere.event.controller;
 import backend.eventsphere.event.model.Event;
 import backend.eventsphere.event.service.EventService;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +17,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
@@ -21,6 +25,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@ExtendWith(MockitoExtension.class)
 @WebMvcTest(EventController.class)
 @Import(EventControllerTest.TestConfig.class)
 public class EventControllerTest {
@@ -28,7 +33,7 @@ public class EventControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
+    @MockBean
     private EventService eventService;
 
     @TestConfiguration
@@ -40,7 +45,7 @@ public class EventControllerTest {
     }
 
     @Test
-    void testListEvents_ReturnsViewWithEvents() throws Exception {
+    void testListEventsAsync_ReturnsViewWithEvents() throws Exception {
         Event event = new Event(
                 UUID.randomUUID(), "Concert", 50000L,
                 LocalDateTime.of(2025, 8, 10, 20, 0),
@@ -48,7 +53,8 @@ public class EventControllerTest {
                 "http://example.com/image.jpg"
         );
 
-        when(eventService.getAllEvents()).thenReturn(List.of(event));
+        when(eventService.getAllEventsAsync())
+                .thenReturn(CompletableFuture.completedFuture(List.of(event)));
 
         mockMvc.perform(get("/events"))
                 .andExpect(status().isOk())
