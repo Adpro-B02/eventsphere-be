@@ -1,4 +1,4 @@
-package backend.eventsphere.model;
+package backend.eventsphere.ticket.model;
 
 import org.springframework.stereotype.Component;
 

@@ -1,10 +1,10 @@
-package backend.eventsphere.service;
+package backend.eventsphere.ticket.service;
 
 import enums.TicketEventType;
-import backend.eventsphere.model.Ticket;
-import backend.eventsphere.model.TicketFactory;
-import backend.eventsphere.model.TicketObserver;
-import backend.eventsphere.repository.TicketRepository;
+import backend.eventsphere.ticket.model.Ticket;
+import backend.eventsphere.ticket.model.TicketFactory;
+import backend.eventsphere.ticket.model.TicketObserver;
+import backend.eventsphere.ticket.repository.TicketRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

@@ -1,4 +1,4 @@
-package backend.eventsphere.model;
+package backend.eventsphere.ticket.model;
 
 import java.util.UUID;
 import org.junit.jupiter.api.Test;

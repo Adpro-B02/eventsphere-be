@@ -1,6 +1,6 @@
-package backend.eventsphere.repository;
+package backend.eventsphere.ticket.repository;
 
-import backend.eventsphere.model.Ticket;
+import backend.eventsphere.ticket.model.Ticket;
 import org.springframework.stereotype.Repository;
 
 import java.util.HashMap;

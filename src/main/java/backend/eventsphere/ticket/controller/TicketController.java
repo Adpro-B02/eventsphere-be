@@ -1,7 +1,7 @@
-package backend.eventsphere.controller;
+package backend.eventsphere.ticket.controller;
 
-import backend.eventsphere.model.Ticket;
-import backend.eventsphere.service.TicketService;
+import backend.eventsphere.ticket.model.Ticket;
+import backend.eventsphere.ticket.service.TicketService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

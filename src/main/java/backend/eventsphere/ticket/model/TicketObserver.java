@@ -1,6 +1,5 @@
-package backend.eventsphere.model;
+package backend.eventsphere.ticket.model;
 
-import backend.eventsphere.model.Ticket;
 import enums.TicketEventType;
 
 public interface TicketObserver {

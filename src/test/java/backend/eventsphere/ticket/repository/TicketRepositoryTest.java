@@ -1,7 +1,7 @@
-package backend.eventsphere.repository;
+package backend.eventsphere.ticket.repository;
 
-import backend.eventsphere.model.Ticket;
-import backend.eventsphere.model.TicketFactory;
+import backend.eventsphere.ticket.model.Ticket;
+import backend.eventsphere.ticket.model.TicketFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

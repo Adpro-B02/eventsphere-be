@@ -1,9 +1,9 @@
-package backend.eventsphere.service;
+package backend.eventsphere.ticket.service;
 
-import backend.eventsphere.model.Ticket;
-import backend.eventsphere.model.TicketFactory;
-import backend.eventsphere.repository.TicketRepository;
-import backend.eventsphere.model.TicketObserver;
+import backend.eventsphere.ticket.model.Ticket;
+import backend.eventsphere.ticket.model.TicketFactory;
+import backend.eventsphere.ticket.repository.TicketRepository;
+import backend.eventsphere.ticket.model.TicketObserver;
 import enums.TicketEventType;
 import org.springframework.stereotype.Service;
 
