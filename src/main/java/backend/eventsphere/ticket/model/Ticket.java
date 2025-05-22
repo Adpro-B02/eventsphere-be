@@ -1,12 +1,18 @@
 package backend.eventsphere.ticket.model;
 
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.persistence.*;
+import lombok.*;
 
 import java.util.UUID;
 
+@Entity
+@Table(name = "tickets", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"event_id", "ticket_type"})
+})
 @Getter
+@NoArgsConstructor
 public class Ticket {
+    @Id
     private UUID id;
     private UUID eventId;
     private String ticketType;
