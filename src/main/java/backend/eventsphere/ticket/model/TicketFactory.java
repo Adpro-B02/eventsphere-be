@@ -1,31 +1,29 @@
 package backend.eventsphere.ticket.model;
 
+import backend.eventsphere.ticket.repository.TicketRepository;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 import java.util.UUID;
 
 @Component
 public class TicketFactory {
-    private Map<UUID, Map<String, Ticket>> ticketsByEvent;
+    private final TicketRepository ticketRepository;
 
-    public TicketFactory() {
-        this.ticketsByEvent = new HashMap<UUID, Map<String, Ticket>>();
+    public TicketFactory(TicketRepository ticketRepository) {
+        this.ticketRepository = ticketRepository;
     }
 
     public Ticket createTicket(UUID eventId, String ticketType, Double price, Integer quota) {
-        ticketsByEvent.putIfAbsent(eventId, new HashMap<>());
+        List<Ticket> existingTickets = ticketRepository.findByEventId(eventId);
 
-        Map<String, Ticket> ticketsForEvent = ticketsByEvent.get(eventId);
+        boolean ticketTypeExists = existingTickets.stream()
+            .anyMatch(ticket -> ticket.getTicketType().equals(ticketType));
 
-        if (ticketsForEvent.containsKey(ticketType)) {
+        if (ticketTypeExists) {
             throw new IllegalArgumentException("Ticket type already exists for this event");
         }
 
-        Ticket ticket = new Ticket(eventId, ticketType, price, quota);
-        ticketsForEvent.put(ticketType, ticket);
-
-        return ticket;
+        return new Ticket(eventId, ticketType, price, quota);
     }
 }
