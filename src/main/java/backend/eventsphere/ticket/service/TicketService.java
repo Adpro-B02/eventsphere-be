@@ -6,8 +6,10 @@ import backend.eventsphere.ticket.repository.TicketRepository;
 import backend.eventsphere.ticket.model.TicketObserver;
 import enums.TicketEventType;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class TicketService {
@@ -34,6 +36,7 @@ public class TicketService {
         }
     }
 
+    @Transactional
     public Ticket createTicket(UUID eventId, String ticketType, Double price, Integer quota) {
         Ticket ticket = ticketFactory.createTicket(eventId, ticketType, price, quota);
         ticketRepository.save(ticket);
@@ -42,14 +45,18 @@ public class TicketService {
     }
 
     public Map<UUID, Ticket> getTicketsByEvent(UUID eventId) {
-        return ticketRepository.listByEvent(eventId);
+        return ticketRepository.findByEventId(eventId).stream()
+            .collect(Collectors.toMap(Ticket::getId, ticket -> ticket));
     }
 
+    @Transactional
     public Ticket updateTicket(UUID ticketId, Double newPrice, Integer newQuota) {
-        Ticket ticket = ticketRepository.findById(ticketId);
-        if (ticket == null) {
+        Optional<Ticket> optionalTicket = ticketRepository.findById(ticketId);
+        if (optionalTicket.isEmpty()) {
             throw new IllegalArgumentException("Ticket not found with ID: " + ticketId);
         }
+
+        Ticket ticket = optionalTicket.get();
         if (newPrice != null) {
             if (newPrice < 0) {
                 throw new IllegalArgumentException("Price cannot be negative");
@@ -62,20 +69,22 @@ public class TicketService {
             }
             ticket.setQuota(newQuota);
         }
-        ticketRepository.update(ticket);
+
+        ticket = ticketRepository.save(ticket);
         notifyTicketEvent(ticket, TicketEventType.UPDATED);
         return ticket;
     }
 
+    @Transactional
     public boolean deleteTicket(UUID ticketId) {
-        Ticket ticket = ticketRepository.findById(ticketId);
-        if (ticket == null) {
+        Optional<Ticket> optionalTicket = ticketRepository.findById(ticketId);
+        if (optionalTicket.isEmpty()) {
             return false;
         }
-        boolean deleted = ticketRepository.delete(ticketId);
-        if (deleted) {
-            notifyTicketEvent(ticket, TicketEventType.DELETED);
-        }
-        return deleted;
+
+        Ticket ticket = optionalTicket.get();
+        ticketRepository.delete(ticket);
+        notifyTicketEvent(ticket, TicketEventType.DELETED);
+        return true;
     }
 }
