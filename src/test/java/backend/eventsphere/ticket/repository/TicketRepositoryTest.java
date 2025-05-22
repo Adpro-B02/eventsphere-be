@@ -4,20 +4,24 @@ import backend.eventsphere.ticket.model.Ticket;
 import backend.eventsphere.ticket.model.TicketFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@DataJpaTest
 public class TicketRepositoryTest {
 
+    @Autowired
     private TicketRepository ticketRepository;
+
     private TicketFactory ticketFactory;
 
     @BeforeEach
     void setUp() {
-        ticketRepository = new TicketRepository();
-        ticketFactory = new TicketFactory();
+        ticketFactory = new TicketFactory(ticketRepository);
     }
 
     @Test
@@ -27,39 +31,19 @@ public class TicketRepositoryTest {
 
         ticketRepository.save(ticket);
 
-        Ticket retrievedTicket = ticketRepository.findById(ticket.getId());
+        Ticket retrievedTicket = ticketRepository.findById(ticket.getId()).orElse(null);
         assertNotNull(retrievedTicket);
         assertEquals(ticket.getId(), retrievedTicket.getId());
     }
 
     @Test
-    void testSaveDuplicateTicket() {
+    void testUniqueTicketTypeConstraint() {
         UUID eventId = UUID.randomUUID();
-        Ticket ticket1 = ticketFactory.createTicket(eventId, "VIP", 100.0, 50);
-        ticketRepository.save(ticket1);
+        ticketRepository.save(ticketFactory.createTicket(eventId, "VIP", 100.0, 50));
 
         assertThrows(IllegalArgumentException.class, () -> {
-            ticketRepository.save(ticket1); // Attempting to save duplicate
+            ticketFactory.createTicket(eventId, "VIP", 150.0, 30);
         });
-    }
-
-    @Test
-    void testFindTicketById() {
-        UUID eventId = UUID.randomUUID();
-        Ticket ticket = ticketFactory.createTicket(eventId, "VIP", 100.0, 50);
-        ticketRepository.save(ticket);
-
-        Ticket retrievedTicket = ticketRepository.findById(ticket.getId());
-        assertNotNull(retrievedTicket);
-        assertEquals(ticket.getId(), retrievedTicket.getId());
-    }
-
-    @Test
-    void testFindMissingTicket() {
-        UUID missingTicketId = UUID.randomUUID();
-        Ticket retrievedTicket = ticketRepository.findById(missingTicketId);
-
-        assertNull(retrievedTicket);
     }
 
     @Test
@@ -71,22 +55,12 @@ public class TicketRepositoryTest {
         ticket.setPrice(150.0);
         ticket.setQuota(75);
 
-        ticketRepository.update(ticket);
+        ticketRepository.save(ticket);
 
-        Ticket updatedTicket = ticketRepository.findById(ticket.getId());
+        Ticket updatedTicket = ticketRepository.findById(ticket.getId()).orElse(null);
         assertNotNull(updatedTicket);
         assertEquals(150.0, updatedTicket.getPrice());
         assertEquals(75, updatedTicket.getQuota());
-    }
-
-    @Test
-    void testUpdateNonExistentTicket() {
-        UUID eventId = UUID.randomUUID();
-        Ticket ticket = ticketFactory.createTicket(eventId, "VIP", 100.0, 50);
-
-        assertThrows(IllegalArgumentException.class, () -> {
-            ticketRepository.update(ticket);
-        });
     }
 
     @Test
@@ -95,19 +69,13 @@ public class TicketRepositoryTest {
         Ticket ticket = ticketFactory.createTicket(eventId, "VIP", 100.0, 50);
         ticketRepository.save(ticket);
 
-        assertTrue(ticketRepository.delete(ticket.getId()));
-        assertNull(ticketRepository.findById(ticket.getId())); // Should not find ticket after deletion
+        ticketRepository.deleteById(ticket.getId());
+
+        assertFalse(ticketRepository.existsById(ticket.getId()));
     }
 
     @Test
-    void testDeleteMissingTicket() {
-        UUID missingTicketId = UUID.randomUUID();
-
-        assertFalse(ticketRepository.delete(missingTicketId));
-    }
-
-    @Test
-    void testListTicketsForEvent() {
+    void testFindTicketsByEventId() {
         UUID eventId = UUID.randomUUID();
 
         Ticket ticket1 = ticketFactory.createTicket(eventId, "VIP", 100.0, 50);
@@ -116,6 +84,6 @@ public class TicketRepositoryTest {
         ticketRepository.save(ticket1);
         ticketRepository.save(ticket2);
 
-        assertEquals(2, ticketRepository.listByEvent(eventId).size());
+        assertEquals(2, ticketRepository.findByEventId(eventId).size());
     }
 }
