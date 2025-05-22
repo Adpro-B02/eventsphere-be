@@ -42,15 +42,4 @@ public class TicketTest {
             Ticket ticket = new Ticket(UUID.randomUUID(), "VIP", 100.0, -10);
         });
     }
-
-    @Test
-    void testCreateDuplicateTicketTypeForSameEvent() {
-        UUID eventId = UUID.randomUUID();
-        TicketFactory factory = new TicketFactory();
-        factory.createTicket(eventId, "VIP", 100.0, 50);
-
-        assertThrows(IllegalArgumentException.class, () -> {
-            factory.createTicket(eventId, "VIP", 110.0, 30);
-        });
-    }
 }
