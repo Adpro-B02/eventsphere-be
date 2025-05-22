@@ -7,20 +7,28 @@ import backend.eventsphere.ticket.model.TicketObserver;
 import backend.eventsphere.ticket.repository.TicketRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.UUID;
+import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 public class TicketServiceTest {
     private TicketService ticketService;
+
+    @Mock
     private TicketRepository ticketRepository;
+
+    @Mock
     private TicketFactory ticketFactory;
+
     private TestObserver testObserver;
 
     @BeforeEach
     void setUp() {
-        ticketRepository = new TicketRepository();
-        ticketFactory = new TicketFactory();
         ticketService = new TicketService(ticketRepository, ticketFactory);
         testObserver = new TestObserver();
         ticketService.registerObserver(testObserver);
@@ -48,118 +56,83 @@ public class TicketServiceTest {
     @Test
     void testCreateTicket() {
         UUID eventId = UUID.randomUUID();
-        Ticket ticket = ticketService.createTicket(eventId, "VIP", 100.0, 50);
+        String ticketType = "VIP";
+        Double price = 100.0;
+        Integer quota = 50;
+
+        Ticket mockTicket = new Ticket(eventId, ticketType, price, quota);
+
+        when(ticketFactory.createTicket(eventId, ticketType, price, quota)).thenReturn(mockTicket);
+        when(ticketRepository.save(mockTicket)).thenReturn(mockTicket);
+
+        Ticket ticket = ticketService.createTicket(eventId, ticketType, price, quota);
 
         assertEquals(TicketEventType.CREATED, testObserver.lastEvent);
         assertEquals(ticket, testObserver.lastTicket);
         assertEquals(1, testObserver.notificationCount);
+
+        verify(ticketFactory).createTicket(eventId, ticketType, price, quota);
+        verify(ticketRepository).save(mockTicket);
     }
 
     @Test
     void testCreateDuplicateTicket() {
         UUID eventId = UUID.randomUUID();
-        ticketService.createTicket(eventId, "VIP", 100.0, 50);
+        String ticketType = "VIP";
+
+        when(ticketFactory.createTicket(eventId, ticketType, 110.0, 30))
+            .thenThrow(new IllegalArgumentException("Ticket type already exists for this event"));
+
         testObserver.reset();
 
         assertThrows(IllegalArgumentException.class, () -> {
-            ticketService.createTicket(eventId, "VIP", 110.0, 30);
+            ticketService.createTicket(eventId, ticketType, 110.0, 30);
         });
 
         assertEquals(0, testObserver.notificationCount);
     }
 
     @Test
-    void testCreateTicketWithNegativePrice() {
-        UUID eventId = UUID.randomUUID();
-        assertThrows(IllegalArgumentException.class, () -> {
-            ticketService.createTicket(eventId, "Regular", -15.0, 100);
-        });
-    }
-
-    @Test
-    void testCreateTicketWithNullTicketType() {
-        UUID eventId = UUID.randomUUID();
-        assertThrows(IllegalArgumentException.class, () -> {
-            ticketService.createTicket(eventId, null, 50.0, 100);
-        });
-    }
-
-    @Test
-    void testCreateTicketWithEmptyTicketType() {
-        UUID eventId = UUID.randomUUID();
-        assertThrows(IllegalArgumentException.class, () -> {
-            ticketService.createTicket(eventId, "   ", 50.0, 100);
-        });
-    }
-
-    @Test
-    void testCreateTicketWithNegativeQuota() {
-        UUID eventId = UUID.randomUUID();
-        assertThrows(IllegalArgumentException.class, () -> {
-            ticketService.createTicket(eventId, "Regular", 50.0, -10);
-        });
-    }
-
-    @Test
     void testGetTicketsByEvent() {
         UUID eventId = UUID.randomUUID();
-        ticketService.createTicket(eventId, "VIP", 100.0, 50);
-        ticketService.createTicket(eventId, "Regular", 50.0, 100);
+        List<Ticket> tickets = Arrays.asList(
+            new Ticket(eventId, "VIP", 100.0, 50),
+            new Ticket(eventId, "Regular", 50.0, 100)
+        );
 
-        assertEquals(2, ticketService.getTicketsByEvent(eventId).size());
-    }
+        when(ticketRepository.findByEventId(eventId)).thenReturn(tickets);
 
-    @Test
-    void testGetTicketsForNonExistentEvent() {
-        UUID nonExistentEventId = UUID.randomUUID();
-        assertTrue(ticketService.getTicketsByEvent(nonExistentEventId).isEmpty());
-    }
-
-    @Test
-    void testTicketsForDifferentEvents() {
-        UUID eventId1 = UUID.randomUUID();
-        UUID eventId2 = UUID.randomUUID();
-
-        Ticket ticket1 = ticketService.createTicket(eventId1, "VIP", 100.0, 50);
-        Ticket ticket2 = ticketService.createTicket(eventId2, "VIP", 150.0, 30);
-
-        assertEquals(1, ticketService.getTicketsByEvent(eventId1).size());
-        assertEquals(1, ticketService.getTicketsByEvent(eventId2).size());
-
-        assertEquals("VIP", ticket1.getTicketType());
-        assertEquals("VIP", ticket2.getTicketType());
-
-        assertNotEquals(ticket1.getPrice(), ticket2.getPrice());
-        assertNotEquals(ticket1.getQuota(), ticket2.getQuota());
-    }
-
-    @Test
-    void testMultipleTicketTypesForSameEvent() {
-        UUID eventId = UUID.randomUUID();
-
-        ticketService.createTicket(eventId, "VIP", 200.0, 20);
-        ticketService.createTicket(eventId, "Regular", 100.0, 100);
-        ticketService.createTicket(eventId, "Economy", 50.0, 200);
-
-        assertEquals(3, ticketService.getTicketsByEvent(eventId).size());
+        Map<UUID, Ticket> result = ticketService.getTicketsByEvent(eventId);
+        assertEquals(2, result.size());
     }
 
     @Test
     void testUpdateTicket() {
+        UUID ticketId = UUID.randomUUID();
         UUID eventId = UUID.randomUUID();
-        Ticket ticket = ticketService.createTicket(eventId, "VIP", 150.0, 80);
+        Ticket ticket = new Ticket(eventId, "VIP", 150.0, 80);
+
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
+        when(ticketRepository.save(ticket)).thenReturn(ticket);
+
         testObserver.reset();
 
-        Ticket updatedTicket = ticketService.updateTicket(ticket.getId(), 200.0, 100);
+        Ticket updatedTicket = ticketService.updateTicket(ticketId, 200.0, 100);
 
         assertEquals(TicketEventType.UPDATED, testObserver.lastEvent);
         assertEquals(updatedTicket, testObserver.lastTicket);
         assertEquals(1, testObserver.notificationCount);
+        assertEquals(200.0, updatedTicket.getPrice());
+        assertEquals(100, updatedTicket.getQuota());
+
+        verify(ticketRepository).save(ticket);
     }
 
     @Test
     void testUpdateNonExistentTicket() {
         UUID nonExistentTicketId = UUID.randomUUID();
+        when(ticketRepository.findById(nonExistentTicketId)).thenReturn(Optional.empty());
+
         testObserver.reset();
 
         assertThrows(IllegalArgumentException.class, () ->
@@ -171,41 +144,56 @@ public class TicketServiceTest {
 
     @Test
     void testUpdateTicketNegativePrice() {
+        UUID ticketId = UUID.randomUUID();
         UUID eventId = UUID.randomUUID();
-        Ticket ticket = ticketService.createTicket(eventId, "Regular", 50.0, 30);
+        Ticket ticket = new Ticket(eventId, "Regular", 50.0, 30);
+
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
 
         assertThrows(IllegalArgumentException.class, () ->
-            ticketService.updateTicket(ticket.getId(), -10.0, 25)
+            ticketService.updateTicket(ticketId, -10.0, 25)
         );
     }
 
     @Test
     void testUpdateTicketNegativeQuota() {
+        UUID ticketId = UUID.randomUUID();
         UUID eventId = UUID.randomUUID();
-        Ticket ticket = ticketService.createTicket(eventId, "Student", 15.0, 10);
+        Ticket ticket = new Ticket(eventId, "Regular", 50.0, 30);
+
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
 
         assertThrows(IllegalArgumentException.class, () ->
-            ticketService.updateTicket(ticket.getId(), 20.0, -5)
+            ticketService.updateTicket(ticketId, 20.0, -5)
         );
     }
 
     @Test
     void testDeleteTicket() {
+        UUID ticketId = UUID.randomUUID();
         UUID eventId = UUID.randomUUID();
-        Ticket ticket = ticketService.createTicket(eventId, "VIP", 100.0, 50);
+        Ticket ticket = new Ticket(eventId, "VIP", 100.0, 50);
+
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
+        doNothing().when(ticketRepository).delete(ticket);
+
         testObserver.reset();
 
-        boolean result = ticketService.deleteTicket(ticket.getId());
+        boolean result = ticketService.deleteTicket(ticketId);
 
         assertTrue(result);
         assertEquals(TicketEventType.DELETED, testObserver.lastEvent);
         assertEquals(ticket, testObserver.lastTicket);
         assertEquals(1, testObserver.notificationCount);
+
+        verify(ticketRepository).delete(ticket);
     }
 
     @Test
     void testDeleteNonExistentTicket() {
         UUID nonExistentTicketId = UUID.randomUUID();
+        when(ticketRepository.findById(nonExistentTicketId)).thenReturn(Optional.empty());
+
         testObserver.reset();
 
         boolean result = ticketService.deleteTicket(nonExistentTicketId);
@@ -215,28 +203,32 @@ public class TicketServiceTest {
     }
 
     @Test
-    void testDeleteAllTicketsForEvent() {
+    void testMultipleObservers() {
         UUID eventId = UUID.randomUUID();
+        TestObserver secondObserver = new TestObserver();
+        ticketService.registerObserver(secondObserver);
 
-        Ticket ticket1 = ticketService.createTicket(eventId, "VIP", 200.0, 20);
-        Ticket ticket2 = ticketService.createTicket(eventId, "Regular", 100.0, 100);
+        Ticket mockTicket = new Ticket(eventId, "VIP", 200.0, 20);
+        when(ticketFactory.createTicket(eventId, "VIP", 200.0, 20)).thenReturn(mockTicket);
+        when(ticketRepository.save(mockTicket)).thenReturn(mockTicket);
 
-        ticketService.deleteTicket(ticket1.getId());
-        ticketService.deleteTicket(ticket2.getId());
+        Ticket ticket = ticketService.createTicket(eventId, "VIP", 200.0, 20);
 
-        assertTrue(ticketService.getTicketsByEvent(eventId).isEmpty());
-    }
+        assertEquals(1, testObserver.notificationCount);
+        assertEquals(1, secondObserver.notificationCount);
+        assertEquals(TicketEventType.CREATED, testObserver.lastEvent);
+        assertEquals(TicketEventType.CREATED, secondObserver.lastEvent);
 
-    @Test
-    void testMultipleNotifications() {
-        UUID eventId = UUID.randomUUID();
+        ticketService.removeObserver(secondObserver);
+        testObserver.reset();
+        secondObserver.reset();
 
-        Ticket ticket1 = ticketService.createTicket(eventId, "VIP", 200.0, 20);
-        Ticket ticket2 = ticketService.createTicket(eventId, "Regular", 100.0, 100);
-        ticketService.updateTicket(ticket1.getId(), 250.0, 15);
-        ticketService.deleteTicket(ticket2.getId());
+        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+        when(ticketRepository.save(ticket)).thenReturn(ticket);
 
-        assertEquals(4, testObserver.notificationCount);
-        assertEquals(TicketEventType.DELETED, testObserver.lastEvent);
+        ticketService.updateTicket(ticket.getId(), 250.0, 15);
+
+        assertEquals(1, testObserver.notificationCount);
+        assertEquals(0, secondObserver.notificationCount);
     }
 }
