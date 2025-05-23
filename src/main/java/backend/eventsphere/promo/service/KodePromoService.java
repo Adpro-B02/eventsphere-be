@@ -4,6 +4,7 @@ import backend.eventsphere.promo.factory.PromoFactory;
 import backend.eventsphere.promo.model.KodePromo;
 import backend.eventsphere.promo.repository.KodePromoRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -11,6 +12,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @Transactional
@@ -24,7 +26,8 @@ public class KodePromoService {
         this.promoFactory = promoFactory;
     }
 
-    public KodePromo createPercentagePromo(String code, BigDecimal percentage,
+    @Async
+    public CompletableFuture<KodePromo> createPercentagePromo(String code, BigDecimal percentage,
                                            LocalDate startDate, LocalDate endDate,
                                            UUID eventId, UUID userId) {
 
@@ -39,10 +42,11 @@ public class KodePromoService {
                 userId
         );
 
-        return repository.save(promo);
+        return CompletableFuture.completedFuture(repository.save(promo));
     }
 
-    public KodePromo createFixedAmountPromo(String code, BigDecimal fixedAmount,
+    @Async
+    public CompletableFuture<KodePromo> createFixedAmountPromo(String code, BigDecimal fixedAmount,
                                             LocalDate startDate, LocalDate endDate,
                                             UUID eventId, UUID userId) {
 
@@ -57,7 +61,7 @@ public class KodePromoService {
                 userId
         );
 
-        return repository.save(promo);
+        return CompletableFuture.completedFuture(repository.save(promo));
     }
 
     private void validatePromoCreation(String code,
@@ -95,7 +99,8 @@ public class KodePromoService {
         repository.deleteById(id);
     }
 
-    public KodePromo updatePromo(UUID id, String newCode, BigDecimal newDiscount,
+    @Async
+    public CompletableFuture<KodePromo> updatePromo(UUID id, String newCode, BigDecimal newDiscount,
                                  KodePromo.DiscountType newDiscountType,
                                  LocalDate newStartDate, LocalDate newEndDate) {
         KodePromo promo = repository.findById(id)
@@ -109,7 +114,7 @@ public class KodePromoService {
         promo.setStartDate(newStartDate);
         promo.setEndDate(newEndDate);
 
-        return repository.save(promo);
+        return CompletableFuture.completedFuture(repository.save(promo));
     }
 
     private void validatePromoUpdate(KodePromo existingPromo, String newCode,

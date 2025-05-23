@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/api/promos")
@@ -21,7 +22,7 @@ public class KodePromoController {
     }
 
     @PostMapping
-    public ResponseEntity<KodePromo> createPromo(
+    public CompletableFuture<ResponseEntity<KodePromo>> createPromo(
             @RequestParam String code,
             @RequestParam BigDecimal amount,
             @RequestParam String promoType,
@@ -30,15 +31,13 @@ public class KodePromoController {
             @RequestParam UUID eventId,
             @RequestParam UUID createdBy) {
 
-        KodePromo created;
         if ("percentage".equalsIgnoreCase(promoType)) {
-            created = promoService.createPercentagePromo(
-                    code, amount, startDate, endDate, eventId, createdBy);
+            return promoService.createPercentagePromo(code, amount, startDate, endDate, eventId, createdBy)
+                    .thenApply(ResponseEntity::ok);
         } else {
-            created = promoService.createFixedAmountPromo(
-                    code, amount, startDate, endDate, eventId, createdBy);
+            return promoService.createFixedAmountPromo(code, amount, startDate, endDate, eventId, createdBy)
+                    .thenApply(ResponseEntity::ok);
         }
-        return ResponseEntity.ok(created);
     }
 
     @GetMapping("/{id}")
@@ -68,23 +67,15 @@ public class KodePromoController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<KodePromo> updatePromo(
+    public CompletableFuture<ResponseEntity<KodePromo>> updatePromo(
             @PathVariable UUID id,
             @RequestParam(required = false) String code,
             @RequestParam(required = false) BigDecimal discount,
             @RequestParam(required = false) KodePromo.DiscountType discountType,
             @RequestParam(required = false) LocalDate startDate,
             @RequestParam(required = false) LocalDate endDate) {
-
-        KodePromo updated = promoService.updatePromo(
-                id,
-                code,
-                discount,
-                discountType,
-                startDate,
-                endDate
-        );
-        return ResponseEntity.ok(updated);
+        return promoService.updatePromo(id, code, discount, discountType, startDate, endDate)
+                .thenApply(ResponseEntity::ok);
     }
 
     @DeleteMapping("/{id}")
