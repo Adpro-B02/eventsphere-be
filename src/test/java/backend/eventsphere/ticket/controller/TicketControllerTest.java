@@ -72,7 +72,7 @@ public class TicketControllerTest {
         when(ticketService.createTicket(any(UUID.class), anyString(), anyDouble(), anyInt()))
                 .thenReturn(testTicket);
 
-        mockMvc.perform(post("/tickets")
+        mockMvc.perform(post("/api/tickets")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -96,7 +96,7 @@ public class TicketControllerTest {
         when(ticketService.createTicket(any(UUID.class), anyString(), anyDouble(), anyInt()))
                 .thenThrow(new IllegalArgumentException("Invalid ticket data"));
 
-        mockMvc.perform(post("/tickets")
+        mockMvc.perform(post("/api/tickets")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -110,7 +110,7 @@ public class TicketControllerTest {
 
         when(ticketService.getTicketsByEvent(testEventId)).thenReturn(ticketsMap);
 
-        mockMvc.perform(get("/tickets/{id_event}", testEventId.toString()))
+        mockMvc.perform(get("/api/tickets/{id_event}", testEventId.toString()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(testTicketId.toString()))
                 .andExpect(jsonPath("$[0].eventId").value(testEventId.toString()))
@@ -125,7 +125,7 @@ public class TicketControllerTest {
     void testGetTicketsByNonexistentEvent() throws Exception {
         when(ticketService.getTicketsByEvent(any(UUID.class))).thenReturn(Collections.emptyMap());
 
-        mockMvc.perform(get("/tickets/{id_event}", testEventId.toString()))
+        mockMvc.perform(get("/api/tickets/{id_event}", testEventId.toString()))
                 .andExpect(status().isNotFound())
                 .andExpect(content().string("No tickets found for event"));
     }
@@ -145,7 +145,7 @@ public class TicketControllerTest {
         when(ticketService.updateTicket(eq(testTicketId), anyDouble(), anyInt()))
                 .thenReturn(updatedTicket);
 
-        mockMvc.perform(put("/tickets/{id_ticket}", testTicketId.toString())
+        mockMvc.perform(put("/api/tickets/{id_ticket}", testTicketId.toString())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -165,7 +165,7 @@ public class TicketControllerTest {
         when(ticketService.updateTicket(any(UUID.class), anyDouble(), anyInt()))
                 .thenThrow(new IllegalArgumentException("Ticket not found with ID: " + testTicketId));
 
-        mockMvc.perform(put("/tickets/{id_ticket}", testTicketId.toString())
+        mockMvc.perform(put("/api/tickets/{id_ticket}", testTicketId.toString())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -176,7 +176,7 @@ public class TicketControllerTest {
     void testDeleteTicket() throws Exception {
         when(ticketService.deleteTicket(testTicketId)).thenReturn(true);
 
-        mockMvc.perform(delete("/tickets/{id_ticket}", testTicketId.toString()))
+        mockMvc.perform(delete("/api/tickets/{id_ticket}", testTicketId.toString()))
                 .andExpect(status().isNoContent());
 
         verify(ticketService).deleteTicket(testTicketId);
@@ -186,7 +186,7 @@ public class TicketControllerTest {
     void testDeleteNonexistentTicket() throws Exception {
         when(ticketService.deleteTicket(any(UUID.class))).thenReturn(false);
 
-        mockMvc.perform(delete("/tickets/{id_ticket}", testTicketId.toString()))
+        mockMvc.perform(delete("/api/tickets/{id_ticket}", testTicketId.toString()))
                 .andExpect(status().isNotFound())
                 .andExpect(content().string("Ticket not found"));
     }
