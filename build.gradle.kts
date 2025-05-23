@@ -43,6 +43,9 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
     implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("io.jsonwebtoken:jjwt-api:0.11.5")
+    implementation("jakarta.servlet:jakarta.servlet-api:6.0.0")
     compileOnly("org.projectlombok:lombok")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
@@ -56,11 +59,11 @@ dependencies {
     testImplementation("org.mockito:mockito-core")
     testImplementation("org.postgresql:postgresql")
     implementation("org.postgresql:postgresql")
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     implementation("jakarta.persistence:jakarta.persistence-api:3.1.0")
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("io.github.cdimascio:java-dotenv:5.2.2")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
 }
 
 tasks.register<Test>("unitTest") {
