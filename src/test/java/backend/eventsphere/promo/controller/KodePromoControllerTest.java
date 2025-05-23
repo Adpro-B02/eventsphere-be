@@ -12,6 +12,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -57,7 +58,7 @@ public class KodePromoControllerTest {
         KodePromo promo = samplePercentagePromo();
         Mockito.when(promoService.createPercentagePromo(
                 anyString(), any(), any(), any(), any(), any())
-        ).thenReturn(promo);
+        ).thenReturn(CompletableFuture.completedFuture(promo));
 
         mockMvc.perform(post("/api/promos")
                         .param("code", promo.getCode())
@@ -77,7 +78,7 @@ public class KodePromoControllerTest {
         KodePromo promo = sampleFixedAmountPromo();
         Mockito.when(promoService.createFixedAmountPromo(
                 anyString(), any(), any(), any(), any(), any())
-        ).thenReturn(promo);
+        ).thenReturn(CompletableFuture.completedFuture(promo));
 
         mockMvc.perform(post("/api/promos")
                         .param("code", promo.getCode())
@@ -175,7 +176,7 @@ public class KodePromoControllerTest {
         Mockito.when(promoService.updatePromo(
                 eq(promo.getId()),
                 anyString(), any(BigDecimal.class), any(), any(), any())
-        ).thenReturn(promo);
+        ).thenReturn(CompletableFuture.completedFuture(promo));
 
         mockMvc.perform(put("/api/promos/{id}", promo.getId())
                         .param("code", promo.getCode())
@@ -193,7 +194,7 @@ public class KodePromoControllerTest {
         Mockito.when(promoService.updatePromo(
                 eq(promo.getId()),
                 anyString(), any(BigDecimal.class), any(), any(), any())
-        ).thenReturn(promo);
+        ).thenReturn(CompletableFuture.completedFuture(promo));
 
         mockMvc.perform(put("/api/promos/{id}", promo.getId())
                         .param("code", "NEWCODE")
