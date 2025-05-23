@@ -3,6 +3,7 @@ package backend.eventsphere.auth.config;
 import backend.eventsphere.auth.config.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -31,6 +32,11 @@ public class SecurityConfig {
             .authorizeHttpRequests()
             .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
             .requestMatchers("/api/review/**").hasAnyRole("ADMIN", "ATTENDEE", "ORGANIZER") // Adjust roles as needed
+            // Ticket Endpoints
+            .requestMatchers(HttpMethod.POST, "/api/tickets").hasRole("ORGANIZER")
+            .requestMatchers(HttpMethod.PUT, "/api/tickets/**").hasRole("ORGANIZER")
+            .requestMatchers(HttpMethod.DELETE, "/api/tickets/**").hasRole("ADMIN")
+            .requestMatchers(HttpMethod.GET, "/api/tickets/**").hasAnyRole("ATTENDEE", "ORGANIZER", "ADMIN")
             .anyRequest().authenticated()
             .and()
             .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS); // Stateless
