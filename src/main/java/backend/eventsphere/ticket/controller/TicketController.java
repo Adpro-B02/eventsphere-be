@@ -4,6 +4,7 @@ import backend.eventsphere.ticket.model.Ticket;
 import backend.eventsphere.ticket.service.TicketService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -23,79 +24,78 @@ public class TicketController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAuthority('ORGANIZER')")
     public CompletableFuture<ResponseEntity<?>> createTicket(@RequestBody CreateTicketRequest request) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                Ticket ticket = ticketService.createTicket(
-                    UUID.fromString(request.getEventId()),
-                    request.getTicketType(),
-                    request.getTicketPrice(),
-                    request.getQuota()
-                );
+        return ticketService.createTicketAsync(
+            UUID.fromString(request.getEventId()),
+            request.getTicketType(),
+            request.getTicketPrice(),
+            request.getQuota()
+        ).handle((ticket, ex) -> {
+            if (ex != null) {
+                Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(cause.getMessage());
+            } else {
                 return ResponseEntity.ok(mapToResponse(ticket));
-            } catch (IllegalArgumentException e) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-            } catch (Exception e) {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error creating ticket: " + e.getMessage());
             }
         });
     }
 
     @GetMapping("/{id_event}")
+    @PreAuthorize("hasAnyAuthority('ATTENDEE', 'ORGANIZER', 'ADMIN')")
     public CompletableFuture<ResponseEntity<?>> getTicketsByEvent(@PathVariable("id_event") String eventId) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                Map<UUID, Ticket> tickets = ticketService.getTicketsByEvent(UUID.fromString(eventId));
+        return ticketService.getTicketsByEventAsync(UUID.fromString(eventId))
+            .handle((tickets, ex) -> {
+                if (ex != null) {
+                    Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(cause.getMessage());
+                }
                 if (tickets.isEmpty()) {
                     return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No tickets found for event");
                 }
                 return ResponseEntity.ok(tickets.values().stream()
                     .map(this::mapToResponse)
                     .toList());
-            } catch (IllegalArgumentException e) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-            } catch (Exception e) {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error retrieving tickets: " + e.getMessage());
-            }
-        });
+            });
     }
 
     @PutMapping("/{id_ticket}")
+    @PreAuthorize("hasAuthority('ORGANIZER')")
     public CompletableFuture<ResponseEntity<?>> updateTicket(
             @PathVariable("id_ticket") String ticketId,
             @RequestBody UpdateTicketRequest request) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                Ticket ticket = ticketService.updateTicket(
-                    UUID.fromString(ticketId),
-                    request.getTicketPrice(),
-                    request.getQuota()
-                );
-                return ResponseEntity.ok(mapToResponse(ticket));
-            } catch (IllegalArgumentException e) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-            } catch (Exception e) {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error updating ticket: " + e.getMessage());
+        return ticketService.updateTicketAsync(
+            UUID.fromString(ticketId),
+            request.getTicketPrice(),
+            request.getQuota()
+        ).handle((ticket, ex) -> {
+            if (ex != null) {
+                Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+                if (cause instanceof IllegalArgumentException) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(cause.getMessage());
+                }
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error updating ticket: " + cause.getMessage());
             }
+            return ResponseEntity.ok(mapToResponse(ticket));
         });
     }
 
     @DeleteMapping("/{id_ticket}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public CompletableFuture<ResponseEntity<?>> deleteTicket(@PathVariable("id_ticket") String ticketId) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                boolean deleted = ticketService.deleteTicket(UUID.fromString(ticketId));
+        return ticketService.deleteTicketAsync(UUID.fromString(ticketId))
+            .handle((deleted, ex) -> {
+                if (ex != null) {
+                    Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body("Error deleting ticket: " + cause.getMessage());
+                }
                 if (deleted) {
                     return ResponseEntity.noContent().build();
                 } else {
                     return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Ticket not found");
                 }
-            } catch (IllegalArgumentException e) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-            } catch (Exception e) {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error deleting ticket: " + e.getMessage());
-            }
-        });
+            });
     }
 
     private TicketResponse mapToResponse(Ticket ticket) {

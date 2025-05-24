@@ -5,10 +5,12 @@ import backend.eventsphere.ticket.model.TicketFactory;
 import backend.eventsphere.ticket.repository.TicketRepository;
 import backend.eventsphere.ticket.model.TicketObserver;
 import enums.TicketEventType;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Service
@@ -86,5 +88,28 @@ public class TicketService {
         ticketRepository.delete(ticket);
         notifyTicketEvent(ticket, TicketEventType.DELETED);
         return true;
+    }
+
+    @Async
+    @Transactional
+    public CompletableFuture<Ticket> createTicketAsync(UUID eventId, String ticketType, Double price, Integer quota) {
+        return CompletableFuture.completedFuture(createTicket(eventId, ticketType, price, quota));
+    }
+
+    @Async
+    public CompletableFuture<Map<UUID, Ticket>> getTicketsByEventAsync(UUID eventId) {
+        return CompletableFuture.completedFuture(getTicketsByEvent(eventId));
+    }
+
+    @Async
+    @Transactional
+    public CompletableFuture<Ticket> updateTicketAsync(UUID ticketId, Double newPrice, Integer newQuota) {
+        return CompletableFuture.completedFuture(updateTicket(ticketId, newPrice, newQuota));
+    }
+
+    @Async
+    @Transactional
+    public CompletableFuture<Boolean> deleteTicketAsync(UUID ticketId) {
+        return CompletableFuture.completedFuture(deleteTicket(ticketId));
     }
 }

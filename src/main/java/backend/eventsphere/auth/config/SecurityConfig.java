@@ -3,9 +3,9 @@ package backend.eventsphere.auth.config;
 import backend.eventsphere.auth.config.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -14,6 +14,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     @Bean
@@ -30,13 +31,8 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http.csrf().disable()
             .authorizeHttpRequests()
-            .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
+            .requestMatchers("/api/auth/register", "/api/auth/login", "/api/tickets/**").permitAll()
             .requestMatchers("/api/review/**").hasAnyRole("ADMIN", "ATTENDEE", "ORGANIZER") // Adjust roles as needed
-            // Ticket Endpoints
-            .requestMatchers(HttpMethod.POST, "/api/tickets").hasRole("ORGANIZER")
-            .requestMatchers(HttpMethod.PUT, "/api/tickets/**").hasRole("ORGANIZER")
-            .requestMatchers(HttpMethod.DELETE, "/api/tickets/**").hasRole("ADMIN")
-            .requestMatchers(HttpMethod.GET, "/api/tickets/**").hasAnyRole("ATTENDEE", "ORGANIZER", "ADMIN")
             .anyRequest().authenticated()
             .and()
             .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS); // Stateless
