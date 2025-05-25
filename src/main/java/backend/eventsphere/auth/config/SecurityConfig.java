@@ -34,6 +34,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/review/**", "/dashboard").hasAnyAuthority("ADMIN", "ATTENDEE", "ORGANIZER")
                 .requestMatchers("/events/create", "/events/update", "/events/delete").hasAuthority("ORGANIZER") // Ini harus di atas
                 .requestMatchers("/events/**").permitAll() // Sekarang semua /events perlu login
+                .requestMatchers("/api/promos/**").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS); // Stateless
