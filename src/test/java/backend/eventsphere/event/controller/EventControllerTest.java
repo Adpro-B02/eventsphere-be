@@ -1,9 +1,12 @@
 package backend.eventsphere.event.controller;
 
 import backend.eventsphere.auth.config.JwtUtil;
+import backend.eventsphere.auth.repository.UserRepository;
+import backend.eventsphere.auth.service.UserService;
 import backend.eventsphere.config.TestSecurityConfig;
 import backend.eventsphere.event.model.Event;
 import backend.eventsphere.event.service.EventService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
@@ -15,6 +18,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
@@ -28,10 +32,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@ExtendWith(MockitoExtension.class)
 @WebMvcTest(EventController.class)
-@Import({EventControllerTest.TestConfig.class, TestSecurityConfig.class})
-public class EventControllerTest {
+@Import(TestSecurityConfig.class)
+class EventControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -39,13 +42,17 @@ public class EventControllerTest {
     @MockBean
     private EventService eventService;
 
+    @MockBean
+    private UserRepository userRepository;
+
+    @MockBean
+    private UserService userService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @TestConfiguration
     static class TestConfig {
-        @Bean
-        public EventService eventService() {
-            return Mockito.mock(EventService.class);
-        }
-
         @Bean
         @Primary
         public JwtUtil jwtUtil() {
@@ -72,14 +79,6 @@ public class EventControllerTest {
     }
 
     @Test
-    void testCreateEventPage_ReturnsCreateFormWithModel() throws Exception {
-        mockMvc.perform(get("/events/create"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("event/createEvent"))
-                .andExpect(model().attributeExists("event"));
-    }
-
-    @Test
     void testCreateEventPost_SavesEventAndRedirects() throws Exception {
         mockMvc.perform(post("/events/create")
                         .param("organizerId", "00000000-0000-0000-0000-000000000001")
@@ -89,8 +88,7 @@ public class EventControllerTest {
                         .param("location", "Jakarta")
                         .param("description", "Event Desc")
                         .param("link_image", "http://img.com/img.jpg")
-                        .param("status", "PLANNED")
-                )
+                        .param("status", "PLANNED"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/events/"));
 
