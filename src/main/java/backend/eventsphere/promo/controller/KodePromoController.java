@@ -1,12 +1,15 @@
 package backend.eventsphere.promo.controller;
 
+import backend.eventsphere.auth.model.User;
 import backend.eventsphere.auth.repository.UserRepository;
 import backend.eventsphere.promo.model.KodePromo;
 import backend.eventsphere.promo.service.KodePromoService;
 import lombok.AllArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -32,24 +35,40 @@ public class KodePromoController {
             @RequestParam("startDate") @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate startDate,
             @RequestParam("endDate") @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate endDate,
             @RequestParam("eventId") String eventId,
-            @RequestParam("createdBy") String createdBy) {
+            Authentication authentication) {
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String username = authentication.getName();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        UUID userId = user.getId();
 
         if ("percentage".equalsIgnoreCase(promoType)) {
             BigDecimal percentage = BigDecimal.valueOf(amount).divide(BigDecimal.valueOf(100));
-            promoService.createPercentagePromo(code, percentage, startDate, endDate, UUID.fromString(eventId), UUID.fromString(createdBy))
-                    .thenApply(ResponseEntity::ok);
-            return ResponseEntity.ok(
-                    KodePromo.builder()
-                            .code(code)
-                            .discountType(KodePromo.DiscountType.PERCENTAGE)
-                            .discount(percentage)
-                            .startDate(startDate)
-                            .endDate(endDate)
-                            .eventId(UUID.fromString(eventId))
-                            .createdBy(UUID.fromString(createdBy)).build());
+
+            promoService.createPercentagePromo(code, percentage, startDate, endDate,
+                    UUID.fromString(eventId), userId
+            ).thenApply(ResponseEntity::ok);
+
+            return ResponseEntity.ok(KodePromo.builder()
+                    .code(code)
+                    .discountType(KodePromo.DiscountType.PERCENTAGE)
+                    .discount(percentage)
+                    .startDate(startDate)
+                    .endDate(endDate)
+                    .eventId(UUID.fromString(eventId))
+                    .createdBy(userId)
+                    .build());
+
         } else {
-            promoService.createFixedAmountPromo(code, BigDecimal.valueOf(amount), startDate, endDate, UUID.fromString(eventId), UUID.fromString(createdBy))
-                    .thenApply(ResponseEntity::ok);
+            promoService.createFixedAmountPromo(code, BigDecimal.valueOf(amount), startDate, endDate,
+                    UUID.fromString(eventId), userId
+            ).thenApply(ResponseEntity::ok);
+
             return ResponseEntity.ok(KodePromo.builder()
                     .code(code)
                     .discountType(KodePromo.DiscountType.FIXED_AMOUNT)
@@ -57,13 +76,13 @@ public class KodePromoController {
                     .startDate(startDate)
                     .endDate(endDate)
                     .eventId(UUID.fromString(eventId))
-                    .createdBy(UUID.fromString(createdBy))
+                    .createdBy(userId)
                     .build());
         }
     }
 
     @GetMapping()
-    @PreAuthorize("hasAuthority('ATTENDEE')")
+    @PreAuthorize("hasAnyAuthority('ATTENDEE', 'ORGANIZER')")
     public ResponseEntity<List<KodePromo>> getAllPromos() {
         List<KodePromo> promos = promoService.getAllPromos();
         return ResponseEntity.ok(promos);
