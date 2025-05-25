@@ -1,158 +1,102 @@
 package backend.eventsphere.review.service;
 
-import backend.eventsphere.review.dto.ReviewCreateRequest;
-import backend.eventsphere.review.dto.ReviewResponse;
-import backend.eventsphere.review.dto.ReviewUpdateRequest;
 import backend.eventsphere.review.model.Review;
 import backend.eventsphere.review.repository.ReviewRepository;
-import backend.eventsphere.review.service.mock.EventServiceMock;
-import backend.eventsphere.review.service.mock.UserService;
-
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Service
 public class ReviewService {
 
     private final ReviewRepository reviewRepository;
-    private final EventServiceMock eventService;
-    private final UserService userService;
+    private final ExecutorService executorService;
 
-    public ReviewService(
-        ReviewRepository reviewRepository, 
-        @Qualifier("mockEventService") EventServiceMock eventService, 
-        @Qualifier("mockUserService") UserService userService) {
+    @Autowired
+    public ReviewService(ReviewRepository reviewRepository) {
         this.reviewRepository = reviewRepository;
-        this.eventService = eventService;
-        this.userService = userService;
+        this.executorService = Executors.newFixedThreadPool(10);
     }
 
-    private ReviewResponse mapToResponse(Review review) {
-        return new ReviewResponse(
-            review.getId(),
-            review.getEventId(),
-            review.getUserId(),
-            review.getRating(),
-            review.getComment()
-        );
+    public CompletableFuture<Review> createReviewAsync(UUID eventId, UUID userId, String comment, int rating) {
+        return CompletableFuture.supplyAsync(() -> {
+            Review existingReview = reviewRepository.findByUserIdAndEventId(userId, eventId);
+            if (existingReview != null) {
+                throw new IllegalStateException("You have already reviewed this event");
+            }
+
+            Review newReview = new Review(
+                null,
+                eventId,
+                userId,
+                comment,
+                rating,
+                LocalDateTime.now(),
+                LocalDateTime.now()
+            );
+
+            return reviewRepository.save(newReview);
+        }, executorService);
     }
 
-    @Transactional
-    public Optional<ReviewResponse> createReview(ReviewCreateRequest request) {
-        // Check if request is valid
-        if (!isCreateRequestValid(request)) {
-            return Optional.empty();
-        }
+    public CompletableFuture<Review> updateReviewAsync(UUID reviewId, UUID userId, String comment, int rating) {
+        return CompletableFuture.supplyAsync(() -> {
+            Review review = reviewRepository.findById(reviewId);
+            if (review == null) {
+                throw new IllegalArgumentException("Review not found");
+            }
 
-        // Check if event exists
-        if (!eventService.eventExists(request.getEventId())) {
-            return Optional.empty();
-        }
+            if (!review.getUserId().equals(userId)) {
+                throw new IllegalArgumentException("You can only update your own reviews");
+            }
 
-        // Check if user exists
-        if (!userService.userExists(request.getUserId())) {
-            return Optional.empty();
-        }
-
-        // Check if user attended the event
-        if (!eventService.userAttendedEvent(request.getUserId(), request.getEventId())) {
-            return Optional.empty();
-        }
-
-        // Check if review already exists for this user and event
-        if (reviewRepository.findByUserIdAndEventId(request.getUserId(), request.getEventId()).isPresent()) {
-            return Optional.empty();
-        }
-
-        // Create new review
-        Review review = new Review(
-            null,
-            request.getEventId(),
-            request.getUserId(),
-            request.getRating(),
-            request.getComment()
-        );
-
-        // Save review
-        Review savedReview = reviewRepository.save(review);
-        return Optional.of(mapToResponse(savedReview));
+            return reviewRepository.update(reviewId, rating, comment);
+        }, executorService);
     }
 
-    @Transactional
-    public Optional<ReviewResponse> updateReview(Long id, ReviewUpdateRequest request) {
-        // Get review
-        Optional<Review> optionalReview = reviewRepository.findById(id);
-        if (optionalReview.isEmpty()) {
-            return Optional.empty();
-        }
+    public CompletableFuture<Void> deleteReviewAsync(UUID reviewId, UUID userId) {
+        return CompletableFuture.runAsync(() -> {
+            Review review = reviewRepository.findById(reviewId);
+            if (review == null) {
+                throw new IllegalArgumentException("Review not found");
+            }
 
-        Review review = optionalReview.get();
+            if (!review.getUserId().equals(userId)) {
+                throw new IllegalArgumentException("You can only delete your own reviews");
+            }
 
-        // Update review
-        if (request.getRating() != null) {
-            review.setRating(request.getRating());
-        }
-
-        if (request.getComment() != null) {
-            review.setComment(request.getComment());
-        }
-
-        // Save review
-        Review updatedReview = reviewRepository.save(review);
-        return Optional.of(mapToResponse(updatedReview));
+            reviewRepository.delete(reviewId);
+        }, executorService);
     }
 
-    @Transactional
-    public boolean deleteReview(Long id) {
-        // Check if review exists
-        if (reviewRepository.findById(id).isEmpty()) {
-            return false;
-        }
-
-        // Delete review
-        reviewRepository.deleteById(id);
-        return true;
+    public CompletableFuture<Review> findByIdAsync(UUID reviewId) {
+        return CompletableFuture.supplyAsync(() -> 
+            reviewRepository.findById(reviewId), executorService);
     }
 
-    public Optional<ReviewResponse> getReviewById(Long id) {
-        return reviewRepository.findById(id)
-            .map(this::mapToResponse);
+    public CompletableFuture<List<Review>> findByEventIdAsync(UUID eventId) {
+        return CompletableFuture.supplyAsync(() ->
+            reviewRepository.findByEventId(eventId), executorService);
     }
 
-    public List<ReviewResponse> getReviewsByEventId(Long eventId) {
-        // Check if event exists
-        if (!eventService.eventExists(eventId)) {
-            return List.of();
-        }
-
-        return reviewRepository.findByEventId(eventId).stream()
-            .map(this::mapToResponse)
-            .collect(Collectors.toList());
+    public CompletableFuture<List<Review>> findByUserIdAsync(UUID userId) {
+        return CompletableFuture.supplyAsync(() ->
+            reviewRepository.findByUserId(userId), executorService);
     }
 
-    public List<ReviewResponse> getReviewsByUserId(Long userId) {
-        // Check if user exists
-        if (!userService.userExists(userId)) {
-            return List.of();
-        }
-
-        return reviewRepository.findByUserId(userId).stream()
-            .map(this::mapToResponse)
-            .collect(Collectors.toList());
+    public CompletableFuture<Review> findByUserIdAndEventIdAsync(UUID userId, UUID eventId) {
+        return CompletableFuture.supplyAsync(() -> 
+            reviewRepository.findByUserIdAndEventId(userId, eventId), executorService);
     }
 
-    public Optional<ReviewResponse> getReviewByUserIdAndEventId(Long userId, Long eventId) {
-        return reviewRepository.findByUserIdAndEventId(userId, eventId)
-            .map(this::mapToResponse);
-    }
-
-    private boolean isCreateRequestValid(ReviewCreateRequest request) {
-        return request.getUserId() != null && request.getEventId() != null &&
-               request.getRating() != null && request.getRating() >= 1 && request.getRating() <= 5;
+    public CompletableFuture<Double> calculateAverageRatingByEventIdAsync(UUID eventId) {
+        return CompletableFuture.supplyAsync(() ->
+            reviewRepository.calculateAverageRatingByEventId(eventId), executorService);
     }
 }

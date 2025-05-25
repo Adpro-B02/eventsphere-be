@@ -1,63 +1,69 @@
 package backend.eventsphere.review.model;
 
+import lombok.Getter;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+@Getter
 public class Review {
-    private Long id;
-    private Long eventId;
-    private Long userId;
-    private Integer rating;
+    private final UUID id;
+    private final UUID eventId;
+    private final UUID userId;
     private String comment;
+    private int rating;
+    private final LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
-    // Default constructor
-    public Review() {
-    }
-
-    // All-args constructor
-    public Review(Long id, Long eventId, Long userId, Integer rating, String comment) {
+    public Review(UUID id, UUID eventId, UUID userId, String comment, int rating,
+                LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
+        validateEventId(eventId);
+        validateUserId(userId);
+        validateComment(comment);
+        validateRating(rating);
+
         this.eventId = eventId;
         this.userId = userId;
-        this.rating = rating;
         this.comment = comment;
-    }
-
-    // Getters and setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Long getEventId() {
-        return eventId;
-    }
-
-    public void setEventId(Long eventId) {
-        this.eventId = eventId;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-
-    public Integer getRating() {
-        return rating;
-    }
-
-    public void setRating(Integer rating) {
         this.rating = rating;
+        this.createdAt = createdAt != null ? createdAt : LocalDateTime.now();
+        this.updatedAt = updatedAt != null ? updatedAt : LocalDateTime.now();
     }
 
-    public String getComment() {
-        return comment;
+    private void validateEventId(UUID eventId) {
+        if (eventId == null) {
+            throw new IllegalArgumentException("Event ID cannot be null");
+        }
+    }
+
+    private void validateUserId(UUID userId) {
+        if (userId == null) {
+            throw new IllegalArgumentException("User ID cannot be null");
+        }
+    }
+
+    private void validateComment(String comment) {
+        if (comment != null && comment.length() > 1000) {
+            throw new IllegalArgumentException("Comment cannot exceed 1000 characters");
+        }
+    }
+
+    private void validateRating(int rating) {
+        if (rating < 1 || rating > 5) {
+            throw new IllegalArgumentException("Rating must be between 1 and 5");
+        }
     }
 
     public void setComment(String comment) {
+        validateComment(comment);
         this.comment = comment;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void setRating(int rating) {
+        validateRating(rating);
+        this.rating = rating;
+        this.updatedAt = LocalDateTime.now();
     }
 }

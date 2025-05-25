@@ -1,223 +1,171 @@
 package backend.eventsphere.review.controller;
 
-import backend.eventsphere.review.dto.ReviewCreateRequest;
-import backend.eventsphere.review.dto.ReviewResponse;
-import backend.eventsphere.review.dto.ReviewUpdateRequest;
+import backend.eventsphere.review.model.Review;
 import backend.eventsphere.review.service.ReviewService;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
-public class ReviewControllerTest {
-
-    private MockMvc mockMvc;
-
-    @Mock
+class ReviewControllerTest {
     private ReviewService reviewService;
-
-    @InjectMocks
     private ReviewController reviewController;
-
-    private ObjectMapper objectMapper;
-    private ReviewCreateRequest validCreateRequest;
-    private ReviewUpdateRequest validUpdateRequest;
-    private ReviewResponse validReviewResponse;
+    private UUID userId;
+    private UUID eventId;
+    private UUID reviewId;
+    private Review sampleReview;
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(reviewController).build();
-        objectMapper = new ObjectMapper();
-
-        // Setup test data
-        validCreateRequest = new ReviewCreateRequest(1L, 1L, 5, "Excellent event!");
-        validUpdateRequest = new ReviewUpdateRequest(4, "Good event, but could be better.");
-        validReviewResponse = new ReviewResponse(1L, 1L, 1L, 5, "Excellent event!");
+        reviewService = mock(ReviewService.class);
+        reviewController = new ReviewController(reviewService);
+        userId = UUID.randomUUID();
+        eventId = UUID.randomUUID();
+        reviewId = UUID.randomUUID();
+        sampleReview = new Review(reviewId, eventId, userId, "Test Review", 5, 
+            LocalDateTime.now(), LocalDateTime.now());
     }
 
     @Test
-    void createReview_ValidRequest_ReturnsCreatedReview() throws Exception {
-        // Arrange
-        when(reviewService.createReview(any(ReviewCreateRequest.class)))
-                .thenReturn(Optional.of(validReviewResponse));
+    void testGetEventReviewsSuccess() throws ExecutionException, InterruptedException {
+        List<Review> expectedReviews = Arrays.asList(sampleReview);
+        when(reviewService.findByEventIdAsync(eventId))
+            .thenReturn(CompletableFuture.completedFuture(expectedReviews));
 
-        // Act & Assert
-        mockMvc.perform(post("/api/reviews")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(validCreateRequest)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(validReviewResponse.getId()))
-                .andExpect(jsonPath("$.eventId").value(validReviewResponse.getEventId()))
-                .andExpect(jsonPath("$.userId").value(validReviewResponse.getUserId()))
-                .andExpect(jsonPath("$.rating").value(validReviewResponse.getRating()))
-                .andExpect(jsonPath("$.comment").value(validReviewResponse.getComment()));
+        CompletableFuture<ResponseEntity<List<Review>>> futureResponse = 
+            reviewController.getEventReviews(eventId);
+        ResponseEntity<List<Review>> response = futureResponse.get();
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(expectedReviews, response.getBody());
     }
 
     @Test
-    void createReview_InvalidRequest_ReturnsBadRequest() throws Exception {
-        // Arrange
-        when(reviewService.createReview(any(ReviewCreateRequest.class)))
-                .thenReturn(Optional.empty());
+    void testGetEventReviewsNotFound() throws ExecutionException, InterruptedException {
+        when(reviewService.findByEventIdAsync(eventId))
+            .thenReturn(CompletableFuture.completedFuture(Collections.emptyList()));
 
-        // Act & Assert
-        mockMvc.perform(post("/api/reviews")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(validCreateRequest)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Failed to create review"))
-                .andExpect(jsonPath("$.status").value(400));
+        CompletableFuture<ResponseEntity<List<Review>>> futureResponse = 
+            reviewController.getEventReviews(eventId);
+        ResponseEntity<List<Review>> response = futureResponse.get();
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
     @Test
-    void updateReview_ValidRequest_ReturnsUpdatedReview() throws Exception {
-        // Arrange
-        ReviewResponse updatedResponse = new ReviewResponse(
-                1L, 1L, 1L, validUpdateRequest.getRating(), validUpdateRequest.getComment());
-        
-        when(reviewService.updateReview(anyLong(), any(ReviewUpdateRequest.class)))
-                .thenReturn(Optional.of(updatedResponse));
+    void testGetReviewSuccess() throws ExecutionException, InterruptedException {
+        when(reviewService.findByIdAsync(reviewId))
+            .thenReturn(CompletableFuture.completedFuture(sampleReview));
 
-        // Act & Assert
-        mockMvc.perform(put("/api/reviews/1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(validUpdateRequest)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(updatedResponse.getId()))
-                .andExpect(jsonPath("$.rating").value(updatedResponse.getRating()))
-                .andExpect(jsonPath("$.comment").value(updatedResponse.getComment()));
+        CompletableFuture<ResponseEntity<Review>> futureResponse = 
+            reviewController.getReview(reviewId);
+        ResponseEntity<Review> response = futureResponse.get();
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(sampleReview, response.getBody());
     }
 
     @Test
-    void updateReview_ReviewNotFound_ReturnsNotFound() throws Exception {
-        // Arrange
-        when(reviewService.updateReview(anyLong(), any(ReviewUpdateRequest.class)))
-                .thenReturn(Optional.empty());
+    void testGetReviewNotFound() throws ExecutionException, InterruptedException {
+        when(reviewService.findByIdAsync(reviewId))
+            .thenReturn(CompletableFuture.completedFuture(null));
 
-        // Act & Assert
-        mockMvc.perform(put("/api/reviews/1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(validUpdateRequest)))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Review not found"))
-                .andExpect(jsonPath("$.status").value(404));
+        CompletableFuture<ResponseEntity<Review>> futureResponse = 
+            reviewController.getReview(reviewId);
+        ResponseEntity<Review> response = futureResponse.get();
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertNull(response.getBody());
     }
 
     @Test
-    void deleteReview_ReviewExists_ReturnsNoContent() throws Exception {
-        // Arrange
-        when(reviewService.deleteReview(anyLong())).thenReturn(true);
+    void testCreateReviewSuccess() throws ExecutionException, InterruptedException {
+        when(reviewService.createReviewAsync(eventId, userId, "Test Review", 5))
+            .thenReturn(CompletableFuture.completedFuture(sampleReview));
 
-        // Act & Assert
-        mockMvc.perform(delete("/api/reviews/1"))
-                .andExpect(status().isNoContent());
+        CompletableFuture<ResponseEntity<Review>> futureResponse = 
+            reviewController.createReview(eventId, userId, "Test Review", 5);
+        ResponseEntity<Review> response = futureResponse.get();
+
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertEquals(sampleReview, response.getBody());
     }
 
     @Test
-    void deleteReview_ReviewNotFound_ReturnsNotFound() throws Exception {
-        // Arrange
-        when(reviewService.deleteReview(anyLong())).thenReturn(false);
+    void testCreateReviewFailure() throws ExecutionException, InterruptedException {
+        when(reviewService.createReviewAsync(eventId, userId, "Test Review", 5))
+            .thenReturn(CompletableFuture.failedFuture(
+                new IllegalStateException("Review already exists")));
 
-        // Act & Assert
-        mockMvc.perform(delete("/api/reviews/1"))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Review not found"))
-                .andExpect(jsonPath("$.status").value(404));
+        CompletableFuture<ResponseEntity<Review>> futureResponse = 
+            reviewController.createReview(eventId, userId, "Test Review", 5);
+        ResponseEntity<Review> response = futureResponse.get();
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 
     @Test
-    void getReviewById_ReviewExists_ReturnsReview() throws Exception {
-        // Arrange
-        when(reviewService.getReviewById(anyLong())).thenReturn(Optional.of(validReviewResponse));
+    void testUpdateReviewSuccess() throws ExecutionException, InterruptedException {
+        Review updatedReview = new Review(reviewId, eventId, userId, "Updated Review", 4, 
+            sampleReview.getCreatedAt(), LocalDateTime.now());
+        when(reviewService.updateReviewAsync(reviewId, userId, "Updated Review", 4))
+            .thenReturn(CompletableFuture.completedFuture(updatedReview));
 
-        // Act & Assert
-        mockMvc.perform(get("/api/reviews/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(validReviewResponse.getId()))
-                .andExpect(jsonPath("$.eventId").value(validReviewResponse.getEventId()))
-                .andExpect(jsonPath("$.userId").value(validReviewResponse.getUserId()))
-                .andExpect(jsonPath("$.rating").value(validReviewResponse.getRating()))
-                .andExpect(jsonPath("$.comment").value(validReviewResponse.getComment()));
+        CompletableFuture<ResponseEntity<Review>> futureResponse = 
+            reviewController.updateReview(reviewId, userId, "Updated Review", 4);
+        ResponseEntity<Review> response = futureResponse.get();
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(updatedReview, response.getBody());
     }
 
     @Test
-    void getReviewById_ReviewNotFound_ReturnsNotFound() throws Exception {
-        // Arrange
-        when(reviewService.getReviewById(anyLong())).thenReturn(Optional.empty());
+    void testUpdateReviewFailure() throws ExecutionException, InterruptedException {
+        when(reviewService.updateReviewAsync(reviewId, userId, "Updated Review", 4))
+            .thenReturn(CompletableFuture.failedFuture(
+                new IllegalArgumentException("Review not found or user mismatch")));
 
-        // Act & Assert
-        mockMvc.perform(get("/api/reviews/1"))
-                .andExpect(status().isNotFound());
+        CompletableFuture<ResponseEntity<Review>> futureResponse = 
+            reviewController.updateReview(reviewId, userId, "Updated Review", 4);
+        ResponseEntity<Review> response = futureResponse.get();
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNull(response.getBody());
     }
 
     @Test
-    void getReviewsByEventId_ReturnsReviews() throws Exception {
-        // Arrange
-        List<ReviewResponse> reviews = Arrays.asList(
-                new ReviewResponse(1L, 1L, 1L, 5, "Great event!"),
-                new ReviewResponse(2L, 1L, 2L, 4, "Good event!")
-        );
-        
-        when(reviewService.getReviewsByEventId(anyLong())).thenReturn(reviews);
+    void testDeleteReviewSuccess() throws ExecutionException, InterruptedException {
+        when(reviewService.deleteReviewAsync(reviewId, userId))
+            .thenReturn(CompletableFuture.completedFuture(null));
 
-        // Act & Assert
-        mockMvc.perform(get("/api/reviews/event/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(reviews.get(0).getId()))
-                .andExpect(jsonPath("$[1].id").value(reviews.get(1).getId()))
-                .andExpect(jsonPath("$[0].comment").value(reviews.get(0).getComment()))
-                .andExpect(jsonPath("$[1].comment").value(reviews.get(1).getComment()));
+        CompletableFuture<ResponseEntity<Void>> futureResponse = 
+            reviewController.deleteReview(reviewId, userId);
+        ResponseEntity<Void> response = futureResponse.get();
+
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
     }
 
     @Test
-    void getReviewsByUserId_ReturnsReviews() throws Exception {
-        // Arrange
-        List<ReviewResponse> reviews = Arrays.asList(
-                new ReviewResponse(1L, 1L, 1L, 5, "Great event!"),
-                new ReviewResponse(2L, 2L, 1L, 4, "Good event!")
-        );
-        
-        when(reviewService.getReviewsByUserId(anyLong())).thenReturn(reviews);
+    void testDeleteReviewFailure() throws ExecutionException, InterruptedException {
+        when(reviewService.deleteReviewAsync(reviewId, userId))
+            .thenReturn(CompletableFuture.failedFuture(
+                new IllegalArgumentException("Review not found")));
 
-        // Act & Assert
-        mockMvc.perform(get("/api/reviews/user/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(reviews.get(0).getId()))
-                .andExpect(jsonPath("$[1].id").value(reviews.get(1).getId()))
-                .andExpect(jsonPath("$[0].comment").value(reviews.get(0).getComment()))
-                .andExpect(jsonPath("$[1].comment").value(reviews.get(1).getComment()));
-    }
+        CompletableFuture<ResponseEntity<Void>> futureResponse = 
+            reviewController.deleteReview(reviewId, userId);
+        ResponseEntity<Void> response = futureResponse.get();
 
-    @Test
-    void getReviewByUserIdAndEventId_ReviewExists_ReturnsReview() throws Exception {
-        // Arrange
-        when(reviewService.getReviewByUserIdAndEventId(anyLong(), anyLong()))
-                .thenReturn(Optional.of(validReviewResponse));
-
-        // Act & Assert
-        mockMvc.perform(get("/api/reviews/user/1/event/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(validReviewResponse.getId()))
-                .andExpect(jsonPath("$.eventId").value(validReviewResponse.getEventId()))
-                .andExpect(jsonPath("$.userId").value(validReviewResponse.getUserId()))
-                .andExpect(jsonPath("$.rating").value(validReviewResponse.getRating()))
-                .andExpect(jsonPath("$.comment").value(validReviewResponse.getComment()));
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 }
