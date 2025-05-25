@@ -65,7 +65,7 @@ public class EventControllerTest {
         when(eventService.getAllEventsAsync())
                 .thenReturn(CompletableFuture.completedFuture(List.of(event)));
 
-        mockMvc.perform(get("/events"))
+        mockMvc.perform(get("/events/"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("event/events"))
                 .andExpect(model().attributeExists("events"));
@@ -92,7 +92,7 @@ public class EventControllerTest {
                         .param("status", "PLANNED")
                 )
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/events"));
+                .andExpect(redirectedUrl("/events/"));
 
         verify(eventService).addEvent(Mockito.any(Event.class));
     }
@@ -104,7 +104,7 @@ public class EventControllerTest {
         mockMvc.perform(post("/events/delete")
                         .param("id", eventId.toString()))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/events"));
+                .andExpect(redirectedUrl("/events/"));
 
         verify(eventService).deleteEventById(eventId);
     }
@@ -149,7 +149,7 @@ public class EventControllerTest {
                         .param("status", "COMPLETED")
                 )
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/events"));
+                .andExpect(redirectedUrl("/events/"));
 
         verify(eventService).updateEvent(Mockito.eq(eventId), Mockito.any(Event.class));
     }
@@ -236,7 +236,7 @@ public class EventControllerTest {
 
         mockMvc.perform(post("/events/delete").param("id", id.toString()))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/events"));
+                .andExpect(redirectedUrl("/events/"));
     }
 
     @Test
@@ -247,6 +247,6 @@ public class EventControllerTest {
 
         mockMvc.perform(post("/events/delete").param("id", id.toString()))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/events"));
+                .andExpect(redirectedUrl("/events/"));
     }
 }

@@ -30,13 +30,16 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http.csrf().disable()
-            .authorizeHttpRequests()
-            .requestMatchers("/api/auth/register", "/api/auth/login", "/login", "/register", "/api/tickets/**").permitAll()
-            .requestMatchers("/userlist").hasAuthority("ADMIN")
-            .requestMatchers("/api/review/**", "/dashboard").hasAnyAuthority("ADMIN", "ATTENDEE", "ORGANIZER") // Adjust roles as needed
-            .anyRequest().authenticated()
-            .and()
-            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS); // Stateless
+                .authorizeHttpRequests()
+                .requestMatchers("/api/auth/register", "/api/auth/login", "/login", "/register", "/api/tickets/**").permitAll()
+                .requestMatchers("/userlist").hasAuthority("ADMIN")
+                .requestMatchers("/api/review/**", "/dashboard").hasAnyAuthority("ADMIN", "ATTENDEE", "ORGANIZER")
+                .requestMatchers("/events/create", "/events/update", "/events/delete").hasAuthority("ORGANIZER") // Ini harus di atas
+                .requestMatchers("/events/**").permitAll() // Sekarang semua /events perlu login
+                .anyRequest().authenticated()
+                .and()
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS); // Stateless
+
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

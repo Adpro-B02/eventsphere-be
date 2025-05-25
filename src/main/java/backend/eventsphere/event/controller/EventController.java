@@ -1,8 +1,14 @@
 package backend.eventsphere.event.controller;
 
+import backend.eventsphere.auth.model.User;
+import backend.eventsphere.auth.repository.UserRepository;
+import backend.eventsphere.auth.service.UserService;
 import backend.eventsphere.event.model.Event;
 import backend.eventsphere.event.service.EventService;
 import jakarta.validation.Valid;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -16,27 +22,49 @@ import java.util.concurrent.ExecutionException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
-@RequestMapping("/events")
+@RequestMapping("/events/")
 public class EventController {
 
     private final EventService eventService;
+    private final UserRepository userRepository;
+    private final UserService userService;
 
-    public EventController(EventService eventService) {
+    public EventController(EventService eventService, UserRepository userRepository, UserService userService) {
         this.eventService = eventService;
+        this.userRepository = userRepository;
+        this.userService = userService;
     }
 
     @GetMapping
     public String listEvents(Model model) throws ExecutionException, InterruptedException {
         CompletableFuture<List<Event>> futureEvents = eventService.getAllEventsAsync();
         List<Event> events = futureEvents.get();
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User.UserRole role = null;
+        if (authentication != null && authentication.isAuthenticated()) {
+            String username = authentication.getName();
+            User user = userService.findByUsername(username);
+            if (user != null) {
+                role = user.getRole();
+            }
+        }
+
         model.addAttribute("events", events);
+        model.addAttribute("userRole", role);
         return "event/events";
     }
 
     @GetMapping("/create")
     public String createEventPage(Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
         Event event = new Event();
-        event.setOrganizerId(UUID.fromString("00000000-0000-0000-0000-000000000001")); // login user ID (organizer), sementara hardcoded
+        event.setOrganizerId(user.getId());
         model.addAttribute("event", event);
         return "event/createEvent";
     }
@@ -55,7 +83,7 @@ public class EventController {
             return "event/createEvent";
         }
 
-        return "redirect:/events";
+        return "redirect:/events/";
     }
 
     @PostMapping("/delete")
@@ -69,7 +97,7 @@ public class EventController {
             redirectAttributes.addFlashAttribute("errorMessage", "Terjadi kesalahan saat menghapus event.");
         }
 
-        return "redirect:/events";
+        return "redirect:/events/";
     }
 
 
@@ -100,6 +128,6 @@ public class EventController {
             return "event/updateEvent";
         }
 
-        return "redirect:/events";
+        return "redirect:/events/";
     }
 }
