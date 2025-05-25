@@ -1,13 +1,18 @@
 package backend.eventsphere.event.controller;
-
+import backend.eventsphere.auth.repository.UserRepository;
+import backend.eventsphere.auth.model.User;
 import backend.eventsphere.event.model.Event;
 import backend.eventsphere.event.service.EventService;
 import jakarta.validation.Valid;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
@@ -20,9 +25,11 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class EventController {
 
     private final EventService eventService;
+    private final UserRepository userRepository;
 
-    public EventController(EventService eventService) {
+    public EventController(EventService eventService, UserRepository userRepository) {
         this.eventService = eventService;
+        this.userRepository = userRepository;
     }
 
     @GetMapping
@@ -35,27 +42,35 @@ public class EventController {
 
     @GetMapping("/create")
     public String createEventPage(Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
         Event event = new Event();
-        event.setOrganizerId(UUID.fromString("00000000-0000-0000-0000-000000000001")); // login user ID (organizer), sementara hardcoded
+        event.setOrganizerId(user.getId());
         model.addAttribute("event", event);
         return "event/createEvent";
     }
 
-    @PostMapping("/create")
-    public String createEvent(@Valid @ModelAttribute("event") Event event,
-                              BindingResult result, Model model) {
-        if (result.hasErrors()) {
-            return "event/createEvent";
-        }
+    @PostMapping(value = "/create", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<?> createEventFromJson(@RequestBody @Valid Event event) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        event.setOrganizerId(user.getId());
 
         try {
             eventService.addEvent(event);
+            return ResponseEntity.ok("Event created successfully.");
         } catch (IllegalArgumentException e) {
-            result.rejectValue("name", "duplicate", e.getMessage());
-            return "event/createEvent";
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
-
-        return "redirect:/events/";
     }
 
     @PostMapping("/delete")
