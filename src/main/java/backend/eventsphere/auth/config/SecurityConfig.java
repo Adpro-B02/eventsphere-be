@@ -29,8 +29,9 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http.csrf().disable()
             .authorizeHttpRequests()
-            .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
-            .requestMatchers("/api/review/**").hasAnyRole("ADMIN", "ATTENDEE", "ORGANIZER") // Adjust roles as needed
+            .requestMatchers("/api/auth/register", "/api/auth/login", "/login", "/register").permitAll()
+            .requestMatchers("/userlist").hasAuthority("ADMIN")
+            .requestMatchers("/api/review/**", "/dashboard").hasAnyAuthority("ADMIN", "ATTENDEE", "ORGANIZER") // Adjust roles as needed
             .anyRequest().authenticated()
             .and()
             .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS); // Stateless
