@@ -7,7 +7,7 @@
 <body>
 <h1>Daftar Event</h1>
 
-<a th:href="@{/events/create}">
+<a th:if="${userRole == T(backend.eventsphere.auth.model.User.UserRole).ORGANIZER}" th:href="@{/events/create}">
     <button>+ Tambah Event</button>
 </a>
 
@@ -52,12 +52,12 @@
         <td th:text="${event.status}"></td>
         <td th:text="${event.organizerId}"></td>
         <td>
-            <form th:action="@{/events/update}" method="get" style="display:inline;">
+            <form th:if="${userRole == T(backend.eventsphere.auth.model.User.UserRole).ORGANIZER}" th:action="@{/events/update}" method="get" style="display:inline;">
                 <input type="hidden" name="id" th:value="${event.id}" />
                 <button type="submit">Update</button>
             </form>
 
-            <form th:action="@{/events/delete}" method="post" style="display:inline;">
+            <form th:if="${userRole == T(backend.eventsphere.auth.model.User.UserRole).ORGANIZER}" th:action="@{/events/delete}" method="post" style="display:inline;">
                 <input type="hidden" name="id" th:value="${event.id}" />
                 <button type="submit">Delete</button>
             </form>

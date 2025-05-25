@@ -2,6 +2,7 @@ package backend.eventsphere.event.controller;
 
 import backend.eventsphere.auth.model.User;
 import backend.eventsphere.auth.repository.UserRepository;
+import backend.eventsphere.auth.service.UserService;
 import backend.eventsphere.event.model.Event;
 import backend.eventsphere.event.service.EventService;
 import jakarta.validation.Valid;
@@ -26,17 +27,31 @@ public class EventController {
 
     private final EventService eventService;
     private final UserRepository userRepository;
+    private final UserService userService;
 
-    public EventController(EventService eventService, UserRepository userRepository) {
+    public EventController(EventService eventService, UserRepository userRepository, UserService userService) {
         this.eventService = eventService;
         this.userRepository = userRepository;
+        this.userService = userService;
     }
 
     @GetMapping
     public String listEvents(Model model) throws ExecutionException, InterruptedException {
         CompletableFuture<List<Event>> futureEvents = eventService.getAllEventsAsync();
         List<Event> events = futureEvents.get();
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User.UserRole role = null;
+        if (authentication != null && authentication.isAuthenticated()) {
+            String username = authentication.getName();
+            User user = userService.findByUsername(username);
+            if (user != null) {
+                role = user.getRole();
+            }
+        }
+
         model.addAttribute("events", events);
+        model.addAttribute("userRole", role);
         return "event/events";
     }
 
