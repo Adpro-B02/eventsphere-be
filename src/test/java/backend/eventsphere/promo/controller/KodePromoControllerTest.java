@@ -1,12 +1,18 @@
 package backend.eventsphere.promo.controller;
 
+import backend.eventsphere.auth.config.JwtUtil;
+import backend.eventsphere.config.TestSecurityConfig;
 import backend.eventsphere.promo.model.KodePromo;
 import backend.eventsphere.promo.service.KodePromoService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
@@ -20,6 +26,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(KodePromoController.class)
+@Import(TestSecurityConfig.class)
 public class KodePromoControllerTest {
 
     @Autowired
@@ -27,6 +34,15 @@ public class KodePromoControllerTest {
 
     @MockBean
     private KodePromoService promoService;
+
+    @TestConfiguration
+    static class TestConfig {
+        @Bean
+        @Primary
+        public JwtUtil jwtUtil() {
+            return Mockito.mock(JwtUtil.class);
+        }
+    }
 
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
