@@ -3,6 +3,7 @@ package backend.eventsphere.promo.service;
 import backend.eventsphere.promo.factory.PromoFactory;
 import backend.eventsphere.promo.model.KodePromo;
 import backend.eventsphere.promo.repository.KodePromoRepository;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +17,7 @@ import java.util.concurrent.CompletableFuture;
 
 @Service
 @Transactional
+@Component
 public class KodePromoService {
 
     private final KodePromoRepository repository;
@@ -108,27 +110,44 @@ public class KodePromoService {
 
         validatePromoUpdate(promo, newCode, newDiscount, newDiscountType);
 
-        promo.setCode(newCode);
-        promo.setDiscount(newDiscount);
-        promo.setDiscountType(newDiscountType);
-        promo.setStartDate(newStartDate);
-        promo.setEndDate(newEndDate);
+        if (newCode != null) promo.setCode(newCode);
+
+        if (newDiscount != null) {
+            if (newDiscountType == KodePromo.DiscountType.PERCENTAGE) {
+                promo.setDiscount(newDiscount.divide(BigDecimal.valueOf(100)));
+            } else {
+                promo.setDiscount(newDiscount);
+            }
+        }
+        if (newDiscountType != null) promo.setDiscountType(newDiscountType);
+        if (newStartDate != null) promo.setStartDate(newStartDate);
+        if (newEndDate != null) promo.setEndDate(newEndDate);
+
 
         return CompletableFuture.completedFuture(repository.save(promo));
     }
 
     private void validatePromoUpdate(KodePromo existingPromo, String newCode,
                                      BigDecimal newDiscount, KodePromo.DiscountType newDiscountType) {
-        if (!existingPromo.getCode().equalsIgnoreCase(newCode) && repository.existsByCodeIgnoreCase(newCode)) {
+        if (newCode != null &&
+                !existingPromo.getCode().equalsIgnoreCase(newCode) &&
+                repository.existsByCodeIgnoreCase(newCode)) {
             throw new IllegalArgumentException("Kode promo sudah digunakan");
         }
 
-        if (newDiscountType == KodePromo.DiscountType.FIXED_AMOUNT && newDiscount.scale() > 0) {
-            throw new IllegalArgumentException("Diskon nominal tetap harus dalam bilangan bulat");
-        }
+        if (newDiscount != null) {
+            if (newDiscountType == KodePromo.DiscountType.FIXED_AMOUNT && newDiscount.scale() > 0) {
+                throw new IllegalArgumentException("Diskon nominal tetap harus dalam bilangan bulat");
+            }
 
-        if (newDiscount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Discount harus lebih besar dari 0");
+            if (newDiscount.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new IllegalArgumentException("Diskon harus lebih besar dari 0");
+            }
+
+            if (newDiscountType == KodePromo.DiscountType.PERCENTAGE &&
+                    newDiscount.compareTo(BigDecimal.valueOf(100)) > 0) {
+                throw new IllegalArgumentException("Diskon persentase maksimal 100%");
+            }
         }
     }
 

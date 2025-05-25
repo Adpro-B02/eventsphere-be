@@ -1,7 +1,10 @@
 package backend.eventsphere.promo.controller;
 
+import backend.eventsphere.auth.repository.UserRepository;
 import backend.eventsphere.promo.model.KodePromo;
 import backend.eventsphere.promo.service.KodePromoService;
+import lombok.AllArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,30 +16,47 @@ import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/api/promos")
+@AllArgsConstructor
 public class KodePromoController {
 
     private final KodePromoService promoService;
+    private final UserRepository userRepository;
 
-    public KodePromoController(KodePromoService promoService) {
-        this.promoService = promoService;
-    }
-
-    @PostMapping
-    public CompletableFuture<ResponseEntity<KodePromo>> createPromo(
-            @RequestParam String code,
-            @RequestParam BigDecimal amount,
-            @RequestParam String promoType,
-            @RequestParam LocalDate startDate,
-            @RequestParam LocalDate endDate,
-            @RequestParam UUID eventId,
-            @RequestParam UUID createdBy) {
+    @PostMapping()
+    public ResponseEntity<KodePromo> createPromo(
+            @RequestParam("code") String code,
+            @RequestParam("amount") Integer amount,
+            @RequestParam("promoType") String promoType,
+            @RequestParam("startDate") @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate startDate,
+            @RequestParam("endDate") @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate endDate,
+            @RequestParam("eventId") String eventId,
+            @RequestParam("createdBy") String createdBy) {
 
         if ("percentage".equalsIgnoreCase(promoType)) {
-            return promoService.createPercentagePromo(code, amount, startDate, endDate, eventId, createdBy)
+            BigDecimal percentage = BigDecimal.valueOf(amount).divide(BigDecimal.valueOf(100));
+            promoService.createPercentagePromo(code, percentage, startDate, endDate, UUID.fromString(eventId), UUID.fromString(createdBy))
                     .thenApply(ResponseEntity::ok);
+            return ResponseEntity.ok(
+                    KodePromo.builder()
+                            .code(code)
+                            .discountType(KodePromo.DiscountType.PERCENTAGE)
+                            .discount(percentage)
+                            .startDate(startDate)
+                            .endDate(endDate)
+                            .eventId(UUID.fromString(eventId))
+                            .createdBy(UUID.fromString(createdBy)).build());
         } else {
-            return promoService.createFixedAmountPromo(code, amount, startDate, endDate, eventId, createdBy)
+            promoService.createFixedAmountPromo(code, BigDecimal.valueOf(amount), startDate, endDate, UUID.fromString(eventId), UUID.fromString(createdBy))
                     .thenApply(ResponseEntity::ok);
+            return ResponseEntity.ok(KodePromo.builder()
+                    .code(code)
+                    .discountType(KodePromo.DiscountType.FIXED_AMOUNT)
+                    .discount(BigDecimal.valueOf(amount))
+                    .startDate(startDate)
+                    .endDate(endDate)
+                    .eventId(UUID.fromString(eventId))
+                    .createdBy(UUID.fromString(createdBy))
+                    .build());
         }
     }
 
@@ -72,8 +92,8 @@ public class KodePromoController {
             @RequestParam(required = false) String code,
             @RequestParam(required = false) BigDecimal discount,
             @RequestParam(required = false) KodePromo.DiscountType discountType,
-            @RequestParam(required = false) LocalDate startDate,
-            @RequestParam(required = false) LocalDate endDate) {
+            @RequestParam @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate startDate,
+            @RequestParam @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate endDate) {
         return promoService.updatePromo(id, code, discount, discountType, startDate, endDate)
                 .thenApply(ResponseEntity::ok);
     }
