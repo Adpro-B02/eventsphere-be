@@ -61,6 +61,8 @@ dependencies {
     implementation("org.postgresql:postgresql")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     implementation("jakarta.persistence:jakarta.persistence-api:3.1.0")
+    testImplementation("org.springframework.boot:spring-boot-starter-thymeleaf")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("io.github.cdimascio:java-dotenv:5.2.2")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")

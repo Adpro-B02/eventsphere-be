@@ -3,12 +3,18 @@ package backend.eventsphere.event.model;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.EntityManager;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -128,5 +134,32 @@ class EventTest {
         );
 
         assertEquals("Startup Day", event.toString());
+    }
+
+    @Test
+    void testDefaultConstructor() {
+        Event event = new Event();
+        assertEquals("PLANNED", event.getStatus());
+    }
+
+    @Test
+    void testBeanValidationViolations() {
+        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+        Validator validator = factory.getValidator();
+
+        Event invalidEvent = new Event();
+        invalidEvent.setOrganizerId(UUID.randomUUID());
+
+        Set<ConstraintViolation<Event>> violations = validator.validate(invalidEvent);
+        assertFalse(violations.isEmpty());
+
+        List<String> messages = violations.stream().map(ConstraintViolation::getMessage).toList();
+
+        assertTrue(messages.contains("Nama event tidak boleh kosong."));
+        assertTrue(messages.contains("Harga tiket tidak boleh kosong."));
+        assertTrue(messages.contains("Tanggal dan waktu event tidak boleh kosong."));
+        assertTrue(messages.contains("Lokasi event tidak boleh kosong."));
+        assertTrue(messages.contains("Deskripsi event tidak boleh kosong."));
+        assertTrue(messages.contains("Gambar event tidak boleh kosong."));
     }
 }

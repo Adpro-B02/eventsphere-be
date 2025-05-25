@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/api/reviews")
@@ -22,63 +23,49 @@ public class ReviewController {
     }
 
     @GetMapping("/event/{eventId}")
-    public ResponseEntity<List<Review>> getEventReviews(@PathVariable UUID eventId) {
-        List<Review> reviews = reviewService.findByEventId(eventId);
-        if (reviews.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-        return new ResponseEntity<>(reviews, HttpStatus.OK);
+    public CompletableFuture<ResponseEntity<List<Review>>> getEventReviews(@PathVariable UUID eventId) {
+        return reviewService.findByEventIdAsync(eventId)
+            .thenApply(reviews -> reviews.isEmpty() 
+                ? new ResponseEntity<>(HttpStatus.NOT_FOUND)
+                : new ResponseEntity<>(reviews, HttpStatus.OK));
     }
 
     @GetMapping("/{reviewId}")
-    public ResponseEntity<Review> getReview(@PathVariable UUID reviewId) {
-        Review review = reviewService.findById(reviewId);
-        if (review == null) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-        return new ResponseEntity<>(review, HttpStatus.OK);
+    public CompletableFuture<ResponseEntity<Review>> getReview(@PathVariable UUID reviewId) {
+        return reviewService.findByIdAsync(reviewId)
+            .thenApply(review -> review == null
+                ? new ResponseEntity<>(HttpStatus.NOT_FOUND)
+                : new ResponseEntity<>(review, HttpStatus.OK));
     }
 
     @PostMapping
-    public ResponseEntity<Review> createReview(
+    public CompletableFuture<ResponseEntity<Review>> createReview(
             @RequestParam UUID eventId,
             @RequestParam UUID userId,
             @RequestParam String comment,
-            @RequestParam int rating
-    ) {
-        try {
-            Review review = reviewService.createReview(eventId, userId, comment, rating);
-            return new ResponseEntity<>(review, HttpStatus.CREATED);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
+            @RequestParam int rating) {
+        return reviewService.createReviewAsync(eventId, userId, comment, rating)
+            .thenApply(review -> new ResponseEntity<>(review, HttpStatus.CREATED))
+            .exceptionally(ex -> new ResponseEntity<>(HttpStatus.BAD_REQUEST));
     }
 
     @PutMapping("/{reviewId}")
-    public ResponseEntity<Review> updateReview(
+    public CompletableFuture<ResponseEntity<Review>> updateReview(
             @PathVariable UUID reviewId,
             @RequestParam UUID userId,
             @RequestParam String comment,
-            @RequestParam int rating
-    ) {
-        try {
-            Review updated = reviewService.updateReview(reviewId, userId, comment, rating);
-            return new ResponseEntity<>(updated, HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
+            @RequestParam int rating) {
+        return reviewService.updateReviewAsync(reviewId, userId, comment, rating)
+            .thenApply(review -> new ResponseEntity<>(review, HttpStatus.OK))
+            .exceptionally(ex -> new ResponseEntity<>(HttpStatus.BAD_REQUEST));
     }
 
     @DeleteMapping("/{reviewId}")
-    public ResponseEntity<Void> deleteReview(
+    public CompletableFuture<ResponseEntity<Void>> deleteReview(
             @PathVariable UUID reviewId,
-            @RequestParam UUID userId
-    ) {
-        try {
-            reviewService.deleteReview(reviewId, userId);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
+            @RequestParam UUID userId) {
+        return reviewService.deleteReviewAsync(reviewId, userId)
+            .thenApply(result -> new ResponseEntity<Void>(HttpStatus.NO_CONTENT))
+            .exceptionally(ex -> new ResponseEntity<Void>(HttpStatus.BAD_REQUEST));
     }
 }
