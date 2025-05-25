@@ -93,23 +93,47 @@ public class TicketService {
     @Async
     @Transactional
     public CompletableFuture<Ticket> createTicketAsync(UUID eventId, String ticketType, Double price, Integer quota) {
-        return CompletableFuture.completedFuture(createTicket(eventId, ticketType, price, quota));
+        try {
+            return CompletableFuture.completedFuture(createTicket(eventId, ticketType, price, quota));
+        } catch (Exception e) {
+            CompletableFuture<Ticket> future = new CompletableFuture<>();
+            future.completeExceptionally(e);
+            return future;
+        }
     }
 
     @Async
     public CompletableFuture<Map<UUID, Ticket>> getTicketsByEventAsync(UUID eventId) {
-        return CompletableFuture.completedFuture(getTicketsByEvent(eventId));
+        try {
+            return CompletableFuture.completedFuture(getTicketsByEvent(eventId));
+        } catch (Exception e) {
+            CompletableFuture<Map<UUID, Ticket>> future = new CompletableFuture<>();
+            future.completeExceptionally(e);
+            return future;
+        }
     }
 
     @Async
     @Transactional
     public CompletableFuture<Ticket> updateTicketAsync(UUID ticketId, Double newPrice, Integer newQuota) {
-        return CompletableFuture.completedFuture(updateTicket(ticketId, newPrice, newQuota));
+        try {
+            return CompletableFuture.completedFuture(updateTicket(ticketId, newPrice, newQuota));
+        } catch (Exception e) {
+            CompletableFuture<Ticket> future = new CompletableFuture<>();
+            future.completeExceptionally(e);
+            return future;
+        }
     }
 
     @Async
     @Transactional
     public CompletableFuture<Boolean> deleteTicketAsync(UUID ticketId) {
-        return CompletableFuture.completedFuture(deleteTicket(ticketId));
+        try {
+            return CompletableFuture.completedFuture(deleteTicket(ticketId));
+        } catch (Exception e) {
+            CompletableFuture<Boolean> future = new CompletableFuture<>();
+            future.completeExceptionally(e);
+            return future;
+        }
     }
 }
