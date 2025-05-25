@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>User List</title>
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            top: 20%;
+            left: 40%;
+            background: white;
+            padding: 15px;
+            border: 1px solid #ccc;
+        }
+
+        .modal.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+<h2>User List</h2>
+<button onclick="openModal('addModal')">Add User</button>
+<button onclick="logout()">Logout</button>
+<table border="1">
+    <tr>
+        <th>ID</th>
+        <th>Username</th>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Actions</th>
+    </tr>
+    <tbody id="userTable" th:each="user : ${users}">
+    <tr>
+        <td th:text="${user.id}"></td>
+        <td th:text="${user.username}"></td>
+        <td th:text="${user.email}"></td>
+        <td th:text="${user.role}"></td>
+        <td>
+            <button onclick="showUpdateModal([[${user.id}]], '[[${user.username}]]', '[[${user.email}]]', '[[${user.role}]]')">Update</button>
+            <button onclick="showDeleteModal([[${user.id}]])">Delete</button>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<!-- Add Modal -->
+<div id="addModal" class="modal">
+    <h3>Add User</h3>
+    <form onsubmit="addUser(event)">
+        <input type="text" id="addUsername" placeholder="Username" required/><br/>
+        <input type="email" id="addEmail" placeholder="Email" required/><br/>
+        <input type="password" id="addPassword" placeholder="Password" required/><br/>
+        <select id="addRole" required>
+            <option value="ADMIN">Admin</option>
+            <option value="ORGANIZER">Organizer</option>
+            <option value="ATTENDEE">Attendee</option>
+        </select><br/>
+        <button type="submit">Add</button>
+        <button type="button" onclick="closeModal('addModal')">Cancel</button>
+    </form>
+    <div id="addResult"></div>
+</div>
+
+<!-- Update Modal -->
+<div id="updateModal" class="modal">
+    <h3>Update User</h3>
+    <form onsubmit="updateUser(event)">
+        <input type="hidden" id="updateId"/>
+        <input type="text" id="updateUsername" placeholder="Username" required/><br/>
+        <input type="email" id="updateEmail" placeholder="Email" required/><br/>
+        <input type="password" id="updatePassword" placeholder="Password"/><br/>
+        <select id="updateRole" required>
+            <option value="ADMIN">Admin</option>
+            <option value="ORGANIZER">Organizer</option>
+            <option value="ATTENDEE">Attendee</option>
+        </select><br/>
+        <button type="submit">Update</button>
+        <button type="button" onclick="closeModal('updateModal')">Cancel</button>
+    </form>
+    <div id="updateResult"></div>
+</div>
+
+<!-- Delete Modal -->
+<div id="deleteModal" class="modal">
+    <h3>Delete User?</h3>
+    <form onsubmit="deleteUser(event)">
+        <input type="hidden" id="deleteId"/>
+        <button type="submit">Delete</button>
+        <button type="button" onclick="closeModal('deleteModal')">Cancel</button>
+    </form>
+    <div id="deleteResult"></div>
+</div>
+
+<script>
+    function openModal(id) {
+        document.getElementById(id).classList.add('show');
+    }
+
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('show');
+    }
+
+    function showUpdateModal(id, username, email, role) {
+        document.getElementById('updateId').value = id;
+        document.getElementById('updateUsername').value = username;
+        document.getElementById('updateEmail').value = email;
+        document.getElementById('updatePassword').value = '';
+        document.getElementById('updateRole').value = role;
+        openModal('updateModal');
+    }
+
+    function showDeleteModal(id) {
+        document.getElementById('deleteId').value = id;
+        openModal('deleteModal');
+    }
+
+    // Add User
+    function addUser(e) {
+        e.preventDefault();
+        fetch('/api/auth/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                username: document.getElementById('addUsername').value,
+                email: document.getElementById('addEmail').value,
+                password: document.getElementById('addPassword').value,
+                role: document.getElementById('addRole').value
+            })
+        }).then(response => response.json())
+            .then(data => {
+                if (data.id) {
+                    closeModal('addModal');
+                    location.reload();
+                } else {
+                    document.getElementById('addResult').innerText = data.error || 'Failed to add user';
+                }
+            });
+    }
+
+    // Update User
+    function updateUser(e) {
+        e.preventDefault();
+        const id = document.getElementById('updateId').value;
+        fetch('/api/auth/users/' + id, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                username: document.getElementById('updateUsername').value,
+                email: document.getElementById('updateEmail').value,
+                password: document.getElementById('updatePassword').value,
+                role: document.getElementById('updateRole').value
+            })
+        }).then(response => response.json())
+            .then(data => {
+                if (data.id) {
+                    closeModal('updateModal');
+                    location.reload();
+                } else {
+                    document.getElementById('updateResult').innerText = data.error || 'Failed to update user';
+                }
+            });
+    }
+
+    // Delete User
+    function deleteUser(e) {
+        e.preventDefault();
+        const id = document.getElementById('deleteId').value;
+        fetch('/api/auth/users/' + id, {
+            method: 'DELETE',
+            credentials: 'include'
+        }).then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    closeModal('deleteModal');
+                    location.reload();
+                } else {
+                    document.getElementById('deleteResult').innerText = data.error || 'Failed to delete user';
+                }
+            });
+    }
+
+    // Logout
+    function logout() {
+        fetch('/api/auth/logout', {
+            method: 'POST',
+            credentials: 'include'
+        })
+            .then(() => {
+                window.location.href = '/login';
+            });
+    }
+</script>
+</body>
+</html>
