@@ -1,5 +1,7 @@
 package backend.eventsphere.event.controller;
 
+import backend.eventsphere.auth.config.JwtUtil;
+import backend.eventsphere.config.TestSecurityConfig;
 import backend.eventsphere.event.model.Event;
 import backend.eventsphere.event.service.EventService;
 import org.junit.jupiter.api.Test;
@@ -12,6 +14,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
@@ -27,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ExtendWith(MockitoExtension.class)
 @WebMvcTest(EventController.class)
-@Import(EventControllerTest.TestConfig.class)
+@Import({EventControllerTest.TestConfig.class, TestSecurityConfig.class})
 public class EventControllerTest {
 
     @Autowired
@@ -41,6 +44,12 @@ public class EventControllerTest {
         @Bean
         public EventService eventService() {
             return Mockito.mock(EventService.class);
+        }
+
+        @Bean
+        @Primary
+        public JwtUtil jwtUtil() {
+            return Mockito.mock(JwtUtil.class);
         }
     }
 
