@@ -13,7 +13,7 @@
 <script>
     async function loadUsername() {
         try {
-            const response = await fetch('/api/auth/me', { credentials: 'include' });
+            const response = await fetch('/api/auth/username', { credentials: 'include' });
             if (response.ok) {
                 const data = await response.json();
                 document.getElementById('username').innerText = data.username || 'User';

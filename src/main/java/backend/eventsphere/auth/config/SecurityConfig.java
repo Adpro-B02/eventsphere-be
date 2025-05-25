@@ -33,7 +33,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests()
                 .requestMatchers("/api/auth/register", "/api/auth/login", "/login", "/register", "/api/tickets/**").permitAll()
                 .requestMatchers("/userlist").hasAuthority("ADMIN")
-                .requestMatchers("/api/review/**", "/dashboard").hasAnyAuthority("ADMIN", "ATTENDEE", "ORGANIZER")
+                .requestMatchers("/api/review/**", "/dashboard", "/api/auth/username", "/api/auth/role", "/tickets/**").hasAnyAuthority("ADMIN", "ATTENDEE", "ORGANIZER")
                 .requestMatchers("/events/create", "/events/update", "/events/delete").hasAuthority("ORGANIZER") // Ini harus di atas
                 .requestMatchers("/events/**").permitAll() // Sekarang semua /events perlu login
                 .anyRequest().authenticated()
