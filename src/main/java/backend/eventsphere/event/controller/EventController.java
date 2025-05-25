@@ -1,11 +1,10 @@
 package backend.eventsphere.event.controller;
-import backend.eventsphere.auth.repository.UserRepository;
+
 import backend.eventsphere.auth.model.User;
+import backend.eventsphere.auth.repository.UserRepository;
 import backend.eventsphere.event.model.Event;
 import backend.eventsphere.event.service.EventService;
 import jakarta.validation.Valid;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -13,6 +12,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
@@ -54,23 +54,21 @@ public class EventController {
         return "event/createEvent";
     }
 
-    @PostMapping(value = "/create", consumes = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
-    public ResponseEntity<?> createEventFromJson(@RequestBody @Valid Event event) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
-
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-        event.setOrganizerId(user.getId());
+    @PostMapping("/create")
+    public String createEvent(@Valid @ModelAttribute("event") Event event,
+                              BindingResult result, Model model) {
+        if (result.hasErrors()) {
+            return "event/createEvent";
+        }
 
         try {
             eventService.addEvent(event);
-            return ResponseEntity.ok("Event created successfully.");
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            result.rejectValue("name", "duplicate", e.getMessage());
+            return "event/createEvent";
         }
+
+        return "redirect:/events/";
     }
 
     @PostMapping("/delete")
