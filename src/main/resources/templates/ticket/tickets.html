@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Tickets for Event</title>
+    <style>
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            border-radius: 5px;
+            width: 80%;
+            max-width: 500px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .btn {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+
+        .ticket-item {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+
+        .ticket-controls {
+            margin-top: 10px;
+        }
+
+        .ticket-controls a,
+        .ticket-controls button {
+            margin-right: 10px;
+            padding: 5px 10px;
+            text-decoration: none;
+            border: 1px solid #007bff;
+            border-radius: 3px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+
+        .ticket-controls a:hover,
+        .ticket-controls button:hover {
+            background-color: #0056b3;
+        }
+
+        .ticket-controls .delete-btn {
+            background-color: #dc3545;
+            border-color: #dc3545;
+        }
+
+        .ticket-controls .delete-btn:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+<h1>Tiket</h1>
+<div>
+    <button id="back-to-event-btn" class="btn btn-secondary">Kembali ke Acara</button>
+</div>
+<div>
+    <div id="tickets-container"></div>
+    <button id="add-ticket-btn" class="btn" style="display:none;">Tambah Tiket</button>
+</div>
+
+<!-- Add Ticket Modal -->
+<div id="add-ticket-modal" class="modal">
+    <div class="modal-content">
+        <span class="close" id="add-modal-close">&times;</span>
+        <h2>Tambah Tiket Baru</h2>
+        <form id="add-ticket-form">
+            <div class="form-group">
+                <label for="add-ticket-type">Jenis Tiket:</label>
+                <input type="text" id="add-ticket-type" name="ticketType" required>
+            </div>
+            <div class="form-group">
+                <label for="add-ticket-price">Harga:</label>
+                <input type="number" id="add-ticket-price" name="ticketPrice" step="0.01" min="0" required>
+            </div>
+            <div class="form-group">
+                <label for="add-quota">Kuota:</label>
+                <input type="number" id="add-quota" name="quota" min="1" required>
+            </div>
+            <button type="submit" class="btn">Tambah Tiket</button>
+            <button type="button" class="btn btn-secondary" id="add-modal-cancel">Batal</button>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Ticket Modal -->
+<div id="edit-ticket-modal" class="modal">
+    <div class="modal-content">
+        <span class="close" id="edit-modal-close">&times;</span>
+        <h2>Edit Tiket</h2>
+        <form id="edit-ticket-form">
+            <input type="hidden" id="edit-ticket-id">
+            <div class="form-group">
+                <label for="edit-ticket-type">Jenis Tiket:</label>
+                <input type="text" id="edit-ticket-type" name="ticketType" readonly>
+            </div>
+            <div class="form-group">
+                <label for="edit-ticket-price">Harga:</label>
+                <input type="number" id="edit-ticket-price" name="ticketPrice" step="0.01" min="0" required>
+            </div>
+            <div class="form-group">
+                <label for="edit-quota">Kuota:</label>
+                <input type="number" id="edit-quota" name="quota" min="1" required>
+            </div>
+            <button type="submit" class="btn">Perbarui Tiket</button>
+            <button type="button" class="btn btn-secondary" id="edit-modal-cancel">Batal</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    const eventId = window.location.pathname.split('/').pop();
+
+    // BUTTON Back to event page
+    document.getElementById('back-to-event-btn').onclick = function() {
+        window.location.href = '/events/'
+    };
+
+    async function fetchUserRole() {
+        try {
+            const response = await fetch('/api/auth/role', {
+                method: 'GET',
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                throw new Error('Gagal mengambil peran pengguna');
+            }
+
+            const data = await response.json();
+            return data.role;
+        } catch (error) {
+            console.error('Error mengambil peran pengguna:', error);
+            return null;
+        }
+    }
+
+    async function checkRole() {
+        const role = await fetchUserRole();
+
+        if (role === 'ORGANIZER') {
+            const addTicketBtn = document.getElementById('add-ticket-btn');
+            addTicketBtn.style.display = 'block';
+            addTicketBtn.onclick = openAddTicketModal;
+        }
+        return role;
+    }
+
+    // Modal functions
+    function openAddTicketModal() {
+        document.getElementById('add-ticket-modal').style.display = 'block';
+    }
+
+    function closeAddTicketModal() {
+        document.getElementById('add-ticket-modal').style.display = 'none';
+        document.getElementById('add-ticket-form').reset();
+    }
+
+    function openEditTicketModal(ticket) {
+        document.getElementById('edit-ticket-id').value = ticket.id;
+        document.getElementById('edit-ticket-type').value = ticket.ticketType;
+        document.getElementById('edit-ticket-price').value = ticket.ticketPrice;
+        document.getElementById('edit-quota').value = ticket.quota;
+        document.getElementById('edit-ticket-modal').style.display = 'block';
+    }
+
+    function closeEditTicketModal() {
+        document.getElementById('edit-ticket-modal').style.display = 'none';
+        document.getElementById('edit-ticket-form').reset();
+    }
+
+    // Modal event listeners
+    document.getElementById('add-modal-close').onclick = closeAddTicketModal;
+    document.getElementById('add-modal-cancel').onclick = closeAddTicketModal;
+    document.getElementById('edit-modal-close').onclick = closeEditTicketModal;
+    document.getElementById('edit-modal-cancel').onclick = closeEditTicketModal;
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const addModal = document.getElementById('add-ticket-modal');
+        const editModal = document.getElementById('edit-ticket-modal');
+        if (event.target === addModal) {
+            closeAddTicketModal();
+        }
+        if (event.target === editModal) {
+            closeEditTicketModal();
+        }
+    }
+
+    // Form submissions
+    document.getElementById('add-ticket-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const ticketData = {
+            eventId: eventId,
+            ticketType: formData.get('ticketType'),
+            ticketPrice: parseFloat(formData.get('ticketPrice')),
+            quota: parseInt(formData.get('quota'))
+        };
+
+        try {
+            const response = await fetch('/api/tickets', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify(ticketData)
+            });
+
+            if (response.ok) {
+                alert('Tiket berhasil ditambahkan!');
+                closeAddTicketModal();
+                await loadTickets();
+            } else {
+                const errorText = await response.text();
+                alert('Error menambah tiket: ' + errorText);
+            }
+        } catch (error) {
+            console.error('Error menambah tiket:', error);
+            alert('Gagal menambah tiket');
+        }
+    });
+
+    document.getElementById('edit-ticket-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const ticketId = document.getElementById('edit-ticket-id').value;
+        const ticketData = {
+            ticketPrice: parseFloat(formData.get('ticketPrice')),
+            quota: parseInt(formData.get('quota'))
+        };
+
+        try {
+            const response = await fetch(`/api/tickets/${ticketId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify(ticketData)
+            });
+
+            if (response.ok) {
+                alert('Tiket berhasil diperbarui!');
+                closeEditTicketModal();
+                await loadTickets();
+            } else {
+                const errorText = await response.text();
+                alert('Error memperbarui tiket: ' + errorText);
+            }
+        } catch (error) {
+            console.error('Error memperbarui tiket:', error);
+            alert('Gagal memperbarui tiket');
+        }
+    });
+
+    // Load tickets
+    async function loadTickets() {
+        const role = await checkRole();
+
+        try {
+            const response = await fetch(`/api/tickets/${eventId}`, {
+                method: 'GET',
+                credentials: 'include',
+            });
+
+            if (!response.ok) {
+                if (response.status === 404) {
+                    const container = document.getElementById('tickets-container');
+                    container.innerHTML = '<p>Tidak ada ticket.</p>';
+                    return;
+                } else if (response.status === 403) {
+                    throw new Error('Akses ditolak. Tidak memiliki izin.');
+                } else if (response.status === 401) {
+                    throw new Error('Tidak sah. Silakan login.');
+                }
+                throw new Error('Gagal mengambil tiket');
+            }
+
+            const tickets = await response.json();
+            const container = document.getElementById('tickets-container');
+
+            if (!tickets.length) {
+                container.innerHTML = '<p>Tidak ada tiket ditemukan.</p>';
+                return;
+            }
+
+            container.innerHTML = '';
+            tickets.forEach(ticket => {
+                const div = document.createElement('div');
+                div.className = 'ticket-item';
+                div.innerHTML = `
+                    <div>
+                        <strong>${ticket.ticketType}</strong><br>
+                        Harga: Rp${ticket.ticketPrice}<br>
+                        Kuota: ${ticket.quota}
+                    </div>
+                    <div class="ticket-controls" id="ticket-controls-${ticket.id}"></div>
+                `;
+                container.appendChild(div);
+
+                const controlsDiv = document.getElementById(`ticket-controls-${ticket.id}`);
+
+                if (role === 'ORGANIZER') {
+                    const editBtn = document.createElement('button');
+                    editBtn.textContent = 'Edit';
+                    editBtn.className = 'btn';
+                    editBtn.onclick = () => openEditTicketModal(ticket);
+                    controlsDiv.appendChild(editBtn);
+                }
+
+                if (role === 'ADMIN') {
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.textContent = 'Hapus';
+                    deleteBtn.className = 'btn delete-btn';
+                    deleteBtn.onclick = () => deleteTicket(ticket.id);
+                    controlsDiv.appendChild(deleteBtn);
+                }
+            });
+        } catch (error) {
+            console.error('Error mengambil tiket:', error);
+            const container = document.getElementById('tickets-container');
+            container.innerHTML = `<p>Error: ${error.message}</p>`;
+
+            if (error.message.includes('Tidak sah') || error.message.includes('Akses ditolak')) {
+                window.location.href = '/login';
+            }
+        }
+    }
+
+    async function deleteTicket(ticketId) {
+        if (!confirm('Apakah Anda yakin ingin menghapus tiket ini?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/tickets/${ticketId}`, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
+
+            if (response.status === 204) {
+                alert('Tiket berhasil dihapus!');
+                await loadTickets();
+            } else {
+                const errorText = await response.text();
+                alert('Error menghapus tiket: ' + errorText);
+            }
+        } catch (error) {
+            console.error('Error menghapus tiket:', error);
+            alert('Gagal menghapus tiket');
+        }
+    }
+
+    // Initial load
+    loadTickets();
+</script>
+</body>
+</html>

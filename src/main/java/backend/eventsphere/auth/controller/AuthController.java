@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
@@ -179,12 +180,30 @@ public class AuthController {
         }
     }
 
-    @GetMapping("/api/auth/me")
+    @GetMapping("/username")
     public ResponseEntity<?> getCurrentUser(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
         }
         String username = authentication.getName();
         return ResponseEntity.ok(Map.of("username", username));
+    }
+
+    @GetMapping("/role")
+    public ResponseEntity<?> getCurrentUserRole(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+        }
+
+        String role = authentication.getAuthorities().stream()
+                .findFirst()
+                .map(GrantedAuthority::getAuthority)
+                .orElse(null);
+
+        if (role == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No role found");
+        }
+
+        return ResponseEntity.ok(Map.of("role", role));
     }
 }
