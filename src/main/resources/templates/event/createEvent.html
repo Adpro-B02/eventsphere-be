@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Buat Event Baru</title>
+</head>
+<body>
+<h1>Buat Event Baru</h1>
+
+<form th:action="@{/events/create}" th:object="${event}" method="post">
+    <label>Nama:</label>
+    <input type="text" th:field="*{name}" required /><br><br>
+    <div th:if="${#fields.hasErrors('name')}" th:errors="*{name}" style="color:red"></div>
+
+    <label>Harga Tiket:</label>
+    <input type="number" th:field="*{ticketPrice}" required /><br><br>
+    <div th:if="${#fields.hasErrors('ticketPrice')}" th:errors="*{ticketPrice}" style="color:red"></div>
+
+    <label>Tanggal & Waktu:</label>
+    <input type="datetime-local" th:field="*{eventDateTime}" required /><br><br>
+    <div th:if="${#fields.hasErrors('eventDateTime')}" th:errors="*{eventDateTime}" style="color:red"></div><br>
+
+    <label>Lokasi:</label>
+    <input type="text" th:field="*{location}" required /><br><br>
+    <div th:if="${#fields.hasErrors('location')}" th:errors="*{location}" style="color:red"></div>
+
+    <label>Deskripsi:</label>
+    <textarea th:field="*{description}" required></textarea><br><br>
+    <div th:if="${#fields.hasErrors('description')}" th:errors="*{description}" style="color:red"></div>
+
+    <label>Link Gambar:</label>
+    <input type="text" th:field="*{link_image}" required /><br><br>
+    <div th:if="${#fields.hasErrors('link_image')}" th:errors="*{link_image}" style="color:red"></div>
+
+    <input type="hidden" th:field="*{status}" />
+
+    <input type="hidden" th:field="*{organizerId}" />
+
+    <button type="submit">Simpan</button>
+</form>
+
+<br>
+<a th:href="@{/events}">Kembali ke daftar event</a>
+
+</body>
+</html>
