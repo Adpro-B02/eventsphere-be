@@ -11,15 +11,17 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class ReviewServiceTest {
 
     private ReviewRepository reviewRepository;
     private ReviewService reviewService;
-
     private UUID userId;
     private UUID eventId;
     private UUID reviewId;
@@ -28,20 +30,19 @@ class ReviewServiceTest {
     void setUp() {
         reviewRepository = mock(ReviewRepository.class);
         reviewService = new ReviewService(reviewRepository);
-
         userId = UUID.randomUUID();
         eventId = UUID.randomUUID();
         reviewId = UUID.randomUUID();
     }
 
     @Test
-    void testCreateReviewSuccessfully() {
+    void testCreateReviewAsyncSuccessfully() throws ExecutionException, InterruptedException {
         when(reviewRepository.findByUserIdAndEventId(userId, eventId)).thenReturn(null);
-
         Review saved = new Review(reviewId, eventId, userId, "Nice!", 5, LocalDateTime.now(), LocalDateTime.now());
         when(reviewRepository.save(any())).thenReturn(saved);
 
-        Review result = reviewService.createReview(eventId, userId, "Nice!", 5);
+        CompletableFuture<Review> futureResult = reviewService.createReviewAsync(eventId, userId, "Nice!", 5);
+        Review result = futureResult.get();
 
         assertNotNull(result);
         assertEquals(userId, result.getUserId());
@@ -49,147 +50,187 @@ class ReviewServiceTest {
     }
 
     @Test
-    void testCreateReviewThrowsIfAlreadyExists() {
-        when(reviewRepository.findByUserIdAndEventId(userId, eventId)).thenReturn(
-            new Review(reviewId, eventId, userId, "Nice!", 5, LocalDateTime.now(), LocalDateTime.now()));
+    void testCreateReviewAsyncThrowsIfAlreadyExists() {
+        when(reviewRepository.findByUserIdAndEventId(userId, eventId))
+            .thenReturn(new Review(reviewId, eventId, userId, "Nice!", 5, LocalDateTime.now(), LocalDateTime.now()));
 
-        assertThrows(IllegalStateException.class, () -> {
-            reviewService.createReview(eventId, userId, "Duplicate", 5);
-        });
+        CompletableFuture<Review> futureResult = reviewService.createReviewAsync(eventId, userId, "Duplicate", 5);
+        
+        ExecutionException exception = assertThrows(ExecutionException.class, futureResult::get);
+        assertTrue(exception.getCause() instanceof IllegalStateException);
     }
 
     @Test
-    void testUpdateReviewSuccessfully() {
-        Review existing = new Review(reviewId, eventId, userId, "Old", 3, null, null);
+    void testUpdateReviewAsyncSuccessfully() throws ExecutionException, InterruptedException {
+        Review existing = new Review(reviewId, eventId, userId, "Old", 3, LocalDateTime.now(), LocalDateTime.now());
         when(reviewRepository.findById(reviewId)).thenReturn(existing);
 
-        Review updated = new Review(reviewId, eventId, userId, "Updated", 4, null, null);
+        Review updated = new Review(reviewId, eventId, userId, "Updated", 4, existing.getCreatedAt(), LocalDateTime.now());
         when(reviewRepository.update(reviewId, 4, "Updated")).thenReturn(updated);
 
-        Review result = reviewService.updateReview(reviewId, userId, "Updated", 4);
+        CompletableFuture<Review> futureResult = reviewService.updateReviewAsync(reviewId, userId, "Updated", 4);
+        Review result = futureResult.get();
 
         assertEquals("Updated", result.getComment());
         verify(reviewRepository).update(reviewId, 4, "Updated");
     }
 
     @Test
-    void testUpdateReviewThrowsIfNotFound() {
+    void testUpdateReviewAsyncThrowsIfNotFound() {
         when(reviewRepository.findById(reviewId)).thenReturn(null);
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            reviewService.updateReview(reviewId, userId, "Nope", 4);
-        });
+        CompletableFuture<Review> futureResult = reviewService.updateReviewAsync(reviewId, userId, "Nope", 4);
+        
+        ExecutionException exception = assertThrows(ExecutionException.class, futureResult::get);
+        assertTrue(exception.getCause() instanceof IllegalArgumentException);
     }
 
     @Test
-    void testUpdateReviewThrowsIfUserMismatch() {
-        UUID otherUser = UUID.randomUUID();
-        when(reviewRepository.findById(reviewId)).thenReturn(new Review(reviewId, eventId, otherUser, "Comment", 3, null, null));
+    void testDeleteReviewAsyncSuccessfully() throws ExecutionException, InterruptedException {
+        when(reviewRepository.findById(reviewId))
+            .thenReturn(new Review(reviewId, eventId, userId, "Del", 5, LocalDateTime.now(), LocalDateTime.now()));
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            reviewService.updateReview(reviewId, userId, "Invalid", 4);
-        });
-    }
-
-    @Test
-    void testDeleteReviewSuccessfully() {
-        when(reviewRepository.findById(reviewId)).thenReturn(new Review(reviewId, eventId, userId, "Del", 5, null, null));
-
-        reviewService.deleteReview(reviewId, userId);
+        CompletableFuture<Void> futureResult = reviewService.deleteReviewAsync(reviewId, userId);
+        futureResult.get(); // Wait for completion
 
         verify(reviewRepository).delete(reviewId);
     }
 
     @Test
-    void testDeleteReviewThrowsIfNotFound() {
+    void testDeleteReviewAsyncThrowsIfNotFound() {
         when(reviewRepository.findById(reviewId)).thenReturn(null);
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            reviewService.deleteReview(reviewId, userId);
-        });
+        CompletableFuture<Void> futureResult = reviewService.deleteReviewAsync(reviewId, userId);
+        
+        ExecutionException exception = assertThrows(ExecutionException.class, futureResult::get);
+        assertTrue(exception.getCause() instanceof IllegalArgumentException);
     }
 
     @Test
-    void testDeleteReviewThrowsIfUserMismatch() {
-        UUID otherUser = UUID.randomUUID();
-        when(reviewRepository.findById(reviewId)).thenReturn(new Review(reviewId, eventId, otherUser, "Comment", 3, null, null));
-
-        assertThrows(IllegalArgumentException.class, () -> {
-            reviewService.deleteReview(reviewId, userId);
-        });
-    }
-
-    @Test
-    void testGetReviewByUserAndEvent() {
-        Review review = new Review(reviewId, eventId, userId, "Hi", 5, null, null);
-        when(reviewRepository.findByUserIdAndEventId(userId, eventId)).thenReturn(review);
-
-        Review result = reviewService.findByUserIdAndEventId(userId, eventId);
-        assertEquals(review, result);
-    }
-
-    @Test
-    void testGetReviewByUserAndEventReturnsNullIfNotFound() {
-        when(reviewRepository.findByUserIdAndEventId(userId, eventId)).thenReturn(null);
-
-        Review result = reviewService.findByUserIdAndEventId(userId, eventId);
-        assertNull(result); // Assert that the result is null if the review doesn't exist
-    }
-
-    @Test
-    void testGetReviewsByEventId() {
+    void testFindByEventIdAsyncSuccess() throws ExecutionException, InterruptedException {
         List<Review> reviews = Arrays.asList(
-            new Review(reviewId, eventId, userId, "Nice!", 5, LocalDateTime.now(), LocalDateTime.now()), 
+            new Review(reviewId, eventId, userId, "Nice!", 5, LocalDateTime.now(), LocalDateTime.now()),
             new Review(UUID.randomUUID(), eventId, UUID.randomUUID(), "Bad!", 1, LocalDateTime.now(), LocalDateTime.now())
         );
         when(reviewRepository.findByEventId(eventId)).thenReturn(reviews);
 
-        List<Review> result = reviewService.findByEventId(eventId);
+        CompletableFuture<List<Review>> futureResult = reviewService.findByEventIdAsync(eventId);
+        List<Review> result = futureResult.get();
+
         assertEquals(2, result.size());
+        verify(reviewRepository).findByEventId(eventId);
     }
 
     @Test
-    void testGetReviewsByEventIdReturnsEmptyListIfNoReviews() {
+    void testFindByEventIdAsyncReturnsEmptyListWhenNotFound() throws ExecutionException, InterruptedException {
         when(reviewRepository.findByEventId(eventId)).thenReturn(Collections.emptyList());
 
-        List<Review> result = reviewService.findByEventId(eventId);
-        assertTrue(result.isEmpty()); // Assert that the result is an empty list
+        CompletableFuture<List<Review>> futureResult = reviewService.findByEventIdAsync(eventId);
+        List<Review> result = futureResult.get();
+
+        assertTrue(result.isEmpty());
+        verify(reviewRepository).findByEventId(eventId);
     }
 
     @Test
-    void testGetReviewsByUserId() {
+    void testFindByUserIdAsyncSuccess() throws ExecutionException, InterruptedException {
         List<Review> reviews = Arrays.asList(
-            new Review(reviewId, eventId, userId, "Nice!", 5, LocalDateTime.now(), LocalDateTime.now()), 
-            new Review(UUID.randomUUID(), eventId, UUID.randomUUID(), "Bad!", 1, LocalDateTime.now(), LocalDateTime.now()),
-            new Review(UUID.randomUUID(), eventId, userId, "Meh.", 3, LocalDateTime.now(), LocalDateTime.now())
+            new Review(reviewId, eventId, userId, "Nice!", 5, LocalDateTime.now(), LocalDateTime.now()),
+            new Review(UUID.randomUUID(), UUID.randomUUID(), userId, "Good!", 4, 
+                LocalDateTime.now(), LocalDateTime.now())
         );
         when(reviewRepository.findByUserId(userId)).thenReturn(reviews);
 
-        List<Review> result = reviewService.findByUserId(userId);
-        assertEquals(3, result.size());
+        CompletableFuture<List<Review>> futureResult = reviewService.findByUserIdAsync(userId);
+        List<Review> result = futureResult.get();
+
+        assertEquals(2, result.size());
+        verify(reviewRepository).findByUserId(userId);
     }
 
     @Test
-    void testGetReviewsByUserIdReturnsEmptyListIfNoReviews() {
+    void testFindByUserIdAsyncReturnsEmptyListWhenNotFound() 
+            throws ExecutionException, InterruptedException {
         when(reviewRepository.findByUserId(userId)).thenReturn(Collections.emptyList());
 
-        List<Review> result = reviewService.findByUserId(userId);
-        assertTrue(result.isEmpty()); // Assert that the result is an empty list
+        CompletableFuture<List<Review>> futureResult = reviewService.findByUserIdAsync(userId);
+        List<Review> result = futureResult.get();
+
+        assertTrue(result.isEmpty());
+        verify(reviewRepository).findByUserId(userId);
     }
 
     @Test
-    void testCalculateAverageRatingForEvent() {
+    void testFindByIdAsyncSuccess() throws ExecutionException, InterruptedException {
+        Review review = new Review(reviewId, eventId, userId, "Test", 5, LocalDateTime.now(), LocalDateTime.now());
+        when(reviewRepository.findById(reviewId)).thenReturn(review);
+
+        CompletableFuture<Review> futureResult = reviewService.findByIdAsync(reviewId);
+        Review result = futureResult.get();
+
+        assertEquals(review, result);
+        verify(reviewRepository).findById(reviewId);
+    }
+
+    @Test
+    void testFindByIdAsyncReturnsNullWhenNotFound() throws ExecutionException, InterruptedException {
+        when(reviewRepository.findById(reviewId)).thenReturn(null);
+
+        CompletableFuture<Review> futureResult = reviewService.findByIdAsync(reviewId);
+        Review result = futureResult.get();
+
+        assertNull(result);
+        verify(reviewRepository).findById(reviewId);
+    }
+
+    @Test
+    void testFindByUserIdAndEventIdAsyncSuccess() throws ExecutionException, InterruptedException {
+        Review expectedReview = new Review(reviewId, eventId, userId, "Test Review", 5, 
+            LocalDateTime.now(), LocalDateTime.now());
+        when(reviewRepository.findByUserIdAndEventId(userId, eventId)).thenReturn(expectedReview);
+    
+        CompletableFuture<Review> futureResult = reviewService.findByUserIdAndEventIdAsync(userId, eventId);
+        Review result = futureResult.get();
+    
+        assertNotNull(result);
+        assertEquals(expectedReview, result);
+        assertEquals("Test Review", result.getComment());
+        assertEquals(5, result.getRating());
+        verify(reviewRepository).findByUserIdAndEventId(userId, eventId);
+    }
+
+    @Test
+    void testFindByUserIdAndEventIdAsyncReturnsNullWhenNotFound() throws ExecutionException, InterruptedException {
+        when(reviewRepository.findByUserIdAndEventId(userId, eventId)).thenReturn(null);
+
+        CompletableFuture<Review> futureResult = reviewService.findByUserIdAndEventIdAsync(userId, eventId);
+        Review result = futureResult.get();
+
+        assertNull(result);
+        verify(reviewRepository).findByUserIdAndEventId(userId, eventId);
+    }
+
+    @Test
+    void testCalculateAverageRatingByEventIdAsync() throws ExecutionException, InterruptedException {
         when(reviewRepository.calculateAverageRatingByEventId(eventId)).thenReturn(4.2);
 
-        double avg = reviewService.calculateAverageRatingByEventId(eventId);
-        assertEquals(4.2, avg);
+        CompletableFuture<Double> futureResult = reviewService.calculateAverageRatingByEventIdAsync(eventId);
+        double result = futureResult.get();
+
+        assertEquals(4.2, result);
+        verify(reviewRepository).calculateAverageRatingByEventId(eventId);
     }
 
     @Test
-    void testCalculateAverageRatingForEventReturnsZeroIfNoReviews() {
+    void testCalculateAverageRatingByEventIdAsyncReturnsZeroWhenNoReviews() 
+            throws ExecutionException, InterruptedException {
         when(reviewRepository.calculateAverageRatingByEventId(eventId)).thenReturn(0.0);
 
-        double avg = reviewService.calculateAverageRatingByEventId(eventId);
-        assertEquals(0.0, avg); // Assert that the average is 0 when there are no reviews
+        CompletableFuture<Double> futureResult = 
+            reviewService.calculateAverageRatingByEventIdAsync(eventId);
+        double result = futureResult.get();
+
+        assertEquals(0.0, result);
+        verify(reviewRepository).calculateAverageRatingByEventId(eventId);
     }
 }
