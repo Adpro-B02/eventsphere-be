@@ -62,6 +62,14 @@ public class KodePromoController {
         }
     }
 
+    @GetMapping()
+    @PreAuthorize("hasAuthority('ATTENDEE')")
+    public ResponseEntity<List<KodePromo>> getAllPromos() {
+        List<KodePromo> promos = promoService.getAllPromos();
+        return ResponseEntity.ok(promos);
+    }
+
+
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('ATTENDEE')")
     public ResponseEntity<KodePromo> getPromoById(@PathVariable UUID id) {

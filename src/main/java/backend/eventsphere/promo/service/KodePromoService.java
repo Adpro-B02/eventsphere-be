@@ -78,6 +78,11 @@ public class KodePromoService {
     }
 
     @Transactional(readOnly = true)
+    public List<KodePromo> getAllPromos() {
+        return repository.findAll();
+    }
+
+    @Transactional(readOnly = true)
     public Optional<KodePromo> getPromoById(UUID id) {
         return repository.findById(id);
     }
