@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Daftar Event</title>
+</head>
+<body>
+<h1>Daftar Event</h1>
+
+<a th:if="${userRole == T(backend.eventsphere.auth.model.User.UserRole).ORGANIZER}" th:href="@{/events/create}">
+    <button>+ Tambah Event</button>
+</a>
+
+<br><br>
+
+<div th:if="${successMessage}" style="color:green">
+    <p th:text="${successMessage}"></p>
+</div>
+
+<div th:if="${warningMessage}" style="color:red">
+    <p th:text="${warningMessage}"></p>
+</div>
+
+<div th:if="${errorMessage}" style="color:red">
+    <p th:text="${errorMessage}"></p>
+</div>
+
+<table border="1">
+    <thead>
+    <tr>
+        <th>Nama</th>
+        <th>Harga Tiket</th>
+        <th>Tanggal & Waktu</th>
+        <th>Lokasi</th>
+        <th>Deskripsi</th>
+        <th>Gambar</th>
+        <th>Status</th>
+        <th>Organizer ID</th>
+        <th>Aksi</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="event : ${events}">
+        <td th:text="${event.name}"></td>
+        <td th:text="${event.ticketPrice}"></td>
+        <td th:text="${#temporals.format(event.eventDateTime, 'dd-MM-yyyy HH:mm')}"></td>
+        <td th:text="${event.location}"></td>
+        <td th:text="${event.description}"></td>
+        <td>
+            <img th:src="@{${event.link_image}}" alt="Event Image" width="100">
+        </td>
+        <td th:text="${event.status}"></td>
+        <td th:text="${event.organizerId}"></td>
+        <td>
+            <form th:if="${userRole == T(backend.eventsphere.auth.model.User.UserRole).ORGANIZER}" th:action="@{/events/update}" method="get" style="display:inline;">
+                <input type="hidden" name="id" th:value="${event.id}" />
+                <button type="submit">Update</button>
+            </form>
+
+            <form th:if="${userRole == T(backend.eventsphere.auth.model.User.UserRole).ORGANIZER}" th:action="@{/events/delete}" method="post" style="display:inline;">
+                <input type="hidden" name="id" th:value="${event.id}" />
+                <button type="submit">Delete</button>
+            </form>
+        </td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>
