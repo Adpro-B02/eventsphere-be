@@ -1,10 +1,14 @@
 package backend.eventsphere.review.controller;
 
+import backend.eventsphere.review.dto.ReviewCreateDto;
 import backend.eventsphere.review.model.Review;
 import backend.eventsphere.review.service.ReviewService;
+import jakarta.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -38,28 +42,33 @@ public class ReviewController {
                 : new ResponseEntity<>(review, HttpStatus.OK));
     }
 
+    @PreAuthorize("hasAuthority('ATTENDEE')")
     @PostMapping
-    public CompletableFuture<ResponseEntity<Review>> createReview(
-            @RequestParam UUID eventId,
-            @RequestParam UUID userId,
-            @RequestParam String comment,
-            @RequestParam int rating) {
-        return reviewService.createReviewAsync(eventId, userId, comment, rating)
+    public CompletableFuture<ResponseEntity<Review>> createReview(@Valid @RequestBody ReviewCreateDto reviewDto) {
+        return reviewService.createReviewAsync(
+                reviewDto.getEventId(), 
+                reviewDto.getUserId(), 
+                reviewDto.getComment(), 
+                reviewDto.getRating())
             .thenApply(review -> new ResponseEntity<>(review, HttpStatus.CREATED))
             .exceptionally(ex -> new ResponseEntity<>(HttpStatus.BAD_REQUEST));
     }
 
+    @PreAuthorize("hasAuthority('ATTENDEE')")
     @PutMapping("/{reviewId}")
     public CompletableFuture<ResponseEntity<Review>> updateReview(
             @PathVariable UUID reviewId,
-            @RequestParam UUID userId,
-            @RequestParam String comment,
-            @RequestParam int rating) {
-        return reviewService.updateReviewAsync(reviewId, userId, comment, rating)
+            @Valid @RequestBody ReviewCreateDto reviewDto) {
+        return reviewService.updateReviewAsync(
+                reviewId,
+                reviewDto.getUserId(), 
+                reviewDto.getComment(), 
+                reviewDto.getRating())
             .thenApply(review -> new ResponseEntity<>(review, HttpStatus.OK))
             .exceptionally(ex -> new ResponseEntity<>(HttpStatus.BAD_REQUEST));
     }
 
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'ATTENDEE')")
     @DeleteMapping("/{reviewId}")
     public CompletableFuture<ResponseEntity<Void>> deleteReview(
             @PathVariable UUID reviewId,
