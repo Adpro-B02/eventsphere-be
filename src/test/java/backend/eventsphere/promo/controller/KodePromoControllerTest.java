@@ -11,6 +11,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
@@ -27,30 +28,32 @@ public class KodePromoControllerTest {
     @MockBean
     private KodePromoService promoService;
 
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+
     private KodePromo samplePercentagePromo() {
-        return new KodePromo(
-                UUID.randomUUID(),
-                "PROMO10",
-                BigDecimal.valueOf(0.1),
-                KodePromo.DiscountType.PERCENTAGE,
-                LocalDate.now(),
-                LocalDate.now().plusDays(10),
-                UUID.randomUUID(),
-                UUID.randomUUID()
-        );
+        return KodePromo.builder()
+                .id(UUID.randomUUID())
+                .code("PROMO10")
+                .discount(BigDecimal.valueOf(0.1))
+                .discountType(KodePromo.DiscountType.PERCENTAGE)
+                .startDate(LocalDate.now())
+                .endDate(LocalDate.now().plusDays(10))
+                .eventId(UUID.randomUUID())
+                .createdBy(UUID.randomUUID())
+                .build();
     }
 
     private KodePromo sampleFixedAmountPromo() {
-        return new KodePromo(
-                UUID.randomUUID(),
-                "DISKON20K",
-                BigDecimal.valueOf(20000),
-                KodePromo.DiscountType.FIXED_AMOUNT,
-                LocalDate.now(),
-                LocalDate.now().plusDays(10),
-                UUID.randomUUID(),
-                UUID.randomUUID()
-        );
+        return KodePromo.builder()
+                .id(UUID.randomUUID())
+                .code("DISKON20K")
+                .discount(BigDecimal.valueOf(20000))
+                .discountType(KodePromo.DiscountType.FIXED_AMOUNT)
+                .startDate(LocalDate.now())
+                .endDate(LocalDate.now().plusDays(10))
+                .eventId(UUID.randomUUID())
+                .createdBy(UUID.randomUUID())
+                .build();
     }
 
     @Test
@@ -62,15 +65,16 @@ public class KodePromoControllerTest {
 
         mockMvc.perform(post("/api/promos")
                         .param("code", promo.getCode())
-                        .param("amount", promo.getDiscount().toString())
+                        .param("amount", "10")
                         .param("promoType", "percentage")
-                        .param("startDate", promo.getStartDate().toString())
-                        .param("endDate", promo.getEndDate().toString())
+                        .param("startDate", promo.getStartDate().format(formatter))
+                        .param("endDate", promo.getEndDate().format(formatter))
                         .param("eventId", promo.getEventId().toString())
                         .param("createdBy", promo.getCreatedBy().toString()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(promo.getCode()))
-                .andExpect(jsonPath("$.discountType").value("PERCENTAGE"));
+                .andExpect(jsonPath("$.discountType").value("PERCENTAGE"))
+                .andExpect(jsonPath("$.discount").value(0.1));
     }
 
     @Test
@@ -82,29 +86,39 @@ public class KodePromoControllerTest {
 
         mockMvc.perform(post("/api/promos")
                         .param("code", promo.getCode())
-                        .param("amount", promo.getDiscount().toString())
-                        .param("promoType", "fixed")
-                        .param("startDate", promo.getStartDate().toString())
-                        .param("endDate", promo.getEndDate().toString())
+                        .param("amount", "20000")
+                        .param("promoType", "fixed_amount")
+                        .param("startDate", promo.getStartDate().format(formatter))
+                        .param("endDate", promo.getEndDate().format(formatter))
                         .param("eventId", promo.getEventId().toString())
                         .param("createdBy", promo.getCreatedBy().toString()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(promo.getCode()))
-                .andExpect(jsonPath("$.discountType").value("FIXED_AMOUNT"));
+                .andExpect(jsonPath("$.discountType").value("FIXED_AMOUNT"))
+                .andExpect(jsonPath("$.discount").value(20000));
     }
 
     @Test
-    void testCreatePromo_WithoutType() throws Exception {
+    void testCreatePromo_InvalidType() throws Exception {
         mockMvc.perform(post("/api/promos")
                         .param("code", "INVALID")
-                        .param("amount", "0.1")
-                        .param("startDate", LocalDate.now().toString())
-                        .param("endDate", LocalDate.now().plusDays(1).toString())
+                        .param("amount", "10")
+                        .param("promoType", "invalid_type")
+                        .param("startDate", LocalDate.now().format(formatter))
+                        .param("endDate", LocalDate.now().plusDays(1).format(formatter))
                         .param("eventId", UUID.randomUUID().toString())
                         .param("createdBy", UUID.randomUUID().toString()))
                 .andExpect(status().isBadRequest());
     }
 
+    @Test
+    void testCreatePromo_MissingRequiredFields() throws Exception {
+        mockMvc.perform(post("/api/promos")
+                        .param("code", "TEST")
+                        .param("amount", "10")
+                        .param("promoType", "percentage"))
+                .andExpect(status().isBadRequest());
+    }
 
     @Test
     void testGetPromoById_Found() throws Exception {
@@ -114,8 +128,8 @@ public class KodePromoControllerTest {
 
         mockMvc.perform(get("/api/promos/{id}", promo.getId()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(promo.getCode()))
-                .andExpect(jsonPath("$.discountType").value(promo.getDiscountType().name()));
+                .andExpect(jsonPath("$.id").value(promo.getId().toString()))
+                .andExpect(jsonPath("$.code").value(promo.getCode()));
     }
 
     @Test
@@ -130,7 +144,10 @@ public class KodePromoControllerTest {
     @Test
     void testGetPromosByEventId() throws Exception {
         UUID eventId = UUID.randomUUID();
-        List<KodePromo> promos = List.of(samplePercentagePromo(), sampleFixedAmountPromo());
+        List<KodePromo> promos = Arrays.asList(
+                samplePercentagePromo(),
+                sampleFixedAmountPromo()
+        );
 
         Mockito.when(promoService.getPromosByEvent(eventId)).thenReturn(promos);
 
@@ -164,50 +181,112 @@ public class KodePromoControllerTest {
 
     @Test
     void testGetPromoByCode_NotFound() throws Exception {
-        Mockito.when(promoService.getPromoByCode("INVALID")).thenReturn(Optional.empty());
+        Mockito.when(promoService.getPromoByCode("NON_EXISTENT")).thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/api/promos/code/{code}", "INVALID"))
+        mockMvc.perform(get("/api/promos/code/{code}", "NON_EXISTENT"))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    void testUpdatePromo() throws Exception {
+    void testUpdatePromo_Success() throws Exception {
         KodePromo promo = samplePercentagePromo();
+        KodePromo updated = KodePromo.builder()
+                .id(promo.getId())
+                .code("UPDATED_CODE")
+                .discount(BigDecimal.valueOf(0.2))
+                .discountType(KodePromo.DiscountType.PERCENTAGE)
+                .startDate(promo.getStartDate())
+                .endDate(promo.getEndDate())
+                .eventId(promo.getEventId())
+                .createdBy(promo.getCreatedBy())
+                .build();
+
         Mockito.when(promoService.updatePromo(
                 eq(promo.getId()),
-                anyString(), any(BigDecimal.class), any(), any(), any())
-        ).thenReturn(CompletableFuture.completedFuture(promo));
+                anyString(), any(), any(), any(), any())
+        ).thenReturn(CompletableFuture.completedFuture(updated));
 
         mockMvc.perform(put("/api/promos/{id}", promo.getId())
-                        .param("code", promo.getCode())
-                        .param("discount", promo.getDiscount().toString())
-                        .param("discountType", promo.getDiscountType().name())
-                        .param("startDate", promo.getStartDate().toString())
-                        .param("endDate", promo.getEndDate().toString()))
+                        .param("code", updated.getCode())
+                        .param("discount", "0.2")
+                        .param("discountType", "PERCENTAGE")
+                        .param("startDate", updated.getStartDate().format(formatter))
+                        .param("endDate", updated.getEndDate().format(formatter)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(promo.getCode()));
+                .andExpect(jsonPath("$.code").value(updated.getCode()))
+                .andExpect(jsonPath("$.discount").value(0.2));
     }
 
     @Test
     void testUpdatePromo_PartialUpdate() throws Exception {
         KodePromo promo = samplePercentagePromo();
+        KodePromo updated = KodePromo.builder()
+                .id(promo.getId())
+                .code("PARTIAL_UPDATE")
+                .discount(promo.getDiscount())
+                .discountType(promo.getDiscountType())
+                .startDate(promo.getStartDate())
+                .endDate(promo.getEndDate())
+                .eventId(promo.getEventId())
+                .createdBy(promo.getCreatedBy())
+                .build();
+
         Mockito.when(promoService.updatePromo(
                 eq(promo.getId()),
-                anyString(), any(BigDecimal.class), any(), any(), any())
-        ).thenReturn(CompletableFuture.completedFuture(promo));
+                anyString(), isNull(), isNull(), isNull(), isNull())
+        ).thenReturn(CompletableFuture.completedFuture(updated));
 
         mockMvc.perform(put("/api/promos/{id}", promo.getId())
-                        .param("code", "NEWCODE")
-                        .param("discount", "0.2"))
-                .andExpect(status().isOk());
+                        .param("code", "PARTIAL_UPDATE"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("PARTIAL_UPDATE"));
     }
 
     @Test
-    void testDeletePromo() throws Exception {
+    void testUpdatePromo_NotFound() throws Exception {
+        UUID id = UUID.randomUUID();
+        Mockito.when(promoService.updatePromo(
+                eq(id), any(), any(), any(), any(), any())
+        ).thenReturn(CompletableFuture.failedFuture(new IllegalArgumentException("Promo not found")));
+
+        mockMvc.perform(put("/api/promos/{id}", id)
+                        .param("code", "TEST")
+                        .param("discount", "0.1")
+                        .param("discountType", "PERCENTAGE")
+                        .param("startDate", LocalDate.now().format(formatter))
+                        .param("endDate", LocalDate.now().plusDays(1).format(formatter)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void testDeletePromo_Success() throws Exception {
         UUID id = UUID.randomUUID();
         Mockito.doNothing().when(promoService).deletePromo(id);
 
         mockMvc.perform(delete("/api/promos/{id}", id))
                 .andExpect(status().isNoContent());
     }
+
+    @Test
+    void testDeletePromo_NotFound() throws Exception {
+        UUID id = UUID.randomUUID();
+        Mockito.doThrow(new IllegalArgumentException("Promo not found"))
+                .when(promoService).deletePromo(id);
+
+        mockMvc.perform(delete("/api/promos/{id}", id))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testGetAllPromos() throws Exception {
+        List<KodePromo> promoList = Arrays.asList(samplePercentagePromo(), sampleFixedAmountPromo());
+        Mockito.when(promoService.getAllPromos()).thenReturn(promoList);
+
+        mockMvc.perform(get("/api/promos"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(promoList.size()))
+                .andExpect(jsonPath("$[0].code").value(promoList.get(0).getCode()))
+                .andExpect(jsonPath("$[1].code").value(promoList.get(1).getCode()));
+    }
+
 }

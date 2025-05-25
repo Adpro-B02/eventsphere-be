@@ -316,4 +316,21 @@ class KodePromoServiceTest {
         when(repository.existsByCodeIgnoreCase("NON_EXISTENT")).thenReturn(false);
         assertFalse(service.isPromoCodeExists("NON_EXISTENT"));
     }
+
+    @Test
+    void testGetAllPromos() {
+        List<KodePromo> promos = Arrays.asList(
+                createSamplePromo("PROMO1", new BigDecimal("0.1"), KodePromo.DiscountType.PERCENTAGE),
+                createSamplePromo("PROMO2", new BigDecimal("20000"), KodePromo.DiscountType.FIXED_AMOUNT)
+        );
+
+        when(repository.findAll()).thenReturn(promos);
+
+        List<KodePromo> result = service.getAllPromos();
+
+        assertEquals(2, result.size());
+        assertEquals("PROMO1", result.get(0).getCode());
+        assertEquals("PROMO2", result.get(1).getCode());
+        verify(repository, times(1)).findAll();
+    }
 }
