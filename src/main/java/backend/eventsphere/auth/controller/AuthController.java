@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -50,6 +51,7 @@ public class AuthController {
                     .password(registeredUser.getPassword())
                     .authorities(registeredUser.getRole().name())
                     .build();
+            
             String jwt = jwtUtil.generateToken(userDetails);
 
             Map<String, Object> response = new HashMap<>();
@@ -81,6 +83,7 @@ public class AuthController {
 
             // Generate JWT token
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+
             String jwt = jwtUtil.generateToken(userDetails);
 
             // Return the token and user details
@@ -100,7 +103,7 @@ public class AuthController {
     }
     
     @GetMapping("/users/{id}")
-    public ResponseEntity<?> getUserById(@PathVariable Long id) {
+    public ResponseEntity<?> getUserById(@PathVariable UUID id) {
         try {
             User user = userService.getUserById(id);
             return ResponseEntity.ok(user);
@@ -112,7 +115,7 @@ public class AuthController {
     }
     
     @PutMapping("/users/{id}")
-    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody UserRegistrationDto updateDto) {
+    public ResponseEntity<?> updateUser(@PathVariable UUID id, @RequestBody UserRegistrationDto updateDto) {
         try {
             User updatedUser = userService.updateUser(id, updateDto);
             
@@ -132,7 +135,7 @@ public class AuthController {
     }
     
     @DeleteMapping("/users/{id}")
-    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+    public ResponseEntity<?> deleteUser(@PathVariable UUID id) {
         try {
             userService.deleteUser(id);
             
