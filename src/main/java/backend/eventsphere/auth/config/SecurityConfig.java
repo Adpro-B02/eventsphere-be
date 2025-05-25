@@ -29,7 +29,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http.csrf().disable()
             .authorizeHttpRequests()
-            .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
+            .requestMatchers("/api/auth/register", "/api/auth/login", "/events/**").permitAll()
             .requestMatchers("/api/review/**").hasAnyRole("ADMIN", "ATTENDEE", "ORGANIZER") // Adjust roles as needed
             .anyRequest().authenticated()
             .and()

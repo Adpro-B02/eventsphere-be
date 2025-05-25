@@ -16,7 +16,7 @@ import java.util.concurrent.ExecutionException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
-@RequestMapping("/events")
+@RequestMapping("/events/")
 public class EventController {
 
     private final EventService eventService;
@@ -55,7 +55,7 @@ public class EventController {
             return "event/createEvent";
         }
 
-        return "redirect:/events";
+        return "redirect:/events/";
     }
 
     @PostMapping("/delete")
@@ -69,7 +69,7 @@ public class EventController {
             redirectAttributes.addFlashAttribute("errorMessage", "Terjadi kesalahan saat menghapus event.");
         }
 
-        return "redirect:/events";
+        return "redirect:/events/";
     }
 
 
@@ -100,6 +100,6 @@ public class EventController {
             return "event/updateEvent";
         }
 
-        return "redirect:/events";
+        return "redirect:/events/";
     }
 }
