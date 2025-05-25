@@ -6,7 +6,10 @@ import backend.eventsphere.auth.config.JwtUtil;
 import backend.eventsphere.auth.repository.UserRepository;
 import backend.eventsphere.auth.service.UserService;
 import backend.eventsphere.auth.model.User;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -24,6 +27,9 @@ import java.util.UUID;
 @RequestMapping("/api/auth")
 public class AuthController {
 
+    @Value("${jwt.expiration}")
+    private int jwtExpiration;
+
     private final UserService userService;
 
     @Autowired
@@ -40,8 +46,24 @@ public class AuthController {
     @Autowired
     private UserRepository userRepository;
 
+    private void addJwtCookie(HttpServletResponse response, String token) {
+        Cookie jwtCookie = new Cookie("jwt", token);
+        jwtCookie.setHttpOnly(true);
+        jwtCookie.setPath("/");
+        jwtCookie.setMaxAge(jwtExpiration);
+        response.addCookie(jwtCookie);
+    }
+
+    private void clearJwtCookie(HttpServletResponse response) {
+        Cookie cookie = new Cookie("jwt", null);
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);
+    }
+
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@RequestBody UserRegistrationDto registrationDto) {
+    public ResponseEntity<?> registerUser(@RequestBody UserRegistrationDto registrationDto, HttpServletResponse resp) {
         try {
             User registeredUser = userService.registerUser(registrationDto);
 
@@ -53,12 +75,13 @@ public class AuthController {
                     .build();
             String jwt = jwtUtil.generateToken(userDetails);
 
+            addJwtCookie(resp, jwt);
+
             Map<String, Object> response = new HashMap<>();
             response.put("id", registeredUser.getId());
             response.put("username", registeredUser.getUsername());
             response.put("email", registeredUser.getEmail());
             response.put("role", registeredUser.getRole());
-            response.put("token", jwt); // Include JWT token
             response.put("message", "User registered successfully");
 
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -70,7 +93,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginDto loginDto) {
+    public ResponseEntity<?> login(@RequestBody LoginDto loginDto, HttpServletResponse resp) {
         try {
             // Authenticate the user
             Authentication authentication = authenticationManager.authenticate(
@@ -84,15 +107,23 @@ public class AuthController {
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             String jwt = jwtUtil.generateToken(userDetails);
 
+            addJwtCookie(resp, jwt);
+
             // Return the token and user details
             return ResponseEntity.ok(Map.of(
-                    "token", jwt,
                     "username", userDetails.getUsername(),
-                    "role", userRepository.findByUsername(userDetails.getUsername()).get().getRole()
+                    "role", userRepository.findByUsername(userDetails.getUsername()).get().getRole(),
+                    "message", "Login successful"
             ));
         } catch (Exception e) {
             return ResponseEntity.status(401).body("Invalid credentials");
         }
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletResponse response) {
+        clearJwtCookie(response);
+        return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
     }
 
     @GetMapping("/users")
@@ -146,5 +177,14 @@ public class AuthController {
             errorResponse.put("error", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
         }
+    }
+
+    @GetMapping("/api/auth/me")
+    public ResponseEntity<?> getCurrentUser(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+        }
+        String username = authentication.getName();
+        return ResponseEntity.ok(Map.of("username", username));
     }
 }
