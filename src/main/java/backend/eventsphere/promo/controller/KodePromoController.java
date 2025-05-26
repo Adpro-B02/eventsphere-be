@@ -126,8 +126,8 @@ public class KodePromoController {
             @RequestParam(required = false) String code,
             @RequestParam(required = false) BigDecimal discount,
             @RequestParam(required = false) KodePromo.DiscountType discountType,
-            @RequestParam @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate startDate,
-            @RequestParam @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate endDate) {
+            @RequestParam(required = false) @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate endDate) {
         return promoService.updatePromo(id, code, discount, discountType, startDate, endDate)
                 .thenApply(ResponseEntity::ok);
     }
