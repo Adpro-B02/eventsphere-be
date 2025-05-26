@@ -1,6 +1,7 @@
 package backend.eventsphere.promo.model;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,6 +13,7 @@ import java.util.UUID;
 @Setter
 @Entity
 @Table(name = "kode_promo")
+@Builder
 public class KodePromo {
 
     public enum DiscountType {
@@ -20,7 +22,7 @@ public class KodePromo {
     }
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(generator = "UUID")
     private UUID id;
 
     @Column(nullable = false, unique = true)
@@ -51,7 +53,7 @@ public class KodePromo {
         validateDates(startDate, endDate);
         validateDiscount(discount, discountType);
 
-        this.id = id != null ? id : UUID.randomUUID();
+        this.id = id;
         this.code = code;
         this.discount = discount;
         this.discountType = discountType;
