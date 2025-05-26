@@ -209,7 +209,6 @@ public class AuthController {
         return ResponseEntity.ok(Map.of("role", role));
     }
 
-<<<<<<<<< Temporary merge branch 1
     @GetMapping("/user-id")
     public ResponseEntity<?> getCurrentUserId(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
