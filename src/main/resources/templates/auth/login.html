@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Login</title>
+</head>
+<body>
+<h2>Login</h2>
+<form onsubmit="login(event)">
+    <label>Email or Username:</label>
+    <input type="text" id="emailOrUsername" required/><br/>
+    <label>Password:</label>
+    <input type="password" id="password" required/><br/>
+    <button type="submit">Login</button>
+</form>
+<div id="loginResult" style="color:red;"></div>
+<p>
+    Belum punya akun?
+    <a href="/register" style="color:blue;">Register</a>
+</p>
+<p>
+    Masuk sebagai
+    <a href="/events/" style="color:blue;">Guest</a>
+</p>
+<script>
+    function login(e) {
+        e.preventDefault();
+        fetch('/api/auth/login', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            credentials: 'include',
+            body: JSON.stringify({
+                emailOrUsername: document.getElementById('emailOrUsername').value,
+                password: document.getElementById('password').value
+            })
+        })
+            .then(r => r.json().then(data => ({status: r.status, data: data})))
+            .then(res => {
+                if (res.status === 200) {
+                    window.location.href = "/dashboard";
+                } else {
+                    document.getElementById("loginResult").innerText = res.data || "Login failed";
+                }
+            });
+    }
+</script>
+</body>
+</html>

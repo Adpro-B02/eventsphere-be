@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Dashboard</title>
+</head>
+<body>
+<h2>Dashboard</h2>
+<p>Welcome, <span id="username"></span>!</p>
+<button onclick="goToUserList()">Go to User List</button>
+<button onclick="goToEventList()">Go to Event List</button>
+<button onclick="logout()">Logout</button>
+
+<script>
+    async function loadUsername() {
+        try {
+            const response = await fetch('/api/auth/username', { credentials: 'include' });
+            if (response.ok) {
+                const data = await response.json();
+                document.getElementById('username').innerText = data.username || 'User';
+            } else {
+                document.getElementById('username').innerText = 'User';
+            }
+        } catch (e) {
+            document.getElementById('username').innerText = 'User';
+        }
+    }
+
+    function goToUserList() {
+        window.location.href = "/userlist";
+    }
+
+    function goToEventList(){
+        window.location.href = "/events/"
+    }
+
+    function logout() {
+        fetch('/api/auth/logout', {
+            method: 'POST',
+            credentials: 'include'
+        }).then(() => {
+            window.location.href = '/login';
+        });
+    }
+
+    loadUsername();
+</script>
+</body>
+</html>
