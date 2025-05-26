@@ -79,6 +79,12 @@ dependencies {
     // Testcontainers
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:postgresql")
+
+    // Spring Boot Actuator
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+
+    // Micrometer Prometheus Registry
+    implementation("io.micrometer:micrometer-registry-prometheus")
 }
 
 tasks.register<Test>("unitTest") {

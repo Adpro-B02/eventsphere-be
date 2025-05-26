@@ -2,6 +2,8 @@ package backend.eventsphere.review.service;
 
 import backend.eventsphere.review.model.Review;
 import backend.eventsphere.review.repository.ReviewRepository;
+import backend.eventsphere.review.strategy.RatingCalculationStrategy;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,11 +18,13 @@ import java.util.concurrent.Executors;
 public class ReviewService {
 
     private final ReviewRepository reviewRepository;
+    private final RatingCalculationStrategy ratingStrategy;
     private final ExecutorService executorService;
-
+    
     @Autowired
-    public ReviewService(ReviewRepository reviewRepository) {
+    public ReviewService(ReviewRepository reviewRepository, RatingCalculationStrategy ratingStrategy) {
         this.reviewRepository = reviewRepository;
+        this.ratingStrategy = ratingStrategy;
         this.executorService = Executors.newFixedThreadPool(10);
     }
 
@@ -47,37 +51,44 @@ public class ReviewService {
 
     public CompletableFuture<Review> updateReviewAsync(UUID reviewId, UUID userId, String comment, int rating) {
         return CompletableFuture.supplyAsync(() -> {
-            Review review = reviewRepository.findById(reviewId);
-            if (review == null) {
-                throw new IllegalArgumentException("Review not found");
-            }
+            Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new IllegalArgumentException("Review not found"));
 
             if (!review.getUserId().equals(userId)) {
                 throw new IllegalArgumentException("You can only update your own reviews");
             }
 
-            return reviewRepository.update(reviewId, rating, comment);
-        }, executorService);
-    }
+            Review updatedReview = new Review(
+                reviewId,
+                review.getEventId(),
+                userId,
+                comment,
+                rating,
+                review.getCreatedAt(),
+                LocalDateTime.now()
+            );
 
-    public CompletableFuture<Void> deleteReviewAsync(UUID reviewId, UUID userId) {
-        return CompletableFuture.runAsync(() -> {
-            Review review = reviewRepository.findById(reviewId);
-            if (review == null) {
-                throw new IllegalArgumentException("Review not found");
-            }
-
-            if (!review.getUserId().equals(userId)) {
-                throw new IllegalArgumentException("You can only delete your own reviews");
-            }
-
-            reviewRepository.delete(reviewId);
+            return reviewRepository.save(updatedReview);
         }, executorService);
     }
 
     public CompletableFuture<Review> findByIdAsync(UUID reviewId) {
         return CompletableFuture.supplyAsync(() -> 
-            reviewRepository.findById(reviewId), executorService);
+            reviewRepository.findById(reviewId).orElse(null), 
+            executorService);
+    }
+
+    public CompletableFuture<Void> deleteReviewAsync(UUID reviewId, UUID userId) {
+        return CompletableFuture.runAsync(() -> {
+            Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new IllegalArgumentException("Review not found"));
+
+            if (!review.getUserId().equals(userId)) {
+                throw new IllegalArgumentException("You can only delete your own reviews");
+            }
+
+            reviewRepository.deleteById(reviewId);
+        }, executorService);
     }
 
     public CompletableFuture<List<Review>> findByEventIdAsync(UUID eventId) {
@@ -96,7 +107,9 @@ public class ReviewService {
     }
 
     public CompletableFuture<Double> calculateAverageRatingByEventIdAsync(UUID eventId) {
-        return CompletableFuture.supplyAsync(() ->
-            reviewRepository.calculateAverageRatingByEventId(eventId), executorService);
+        return CompletableFuture.supplyAsync(() -> {
+            List<Review> reviews = reviewRepository.findByEventId(eventId);
+            return ratingStrategy.calculateRating(reviews);
+        }, executorService);
     }
 }
