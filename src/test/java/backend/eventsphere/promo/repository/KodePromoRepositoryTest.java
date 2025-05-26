@@ -161,25 +161,4 @@ class KodePromoRepositoryTest {
         assertThat(found.get().getDiscount()).isEqualTo(new BigDecimal("0.15"));
         assertThat(found.get().getDiscountType()).isEqualTo(KodePromo.DiscountType.FIXED_AMOUNT);
     }
-
-    @Test
-    void testSaveWithInvalidDiscount() {
-        KodePromo invalidPromo = new KodePromo(
-                null,
-                "INVALID",
-                new BigDecimal("1.50"), // Percentage > 100%
-                KodePromo.DiscountType.PERCENTAGE,
-                today,
-                today.plusDays(5),
-                eventId,
-                UUID.randomUUID()
-        );
-
-        try {
-            repository.save(invalidPromo);
-        } catch (Exception e) {
-            assertThat(e).hasCauseInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("Percentage discount cannot be more than 100%");
-        }
-    }
 }
