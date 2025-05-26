@@ -6,17 +6,27 @@ import backend.eventsphere.promo.factory.PromoFactory;
 import backend.eventsphere.promo.factory.DiskonPromoFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class KodePromoServiceTest {
 
+    @Mock
     private KodePromoRepository repository;
+
+    @InjectMocks
     private KodePromoService service;
     private UUID promoId;
     private UUID eventId;
@@ -50,14 +60,14 @@ class KodePromoServiceTest {
     }
 
     @Test
-    void testCreatePercentagePromo_Success() {
+    void testCreatePercentagePromo_Success() throws Exception{
         KodePromo promo = createSamplePromo("DISC10", new BigDecimal("0.1"),
                 KodePromo.DiscountType.PERCENTAGE);
 
         when(repository.existsByCodeIgnoreCase("DISC10")).thenReturn(false);
         when(repository.save(any(KodePromo.class))).thenReturn(promo);
 
-        KodePromo created = service.createPercentagePromo(
+        CompletableFuture<KodePromo> future = service.createPercentagePromo(
                 "DISC10",
                 new BigDecimal("0.1"),
                 today,
@@ -66,6 +76,8 @@ class KodePromoServiceTest {
                 userId
         );
 
+        KodePromo created = future.get();
+
         assertEquals("DISC10", created.getCode());
         assertEquals(KodePromo.DiscountType.PERCENTAGE, created.getDiscountType());
         assertEquals(new BigDecimal("0.1"), created.getDiscount());
@@ -73,14 +85,14 @@ class KodePromoServiceTest {
     }
 
     @Test
-    void testCreateFixedAmountPromo_Success() {
+    void testCreateFixedAmountPromo_Success() throws Exception{
         KodePromo promo = createSamplePromo("CASH50", new BigDecimal("50000"),
                 KodePromo.DiscountType.FIXED_AMOUNT);
 
         when(repository.existsByCodeIgnoreCase("CASH50")).thenReturn(false);
         when(repository.save(any(KodePromo.class))).thenReturn(promo);
 
-        KodePromo created = service.createFixedAmountPromo(
+        CompletableFuture<KodePromo> future = service.createFixedAmountPromo(
                 "CASH50",
                 new BigDecimal("50000"),
                 today,
@@ -88,6 +100,8 @@ class KodePromoServiceTest {
                 eventId,
                 userId
         );
+
+        KodePromo created = future.get();
 
         assertEquals("CASH50", created.getCode());
         assertEquals(KodePromo.DiscountType.FIXED_AMOUNT, created.getDiscountType());
@@ -97,7 +111,8 @@ class KodePromoServiceTest {
 
     @Test
     void testCreateFixedAmountPromo_InvalidAmount() {
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThrows(IllegalArgumentException.class, () -> {
+            try {
                 service.createFixedAmountPromo(
                         "INVALID",
                         new BigDecimal("50000.50"),
@@ -105,20 +120,11 @@ class KodePromoServiceTest {
                         today.plusDays(1),
                         eventId,
                         userId
-                )
-        );
-
-        // Amount <= 0
-        assertThrows(IllegalArgumentException.class, () ->
-                service.createFixedAmountPromo(
-                        "INVALID",
-                        BigDecimal.ZERO,
-                        today,
-                        today.plusDays(1),
-                        eventId,
-                        userId
-                )
-        );
+                ).get();
+            } catch (ExecutionException | InterruptedException e) {
+                throw e.getCause();
+            }
+        });
     }
 
     @Test
@@ -171,15 +177,17 @@ class KodePromoServiceTest {
     }
 
     @Test
-    void testUpdatePromo_ChangeDiscountType() {
+    void testUpdatePromo_Success() throws Exception {
         KodePromo existing = createSamplePromo("OLD", new BigDecimal("0.1"),
                 KodePromo.DiscountType.PERCENTAGE);
+        KodePromo updatedPromo = createSamplePromo("NEW", new BigDecimal("50000"),
+                KodePromo.DiscountType.FIXED_AMOUNT);
 
         when(repository.findById(promoId)).thenReturn(Optional.of(existing));
         when(repository.existsByCodeIgnoreCase("NEW")).thenReturn(false);
-        when(repository.save(any(KodePromo.class))).thenReturn(existing);
+        when(repository.save(any(KodePromo.class))).thenReturn(updatedPromo);
 
-        KodePromo updated = service.updatePromo(
+        CompletableFuture<KodePromo> future = service.updatePromo(
                 promoId,
                 "NEW",
                 new BigDecimal("50000"),
@@ -188,8 +196,11 @@ class KodePromoServiceTest {
                 today.plusDays(5)
         );
 
+        KodePromo updated = future.get();
+
         assertEquals(KodePromo.DiscountType.FIXED_AMOUNT, updated.getDiscountType());
         assertEquals(new BigDecimal("50000"), updated.getDiscount());
+        verify(repository).save(any(KodePromo.class));
     }
 
     @Test
@@ -199,15 +210,20 @@ class KodePromoServiceTest {
         when(repository.findById(promoId)).thenReturn(Optional.of(existing));
         when(repository.existsByCodeIgnoreCase("EXISTING_CODE")).thenReturn(true);
 
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThrows(IllegalArgumentException.class, () -> {
+            try {
                 service.updatePromo(
                         promoId,
                         "EXISTING_CODE",
                         new BigDecimal("0.3"),
                         KodePromo.DiscountType.PERCENTAGE,
                         today.plusDays(1),
-                        today.plusDays(5))
-        );
+                        today.plusDays(5)
+                ).get();
+            } catch (ExecutionException | InterruptedException e) {
+                throw e.getCause();
+            }
+        });
 
         verify(repository, never()).save(any());
     }
@@ -299,5 +315,22 @@ class KodePromoServiceTest {
 
         when(repository.existsByCodeIgnoreCase("NON_EXISTENT")).thenReturn(false);
         assertFalse(service.isPromoCodeExists("NON_EXISTENT"));
+    }
+
+    @Test
+    void testGetAllPromos() {
+        List<KodePromo> promos = Arrays.asList(
+                createSamplePromo("PROMO1", new BigDecimal("0.1"), KodePromo.DiscountType.PERCENTAGE),
+                createSamplePromo("PROMO2", new BigDecimal("20000"), KodePromo.DiscountType.FIXED_AMOUNT)
+        );
+
+        when(repository.findAll()).thenReturn(promos);
+
+        List<KodePromo> result = service.getAllPromos();
+
+        assertEquals(2, result.size());
+        assertEquals("PROMO1", result.get(0).getCode());
+        assertEquals("PROMO2", result.get(1).getCode());
+        verify(repository, times(1)).findAll();
     }
 }

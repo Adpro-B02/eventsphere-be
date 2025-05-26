@@ -206,4 +206,17 @@ public class AuthController {
 
         return ResponseEntity.ok(Map.of("role", role));
     }
+
+    @GetMapping("/user-id")
+    public ResponseEntity<?> getCurrentUserId(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+        }
+
+        String username = authentication.getName();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return ResponseEntity.ok(Map.of("userId", user.getId().toString()));
+    }
 }
