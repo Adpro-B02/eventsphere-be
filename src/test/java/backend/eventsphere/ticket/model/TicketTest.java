@@ -25,21 +25,42 @@ public class TicketTest {
     @Test
     void testCreateTicketWithEmptyTicketType() {
         assertThrows(IllegalArgumentException.class, () -> {
-            Ticket ticket = new Ticket(UUID.randomUUID(), "", 100000.0, 50);
+            new Ticket(UUID.randomUUID(), "", 100000.0, 50);
         });
     }
 
     @Test
     void testCreateTicketWithNegativePrice() {
         assertThrows(IllegalArgumentException.class, () -> {
-            Ticket ticket = new Ticket(UUID.randomUUID(), "VIP", -50.0, 50);
+            new Ticket(UUID.randomUUID(), "VIP", -50.0, 50);
         });
     }
 
     @Test
     void testCreateTicketWithNegativeQuota() {
         assertThrows(IllegalArgumentException.class, () -> {
-            Ticket ticket = new Ticket(UUID.randomUUID(), "VIP", 100.0, -10);
+            new Ticket(UUID.randomUUID(), "VIP", 100.0, -10);
+        });
+    }
+
+    @Test
+    void testCreateTicketWithNullTicketType() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            new Ticket(UUID.randomUUID(), null, 100.0, 50);
+        });
+    }
+
+    @Test
+    void testCreateTicketWithNullPrice() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            new Ticket(UUID.randomUUID(), "VIP", null, 50);
+        });
+    }
+
+    @Test
+    void testCreateTicketWithNullQuota() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            new Ticket(UUID.randomUUID(), "VIP", 100.0, null);
         });
     }
 }
