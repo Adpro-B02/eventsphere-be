@@ -247,4 +247,86 @@ class TicketControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(content().string(containsString("Ticket not found")));
     }
+
+    @Test
+    void testCreateTicket_UnexpectedException() throws Exception {
+        TicketController.CreateTicketRequest request = new TicketController.CreateTicketRequest();
+        request.setEventId(eventId.toString());
+        request.setTicketType("VIP");
+        request.setTicketPrice(100.0);
+        request.setQuota(50);
+
+        Mockito.when(ticketService.createTicketAsync(eq(eventId), anyString(), anyDouble(), anyInt()))
+                .thenReturn(CompletableFuture.failedFuture(new RuntimeException("Unexpected error")));
+
+        mockMvc.perform(post("/api/tickets")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mockMvc.perform(asyncDispatch(
+                        mockMvc.perform(post("/api/tickets")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(request)))
+                                .andReturn()))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(containsString("Unexpected error")));
+    }
+
+    @Test
+    void testGetTicketsByEvent_Exception() throws Exception {
+        Mockito.when(ticketService.getTicketsByEventAsync(eventId))
+                .thenReturn(CompletableFuture.failedFuture(new RuntimeException("Unexpected error")));
+
+        mockMvc.perform(get("/api/tickets/{id_event}", eventId))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mockMvc.perform(asyncDispatch(
+                        mockMvc.perform(get("/api/tickets/{id_event}", eventId))
+                                .andReturn()))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(containsString("Unexpected error")));
+    }
+
+    @Test
+    void testUpdateTicket_InternalServerError() throws Exception {
+        TicketController.UpdateTicketRequest updateRequest = new TicketController.UpdateTicketRequest();
+        updateRequest.setTicketPrice(120.0);
+        updateRequest.setQuota(60);
+
+        Mockito.when(ticketService.updateTicketAsync(eq(ticketId), eq(120.0), eq(60)))
+                .thenReturn(CompletableFuture.failedFuture(new RuntimeException("Unexpected error")));
+
+        mockMvc.perform(put("/api/tickets/{id_ticket}", ticketId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateRequest)))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mockMvc.perform(asyncDispatch(
+                        mockMvc.perform(put("/api/tickets/{id_ticket}", ticketId)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(updateRequest)))
+                                .andReturn()))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string(containsString("Error updating ticket: Unexpected error")));
+    }
+
+    @Test
+    void testDeleteTicket_InternalServerError() throws Exception {
+        Mockito.when(ticketService.deleteTicketAsync(ticketId))
+                .thenReturn(CompletableFuture.failedFuture(new RuntimeException("Unexpected error")));
+
+        mockMvc.perform(delete("/api/tickets/{id_ticket}", ticketId))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mockMvc.perform(asyncDispatch(
+                        mockMvc.perform(delete("/api/tickets/{id_ticket}", ticketId))
+                                .andReturn()))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string(containsString("Error deleting ticket: Unexpected error")));
+    }
 }

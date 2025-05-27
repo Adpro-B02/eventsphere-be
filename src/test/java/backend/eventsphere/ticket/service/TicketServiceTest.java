@@ -326,8 +326,8 @@ public class TicketServiceTest {
     void testGetTicketsByEventAsyncSuccess() throws Exception {
         UUID eventId = UUID.randomUUID();
         List<Ticket> tickets = List.of(
-                new Ticket(eventId, "A", 10d, 1),
-                new Ticket(eventId, "B", 20d, 2)
+            new Ticket(eventId, "A", 10d, 1),
+            new Ticket(eventId, "B", 20d, 2)
         );
         when(ticketRepository.findByEventId(eventId)).thenReturn(tickets);
         CompletableFuture<Map<UUID, Ticket>> future = ticketService.getTicketsByEventAsync(eventId);
