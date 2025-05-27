@@ -80,6 +80,11 @@ jobs:
             chmod 600 ~/app/.env
           EOF
 
+      - name: List files
+        run: |
+          pwd
+          ls -R
+
       - name: Copy configuration files
         run: |
           scp -i tkadprokey.pem -o StrictHostKeyChecking=no docker-compose.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app/
