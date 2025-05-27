@@ -32,7 +32,7 @@ public class KodePromoViewController {
             }
         }
         model.addAttribute("userRole", role);
-        model.addAttribute("eventId", eventId);
+        model.addAttribute("eventId", eventId.toString());
         return "promo/promo";
     }
 
