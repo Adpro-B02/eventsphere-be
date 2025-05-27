@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Promo Code Management</title>
+    <title>Promo Code for Events</title>
     <style>
         /* Modal styles */
         .modal {
@@ -151,14 +151,14 @@
     </style>
 </head>
 <body>
-<h1>Promo Code Management</h1>
-<div>
+<h1 th:text="${userRole == T(backend.eventsphere.auth.model.User.UserRole).ORGANIZER}
+              ? 'Sistem Manajemen Kode Promo'
+              : 'Daftar Promo'"></h1>
+<div style="display: flex; gap: 5px; margin-bottom: 20px;">
     <button id="back-to-events-btn" class="btn btn-secondary">Kembali ke Acara</button>
-</div>
-<div>
-    <div id="promos-container"></div>
     <button id="add-promo-btn" class="btn" style="display:none;">Tambah Promo</button>
 </div>
+<div id="promos-container"></div>
 
 <!-- Add Promo Modal -->
 <div id="add-promo-modal" class="modal">
@@ -170,9 +170,9 @@
                 <label for="add-promo-code">Kode Promo:</label>
                 <input type="text" id="add-promo-code" name="code" required>
             </div>
-            <div class="form-group">
+            <div class="form-group" style="display: none;">
                 <label for="add-event-id">Event ID:</label>
-                <input type="text" id="add-event-id" name="eventId" required>
+                <input type="text" id="add-event-id" name="eventId" th:value="${eventId}" readonly>
             </div>
             <div class="form-group">
                 <label for="add-discount-type">Jenis Diskon:</label>
@@ -212,7 +212,7 @@
             <input type="hidden" id="edit-promo-id">
             <div class="form-group">
                 <label for="edit-promo-code">Kode Promo:</label>
-                <input type="text" id="edit-promo-code" name="code" readonly>
+                <input type="text" id="edit-promo-code" name="code" required>
             </div>
             <div class="form-group">
                 <label for="edit-event-id">Event ID:</label>
@@ -241,6 +241,8 @@
 </div>
 
 <script>
+    const eventId = "[[${eventId}]]";
+
     document.getElementById('back-to-events-btn').onclick = function() {
         window.location.href = '/events/'
     };
@@ -309,6 +311,7 @@
 
     // Modal functions
     function openAddPromoModal() {
+        document.getElementById('add-event-id').value = eventId;
         document.getElementById('add-promo-modal').style.display = 'block';
     }
 
@@ -465,11 +468,17 @@
         }
     });
 
+    document.addEventListener('DOMContentLoaded', function() {
+        if (eventId) {
+            document.getElementById('add-event-id').value = eventId;
+        }
+    });
+
     async function loadPromos() {
         const role = await checkRole();
 
         try {
-            const response = await fetch('/api/promos', {
+            const response = await fetch(`/api/promos/event/${eventId}`, {
                 method: 'GET',
                 credentials: 'include',
             });
@@ -477,7 +486,7 @@
             if (!response.ok) {
                 if (response.status === 404) {
                     const container = document.getElementById('promos-container');
-                    container.innerHTML = '<p>Tidak ada promo.</p>';
+                    container.innerHTML = '<p>Tidak ada promo untuk event ini.</p>';
                     return;
                 } else if (response.status === 403) {
                     throw new Error('Akses ditolak. Tidak memiliki izin.');
@@ -491,7 +500,7 @@
             const container = document.getElementById('promos-container');
 
             if (!promos.length) {
-                container.innerHTML = '<p>Tidak ada promo ditemukan.</p>';
+                container.innerHTML = '<p>Tidak ada promo untuk event ini.</p>';
                 return;
             }
 
@@ -519,7 +528,6 @@
                         </span>
                         <br>
                         Nilai: ${discountValue}<br>
-                        Event ID: ${promo.eventId}<br>
                         Berlaku: ${new Date(promo.startDate).toLocaleDateString()} - ${new Date(promo.endDate).toLocaleDateString()}
                     </div>
                     <div class="promo-controls" id="promo-controls-${promo.id}"></div>

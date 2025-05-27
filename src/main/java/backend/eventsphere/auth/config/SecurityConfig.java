@@ -38,7 +38,7 @@ public class SecurityConfig {
                 .requestMatchers("/dashboard", "/api/auth/username", "/api/auth/role", "/api/auth/user-id").hasAnyAuthority("ADMIN", "ATTENDEE", "ORGANIZER")
                 .requestMatchers("/events/create", "/events/update", "/events/delete").hasAuthority("ORGANIZER")
                 .requestMatchers("/events/**").permitAll()
-                .requestMatchers("/api/promos/**").permitAll()
+                .requestMatchers("/api/promos/**", "/promos/**").permitAll()
                 .requestMatchers("/api/tickets/**").permitAll()
                 .requestMatchers("/tickets/**").hasAnyAuthority("ADMIN", "ATTENDEE", "ORGANIZER")
                 .requestMatchers("/api/reviews/**", "/reviews/**").permitAll()
