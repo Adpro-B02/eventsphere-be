@@ -30,6 +30,9 @@ public class ReviewService {
 
     public CompletableFuture<Review> createReviewAsync(UUID eventId, UUID userId, String comment, int rating) {
         return CompletableFuture.supplyAsync(() -> {
+            if (rating < 1 || rating > 5) {
+                throw new IllegalArgumentException("Rating must be between 1 and 5");
+            }
             Review existingReview = reviewRepository.findByUserIdAndEventId(userId, eventId);
             if (existingReview != null) {
                 throw new IllegalStateException("You have already reviewed this event");

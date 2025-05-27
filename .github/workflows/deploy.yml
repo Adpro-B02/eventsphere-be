@@ -48,6 +48,9 @@ jobs:
     needs: build
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Add SSH Key to Agent
         run: |
           echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > tkadprokey.pem
@@ -93,7 +96,7 @@ jobs:
           ssh -i tkadprokey.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             cd ~/app
             docker-compose pull
-            docker-compose down
+            docker-compose down --remove-orphans
             docker-compose up -d
           EOF
 

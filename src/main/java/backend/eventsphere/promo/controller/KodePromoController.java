@@ -98,7 +98,7 @@ public class KodePromoController {
     }
 
     @GetMapping("/event/{eventId}")
-    @PreAuthorize("hasAuthority('ATTENDEE')")
+    @PreAuthorize("hasAnyAuthority('ATTENDEE', 'ORGANIZER')")
     public ResponseEntity<List<KodePromo>> getPromosByEventId(@PathVariable UUID eventId) {
         List<KodePromo> promos = promoService.getPromosByEvent(eventId);
         return ResponseEntity.ok(promos);

@@ -16,12 +16,4 @@ class ReviewTest {
         assertEquals("Valid comment", review.getComment());
         assertEquals(4, review.getRating());
     }
-
-    @Test
-    void createInvalidReview() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            new Review(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
-                "Invalid", 6, LocalDateTime.now(), LocalDateTime.now());
-        });
-    }
 }

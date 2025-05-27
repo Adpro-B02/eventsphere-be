@@ -40,9 +40,6 @@ public class Review {
 
     public Review(UUID id, UUID eventId, UUID userId, String comment, int rating, 
               LocalDateTime createdAt, LocalDateTime updatedAt) {
-        if (rating < 1 || rating > 5) {
-            throw new IllegalArgumentException("Rating must be between 1 and 5");
-        }
         this.id = id;
         this.eventId = eventId;
         this.userId = userId;
