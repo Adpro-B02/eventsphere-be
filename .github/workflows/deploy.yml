@@ -37,7 +37,7 @@ jobs:
           password: ${{ secrets.DOCKER_HUB_PASSWORD }}
 
       - name: Build Docker Image
-        run: docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/spring-boot-app:latest .
+        run: docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/spring-boot-app:latest -f docker/Dockerfile .
 
       - name: Push Docker Image to Docker Hub
         run: docker push ${{ secrets.DOCKER_HUB_USERNAME }}/spring-boot-app:latest
@@ -55,17 +55,47 @@ jobs:
           eval "$(ssh-agent -s)"
           ssh-add tkadprokey.pem
 
-      - name: Deploy Application via SSH
+      - name: Create directories and .env file on EC2
         run: |
           ssh -i tkadprokey.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/spring-boot-app:latest
-            docker stop spring-boot-app || true
-            docker rm spring-boot-app || true
-            docker run -d --name spring-boot-app \
-            -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
-            -e DB_URL=${{ secrets.DB_URL }} \
-            -e DB_USERNAME=${{ secrets.DB_USERNAME }} \
-            -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
-            -p 8080:8080 ${{ secrets.DOCKER_HUB_USERNAME }}/spring-boot-app:latest
-          EOF
+
+            mkdir -p ~/app/docker/prometheus
+            mkdir -p ~/app/docker/grafana/dashboards
+            mkdir -p ~/app/docker/grafana/provisioning/datasources
+            mkdir -p ~/app/docker/grafana/provisioning/dashboards
           
+            # Create .env file with secrets
+            cat > ~/app/.env << EOL
+          DB_URL=${{ secrets.DB_URL }}
+          DB_HOST=${{ secrets.DB_HOST }}
+          DB_PORT=${{ secrets.DB_PORT }}
+          DB_NAME=${{ secrets.DB_NAME }}
+          DB_USERNAME=${{ secrets.DB_USERNAME }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          DB_PARAMS=${{ secrets.DB_PARAMS }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          DOCKER_HUB_USERNAME=${{ secrets.DOCKER_HUB_USERNAME }}
+          EOL
+          
+            chmod 600 ~/app/.env
+          EOF
+
+      - name: Copy configuration files
+        run: |
+          scp -i tkadprokey.pem -o StrictHostKeyChecking=no docker-compose.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app/
+          scp -i tkadprokey.pem -o StrictHostKeyChecking=no docker/prometheus/prometheus.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app/docker/prometheus/
+          scp -i tkadprokey.pem -o StrictHostKeyChecking=no docker/grafana/provisioning/datasources/prometheus.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app/docker/grafana/provisioning/datasources/
+          scp -i tkadprokey.pem -o StrictHostKeyChecking=no docker/grafana/provisioning/dashboards/dashboard.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app/docker/grafana/provisioning/dashboards/
+          scp -i tkadprokey.pem -o StrictHostKeyChecking=no docker/grafana/dashboards/spring-boot-dashboard.json ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app/docker/grafana/dashboards/
+
+      - name: Deploy Application
+        run: |
+          ssh -i tkadprokey.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            cd ~/app
+            docker-compose pull
+            docker-compose down
+            docker-compose up -d
+          EOF
+
+      - name: Cleanup
+        run: rm -f tkadprokey.pem
