@@ -48,6 +48,9 @@ jobs:
     needs: build
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Add SSH Key to Agent
         run: |
           echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > tkadprokey.pem
