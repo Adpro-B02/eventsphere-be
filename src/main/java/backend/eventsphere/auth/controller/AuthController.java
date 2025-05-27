@@ -74,6 +74,7 @@ public class AuthController {
                     .password(registeredUser.getPassword())
                     .authorities(registeredUser.getRole().name())
                     .build();
+            
             String jwt = jwtUtil.generateToken(userDetails);
 
             addJwtCookie(resp, jwt);
@@ -106,6 +107,7 @@ public class AuthController {
 
             // Generate JWT token
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+
             String jwt = jwtUtil.generateToken(userDetails);
 
             addJwtCookie(resp, jwt);

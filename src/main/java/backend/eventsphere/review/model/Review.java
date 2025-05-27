@@ -1,69 +1,54 @@
 package backend.eventsphere.review.model;
 
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Entity
+@Table(name = "reviews")
 @Getter
+@NoArgsConstructor
 public class Review {
-    private final UUID id;
-    private final UUID eventId;
-    private final UUID userId;
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+    
+    @Column(nullable = false)
+    private UUID eventId;
+    
+    @Column(nullable = false)
+    private UUID userId;
+    
+    @Column(length = 1000)
     private String comment;
+    
+    @Column(nullable = false)
+    @Min(1)
+    @Max(5)
     private int rating;
-    private final LocalDateTime createdAt;
+    
+    @Column(nullable = false)
+    private LocalDateTime createdAt;
+    
+    @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    public Review(UUID id, UUID eventId, UUID userId, String comment, int rating,
-                LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public Review(UUID id, UUID eventId, UUID userId, String comment, int rating, 
+              LocalDateTime createdAt, LocalDateTime updatedAt) {
+        if (rating < 1 || rating > 5) {
+            throw new IllegalArgumentException("Rating must be between 1 and 5");
+        }
         this.id = id;
-        validateEventId(eventId);
-        validateUserId(userId);
-        validateComment(comment);
-        validateRating(rating);
-
         this.eventId = eventId;
         this.userId = userId;
         this.comment = comment;
         this.rating = rating;
-        this.createdAt = createdAt != null ? createdAt : LocalDateTime.now();
-        this.updatedAt = updatedAt != null ? updatedAt : LocalDateTime.now();
-    }
-
-    private void validateEventId(UUID eventId) {
-        if (eventId == null) {
-            throw new IllegalArgumentException("Event ID cannot be null");
-        }
-    }
-
-    private void validateUserId(UUID userId) {
-        if (userId == null) {
-            throw new IllegalArgumentException("User ID cannot be null");
-        }
-    }
-
-    private void validateComment(String comment) {
-        if (comment != null && comment.length() > 1000) {
-            throw new IllegalArgumentException("Comment cannot exceed 1000 characters");
-        }
-    }
-
-    private void validateRating(int rating) {
-        if (rating < 1 || rating > 5) {
-            throw new IllegalArgumentException("Rating must be between 1 and 5");
-        }
-    }
-
-    public void setComment(String comment) {
-        validateComment(comment);
-        this.comment = comment;
-        this.updatedAt = LocalDateTime.now();
-    }
-
-    public void setRating(int rating) {
-        validateRating(rating);
-        this.rating = rating;
-        this.updatedAt = LocalDateTime.now();
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 }
