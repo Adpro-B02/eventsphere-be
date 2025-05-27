@@ -4,7 +4,7 @@ import backend.eventsphere.ticket.model.Ticket;
 import backend.eventsphere.ticket.model.TicketFactory;
 import backend.eventsphere.ticket.repository.TicketRepository;
 import backend.eventsphere.ticket.model.TicketObserver;
-import enums.TicketEventType;
+import backend.eventsphere.ticket.enums.TicketEventType;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

@@ -1,6 +1,6 @@
 package backend.eventsphere.ticket.service;
 
-import enums.TicketEventType;
+import backend.eventsphere.ticket.enums.TicketEventType;
 import backend.eventsphere.ticket.model.Ticket;
 import backend.eventsphere.ticket.model.TicketFactory;
 import backend.eventsphere.ticket.model.TicketObserver;
