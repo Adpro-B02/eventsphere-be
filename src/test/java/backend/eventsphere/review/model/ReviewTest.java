@@ -18,10 +18,18 @@ class ReviewTest {
     }
 
     @Test
-    void createInvalidReview() {
+    void whenRatingIsBelowMinimum_thenThrowException() {
         assertThrows(IllegalArgumentException.class, () -> {
             new Review(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
-                "Invalid", 6, LocalDateTime.now(), LocalDateTime.now());
+                "Invalid comment", 0, LocalDateTime.now(), LocalDateTime.now());
+        });
+    }
+
+    @Test
+    void whenRatingIsAboveMaximum_thenThrowException() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            new Review(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
+                "Invalid comment", 6, LocalDateTime.now(), LocalDateTime.now());
         });
     }
 }

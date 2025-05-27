@@ -18,18 +18,14 @@ import java.util.UUID;
 public class ReviewWebController {
 
     private final ReviewService reviewService;
-    private final UserRepository userRepository;
 
     @Autowired
-    public ReviewWebController(ReviewService reviewService, UserRepository userRepository) {
+    public ReviewWebController(ReviewService reviewService) {
         this.reviewService = reviewService;
-        this.userRepository = userRepository; 
     }
 
     @GetMapping("/reviews/{eventId}")
     public String getEventReviewsPage(@PathVariable UUID eventId, Model model) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        
         model.addAttribute("eventId", eventId);
         model.addAttribute("reviews", reviewService.findByEventIdAsync(eventId).join());
         return "review/review";
