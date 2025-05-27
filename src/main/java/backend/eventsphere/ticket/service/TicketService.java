@@ -19,15 +19,16 @@ import java.util.stream.Collectors;
 public class TicketService {
     private final TicketRepository ticketRepository;
     private final TicketFactory ticketFactory;
+    private final TicketService self;
     private final List<TicketObserver> observers = new ArrayList<>();
 
     @Autowired
-    @Lazy
-    private TicketService self;
-
-    public TicketService(TicketRepository ticketRepository, TicketFactory ticketFactory) {
+    public TicketService(TicketRepository ticketRepository,
+                         TicketFactory ticketFactory,
+                         @Lazy TicketService self) {
         this.ticketRepository = ticketRepository;
         this.ticketFactory = ticketFactory;
+        this.self = self;
     }
 
     public void registerObserver(TicketObserver observer) {

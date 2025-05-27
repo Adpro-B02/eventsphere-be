@@ -33,7 +33,7 @@ public class TicketServiceTest {
 
     @BeforeEach
     void setUp() {
-        ticketService = new TicketService(ticketRepository, ticketFactory);
+        ticketService = new TicketService(ticketRepository, ticketFactory, null);
         ReflectionTestUtils.setField(ticketService, "self", ticketService);
         testObserver = new TestObserver();
         ticketService.registerObserver(testObserver);
