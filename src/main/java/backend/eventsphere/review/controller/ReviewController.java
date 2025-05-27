@@ -42,6 +42,13 @@ public class ReviewController {
                 : new ResponseEntity<>(review, HttpStatus.OK));
     }
 
+    @GetMapping("/event/{eventId}/average-rating")
+    public CompletableFuture<ResponseEntity<Double>> getAverageRating(@PathVariable UUID eventId) {
+        return reviewService.calculateAverageRatingByEventIdAsync(eventId)
+            .thenApply(averageRating -> new ResponseEntity<>(averageRating, HttpStatus.OK))
+            .exceptionally(ex -> new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR));
+    }
+
     @PreAuthorize("hasAuthority('ATTENDEE')")
     @PostMapping
     public CompletableFuture<ResponseEntity<Review>> createReview(@Valid @RequestBody ReviewCreateDto reviewDto) {
