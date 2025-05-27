@@ -1,98 +1,304 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>User List</title>
+    <meta charset="UTF-8">
+    <title>Daftar Pengguna | EventSphere</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #e3f0ff 0%, #f8fbff 100%);
+            color: #232b3b;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background: linear-gradient(90deg, #2264a3 70%, #39a2db 100%);
+            padding: 32px 16px 24px 16px;
+            color: #fff;
+            text-align: center;
+            letter-spacing: 1px;
+            box-shadow: 0 2px 8px rgba(34, 100, 163, 0.08);
+        }
+        section {
+            max-width: 1200px;
+            margin: 32px auto 0 auto;
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 4px 32px rgba(34,100,163,0.07);
+            padding: 36px 3vw 30px 3vw;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            color: #1b3556;
+            margin-bottom: 14px;
+        }
+        .btn-primary, .btn-secondary, .btn-danger {
+            background: linear-gradient(90deg, #2264a3 70%, #39a2db 100%);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 1em;
+            font-weight: 500;
+            margin: 5px;
+            cursor: pointer;
+            transition: transform 0.08s, box-shadow 0.15s;
+            box-shadow: 0 2px 6px rgba(34, 100, 163, 0.10);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary:hover, .btn-secondary:hover {
+            background: linear-gradient(90deg, #1c4d75 70%, #297eb8 100%);
+            transform: translateY(-2px) scale(1.04);
+            box-shadow: 0 5px 18px rgba(34, 100, 163, 0.13);
+        }
+        .btn-danger {
+            background: linear-gradient(90deg, #d63031 70%, #ff7675 100%);
+        }
+        .btn-danger:hover {
+            background: linear-gradient(90deg, #b22222 70%, #e66767 100%);
+        }
+        .action-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: #f6faff;
+            box-shadow: 0 2px 12px rgba(34,100,163,0.06);
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e3f0ff;
+        }
+        th {
+            background: #2264a3;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background: #e3f0ff;
+        }
+        tr:hover {
+            background: #d7e9ff;
+        }
         .modal {
             display: none;
             position: fixed;
-            top: 20%;
-            left: 40%;
-            background: white;
-            padding: 15px;
-            border: 1px solid #ccc;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
         }
-
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 18px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 4px 32px rgba(34,100,163,0.07);
+        }
         .modal.show {
-            display: block;
+            display: flex;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #d1e6f7;
+            border-radius: 8px;
+        }
+        .error-message {
+            color: #d61d1d;
+            margin-top: 10px;
+        }
+        @media (max-width: 768px) {
+            table {
+                font-size: 0.9em;
+            }
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        .back-dashboard {
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .back-dashboard:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        .placeholder {
+            width: 120px;
         }
     </style>
 </head>
 <body>
-<h2>User List</h2>
-<button onclick="openModal('addModal')">Add User</button>
-<button onclick="logout()">Logout</button>
-<table border="1">
-    <tr>
-        <th>ID</th>
-        <th>Username</th>
-        <th>Email</th>
-        <th>Role</th>
-        <th>Actions</th>
-    </tr>
-    <tbody id="userTable" th:each="user : ${users}">
-    <tr>
-        <td th:text="${user.id}"></td>
-        <td th:text="${user.username}"></td>
-        <td th:text="${user.email}"></td>
-        <td th:text="${user.role}"></td>
-        <td>
-            <button onclick="showUpdateModal([[${user.id}]], '[[${user.username}]]', '[[${user.email}]]', '[[${user.role}]]')">Update</button>
-            <button onclick="showDeleteModal([[${user.id}]])">Delete</button>
-        </td>
-    </tr>
-    </tbody>
-</table>
+<header>
+    <div class="header-container">
+        <button onclick="goToDashboard()" class="btn-secondary back-dashboard">
+            <i class="fas fa-arrow-left"></i> Dashboard
+        </button>
+        <div class="logo" style="font-size: 2.1em; font-weight: 700; letter-spacing: 0.7px;">
+            EventSphere
+        </div>
+        <div class="placeholder"></div>
+    </div>
+</header>
+
+<section>
+    <h1>Daftar Pengguna</h1>
+
+    <div class="action-buttons">
+        <button onclick="openModal('addModal')" class="btn-primary">
+            <i class="fas fa-user-plus"></i> Tambah Pengguna
+        </button>
+        <button onclick="logout()" class="btn-danger">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+    </div>
+
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Username</th>
+            <th>Nama Lengkap</th>
+            <th>Email</th>
+            <th>Peran</th>
+            <th>Aksi</th>
+        </tr>
+        </thead>
+        <tbody id="userTable">
+        <tr th:each="user : ${users}">
+            <td th:text="${user.id}"></td>
+            <td th:text="${user.username}"></td>
+            <td th:text="${user.fullName}"></td>
+            <td th:text="${user.email}"></td>
+            <td th:text="${user.role}"></td>
+            <td>
+                <button
+                        type="button"
+                        class="btn-secondary update-btn"
+                        th:attr="data-id=${user.id}, data-username=${user.username}, data-email=${user.email}, data-role=${user.role}, data-fullname=${user.fullName}">
+                    <i class="fas fa-edit"></i> Update
+                </button>
+                <button
+                        type="button"
+                        class="btn-danger delete-btn"
+                        th:attr="data-id=${user.id}">
+                    <i class="fas fa-trash"></i> Hapus
+                </button>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</section>
 
 <!-- Add Modal -->
 <div id="addModal" class="modal">
-    <h3>Add User</h3>
-    <form onsubmit="addUser(event)">
-        <input type="text" id="addUsername" placeholder="Username" required/><br/>
-        <input type="email" id="addEmail" placeholder="Email" required/><br/>
-        <input type="password" id="addPassword" placeholder="Password" required/><br/>
-        <select id="addRole" required>
-            <option value="ADMIN">Admin</option>
-            <option value="ORGANIZER">Organizer</option>
-            <option value="ATTENDEE">Attendee</option>
-        </select><br/>
-        <button type="submit">Add</button>
-        <button type="button" onclick="closeModal('addModal')">Cancel</button>
-    </form>
-    <div id="addResult"></div>
+    <div class="modal-content">
+        <h3>Tambah Pengguna</h3>
+        <form onsubmit="addUser(event)">
+            <input type="text" id="addUsername" placeholder="Username" required/>
+            <input type="text" id="addFullName" placeholder="Nama Lengkap" required/>
+            <input type="email" id="addEmail" placeholder="Email" required/>
+            <input type="password" id="addPassword" placeholder="Password" required/>
+            <select id="addRole" required>
+                <option value="ADMIN">Admin</option>
+                <option value="ORGANIZER">Organizer</option>
+                <option value="ATTENDEE">Attendee</option>
+            </select>
+            <button type="submit" class="btn-primary">Tambah</button>
+            <button type="button" class="btn-secondary" onclick="closeModal('addModal')">Batal</button>
+        </form>
+        <div id="addResult" class="error-message"></div>
+    </div>
 </div>
 
 <!-- Update Modal -->
 <div id="updateModal" class="modal">
-    <h3>Update User</h3>
-    <form onsubmit="updateUser(event)">
-        <input type="hidden" id="updateId"/>
-        <input type="text" id="updateUsername" placeholder="Username" required/><br/>
-        <input type="email" id="updateEmail" placeholder="Email" required/><br/>
-        <input type="password" id="updatePassword" placeholder="Password"/><br/>
-        <select id="updateRole" required>
-            <option value="ADMIN">Admin</option>
-            <option value="ORGANIZER">Organizer</option>
-            <option value="ATTENDEE">Attendee</option>
-        </select><br/>
-        <button type="submit">Update</button>
-        <button type="button" onclick="closeModal('updateModal')">Cancel</button>
-    </form>
-    <div id="updateResult"></div>
+    <div class="modal-content">
+        <h3>Update Pengguna</h3>
+        <form onsubmit="updateUser(event)">
+            <input type="hidden" id="updateId"/>
+            <input type="text" id="updateUsername" placeholder="Username" required/>
+            <input type="text" id="updateFullName" placeholder="Nama Lengkap" required/>
+            <input type="email" id="updateEmail" placeholder="Email" required/>
+            <input type="password" id="updatePassword" placeholder="Password (kosongkan jika tidak diubah)"/>
+            <select id="updateRole" required>
+                <option value="ADMIN">Admin</option>
+                <option value="ORGANIZER">Organizer</option>
+                <option value="ATTENDEE">Attendee</option>
+            </select>
+            <button type="submit" class="btn-primary">
+                <i class="fas fa-save"></i> Perbarui
+            </button>
+            <button type="button" class="btn-secondary" onclick="closeModal('updateModal')">
+                <i class="fas fa-times"></i> Batal
+            </button>
+        </form>
+        <div id="updateResult" class="error-message"></div>
+    </div>
 </div>
 
 <!-- Delete Modal -->
 <div id="deleteModal" class="modal">
-    <h3>Delete User?</h3>
-    <form onsubmit="deleteUser(event)">
-        <input type="hidden" id="deleteId"/>
-        <button type="submit">Delete</button>
-        <button type="button" onclick="closeModal('deleteModal')">Cancel</button>
-    </form>
-    <div id="deleteResult"></div>
+    <div class="modal-content">
+        <h3>Hapus Pengguna?</h3>
+        <p>Apakah Anda yakin ingin menghapus pengguna ini?</p>
+        <form onsubmit="deleteUser(event)">
+            <input type="hidden" id="deleteId"/>
+            <button type="submit" class="btn-danger">
+                <i class="fas fa-trash"></i> Hapus
+            </button>
+            <button type="button" class="btn-secondary" onclick="closeModal('deleteModal')">
+                <i class="fas fa-times"></i> Batal
+            </button>
+        </form>
+        <div id="deleteResult" class="error-message"></div>
+    </div>
 </div>
 
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.update-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const id = btn.getAttribute('data-id');
+                const username = btn.getAttribute('data-username');
+                const email = btn.getAttribute('data-email');
+                const role = btn.getAttribute('data-role');
+                const fullName = btn.getAttribute('data-fullname');
+                showUpdateModal(id, username, email, role, fullName);
+            });
+        });
+
+        document.querySelectorAll('.delete-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const id = btn.getAttribute('data-id');
+                showDeleteModal(id);
+            });
+        });
+    });
+
     function openModal(id) {
         document.getElementById(id).classList.add('show');
     }
@@ -101,9 +307,10 @@
         document.getElementById(id).classList.remove('show');
     }
 
-    function showUpdateModal(id, username, email, role) {
+    function showUpdateModal(id, username, email, role, fullName) {
         document.getElementById('updateId').value = id;
         document.getElementById('updateUsername').value = username;
+        document.getElementById('updateFullName').value = fullName;
         document.getElementById('updateEmail').value = email;
         document.getElementById('updatePassword').value = '';
         document.getElementById('updateRole').value = role;
@@ -126,6 +333,7 @@
             credentials: 'include',
             body: JSON.stringify({
                 username: document.getElementById('addUsername').value,
+                fullName: document.getElementById('addFullName').value,
                 email: document.getElementById('addEmail').value,
                 password: document.getElementById('addPassword').value,
                 role: document.getElementById('addRole').value
@@ -153,6 +361,7 @@
             credentials: 'include',
             body: JSON.stringify({
                 username: document.getElementById('updateUsername').value,
+                fullName: document.getElementById('updateFullName').value,
                 email: document.getElementById('updateEmail').value,
                 password: document.getElementById('updatePassword').value,
                 role: document.getElementById('updateRole').value
@@ -195,6 +404,10 @@
             .then(() => {
                 window.location.href = '/login';
             });
+    }
+
+    function goToDashboard() {
+        window.location.href = '/dashboard';
     }
 </script>
 </body>

@@ -69,17 +69,6 @@ public class AuthController {
         try {
             User registeredUser = userService.registerUser(registrationDto);
 
-            // Generate JWT token
-            UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
-                    .username(registeredUser.getUsername())
-                    .password(registeredUser.getPassword())
-                    .authorities(registeredUser.getRole().name())
-                    .build();
-            
-            String jwt = jwtUtil.generateToken(userDetails);
-
-            addJwtCookie(resp, jwt);
-
             Map<String, Object> response = new HashMap<>();
             response.put("id", registeredUser.getId());
             response.put("username", registeredUser.getUsername());

@@ -1,14 +1,133 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Dashboard</title>
+    <meta charset="UTF-8">
+    <title>Dashboard | EventSphere</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #e3f0ff 0%, #f8fbff 100%);
+            color: #232b3b;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        header {
+            background: linear-gradient(90deg, #2264a3 70%, #39a2db 100%);
+            padding: 32px 16px 24px 16px;
+            color: #fff;
+            text-align: center;
+            letter-spacing: 1px;
+            box-shadow: 0 2px 8px rgba(34, 100, 163, 0.08);
+        }
+        .container {
+            max-width: 800px;
+            margin: 32px auto;
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 4px 32px rgba(34,100,163,0.07);
+            padding: 36px 3vw 30px 3vw;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            color: #1b3556;
+            margin-bottom: 24px;
+        }
+        .welcome-message {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2264a3;
+        }
+        .dashboard-actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            width: 100%;
+        }
+        .btn-primary, button {
+            background: linear-gradient(90deg, #2264a3 70%, #39a2db 100%);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 15px 25px;
+            font-size: 1em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.08s, box-shadow 0.15s;
+            box-shadow: 0 2px 6px rgba(34, 100, 163, 0.10);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-width: 200px;
+            text-decoration: none;
+        }
+        .btn-primary:hover, button:hover {
+            background: linear-gradient(90deg, #1c4d75 70%, #297eb8 100%);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 5px 18px rgba(34, 100, 163, 0.13);
+        }
+        .btn-logout {
+            background: linear-gradient(90deg, #d63031 70%, #ff7675 100%);
+        }
+        .btn-logout:hover {
+            background: linear-gradient(90deg, #b22222 70%, #e66767 100%);
+        }
+        .icon {
+            font-size: 1.2em;
+        }
+        @media (max-width: 600px) {
+            .container {
+                margin: 16px;
+                padding: 24px 16px;
+            }
+            .dashboard-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .btn-primary {
+                width: 100%;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-<h2>Dashboard</h2>
-<p>Welcome, <span id="username"></span>!</p>
-<button onclick="goToUserList()">Go to User List</button>
-<button onclick="goToEventList()">Go to Event List</button>
-<button onclick="logout()">Logout</button>
+<header>
+    <div style="font-size: 2.1em; font-weight: 700; letter-spacing: 0.7px;">
+        EventSphere
+    </div>
+</header>
+
+<div class="container">
+    <h1>Dashboard</h1>
+    <div class="welcome-message">
+        <h2>Welcome, <span id="username">User</span>!</h2>
+    </div>
+
+    <div class="dashboard-actions">
+        <button onclick="goToUserList()" class="btn-primary">
+            <i class="fas fa-users icon"></i> User List
+        </button>
+
+        <button onclick="goToEventList()" class="btn-primary">
+            <i class="fas fa-calendar-alt icon"></i> Event List
+        </button>
+
+        <button onclick="logout()" class="btn-primary btn-logout">
+            <i class="fas fa-sign-out-alt icon"></i> Logout
+        </button>
+    </div>
+</div>
 
 <script>
     async function loadUsername() {
