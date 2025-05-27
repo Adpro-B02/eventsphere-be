@@ -86,6 +86,18 @@ class ReviewServiceTest {
     }
 
     @Test
+    void whenUpdateReviewNotOwnedByUser_thenThrowException() {
+        UUID anotherUserId = UUID.randomUUID();
+        when(reviewRepository.findById(reviewId)).thenReturn(Optional.of(sampleReview));
+
+        ExecutionException exception = assertThrows(ExecutionException.class, () -> 
+            reviewService.updateReviewAsync(reviewId, anotherUserId, "Updated Comment", 4).get()
+        );
+        assertTrue(exception.getCause() instanceof IllegalArgumentException);
+        assertEquals("You can only update your own reviews", exception.getCause().getMessage());
+    }
+
+    @Test
     void whenDeleteOwnReview_thenSuccess() throws ExecutionException, InterruptedException {
         when(reviewRepository.findById(reviewId)).thenReturn(Optional.of(sampleReview));
         doNothing().when(reviewRepository).deleteById(reviewId);
@@ -102,6 +114,29 @@ class ReviewServiceTest {
         
         ExecutionException exception = assertThrows(ExecutionException.class, futureResult::get);
         assertTrue(exception.getCause() instanceof IllegalArgumentException);
+    }
+
+    @Test
+    void whenDeleteNonexistentReview_thenThrowException() {
+        when(reviewRepository.findById(reviewId)).thenReturn(Optional.empty());
+
+        ExecutionException exception = assertThrows(ExecutionException.class, () -> 
+            reviewService.deleteReviewAsync(reviewId, userId).get()
+        );
+        assertTrue(exception.getCause() instanceof IllegalArgumentException);
+        assertEquals("Review not found", exception.getCause().getMessage());
+    }
+
+    @Test
+    void whenDeleteReviewNotOwnedByUser_thenThrowException() {
+        UUID anotherUserId = UUID.randomUUID();
+        when(reviewRepository.findById(reviewId)).thenReturn(Optional.of(sampleReview));
+
+        ExecutionException exception = assertThrows(ExecutionException.class, () -> 
+            reviewService.deleteReviewAsync(reviewId, anotherUserId).get()
+        );
+        assertTrue(exception.getCause() instanceof IllegalArgumentException);
+        assertEquals("You can only delete your own reviews", exception.getCause().getMessage());
     }
 
     @Test
@@ -205,5 +240,35 @@ class ReviewServiceTest {
 
         assertNull(result);
         verify(reviewRepository).findByUserIdAndEventId(userId, eventId);
+    }
+
+    @Test
+    void whenCalculateAverageRating_thenSuccess() throws ExecutionException, InterruptedException {
+        List<Review> reviews = Arrays.asList(
+            new Review(reviewId, eventId, userId, "Great!", 5, LocalDateTime.now(), LocalDateTime.now()),
+            new Review(UUID.randomUUID(), eventId, UUID.randomUUID(), "Good", 4, LocalDateTime.now(), LocalDateTime.now())
+        );
+        when(reviewRepository.findByEventId(eventId)).thenReturn(reviews);
+        when(ratingStrategy.calculateRating(reviews)).thenReturn(4.5);
+
+        Double averageRating = reviewService.calculateAverageRatingByEventIdAsync(eventId).get();
+
+        assertNotNull(averageRating);
+        assertEquals(4.5, averageRating);
+        verify(reviewRepository).findByEventId(eventId);
+        verify(ratingStrategy).calculateRating(reviews);
+    }
+
+    @Test
+    void whenCalculateAverageRatingWithNoReviews_thenReturnZero() throws ExecutionException, InterruptedException {
+        when(reviewRepository.findByEventId(eventId)).thenReturn(Collections.emptyList());
+        when(ratingStrategy.calculateRating(Collections.emptyList())).thenReturn(0.0);
+
+        Double averageRating = reviewService.calculateAverageRatingByEventIdAsync(eventId).get();
+
+        assertNotNull(averageRating);
+        assertEquals(0.0, averageRating);
+        verify(reviewRepository).findByEventId(eventId);
+        verify(ratingStrategy).calculateRating(Collections.emptyList());
     }
 }
