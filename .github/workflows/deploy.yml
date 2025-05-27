@@ -91,33 +91,13 @@ jobs:
           scp -i tkadprokey.pem -o StrictHostKeyChecking=no docker/grafana/provisioning/dashboards/dashboard.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app/docker/grafana/provisioning/dashboards/
           scp -i tkadprokey.pem -o StrictHostKeyChecking=no docker/grafana/dashboards/spring-boot-dashboard.json ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app/docker/grafana/dashboards/
 
-      - name: Clean Up Existing Containers
-        run: |
-          ssh -i tkadprokey.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-            # Stop all running containers
-            docker stop $(docker ps -a -q)
-          
-            # Remove all containers
-            docker rm $(docker ps -a -q)
-          
-            # Remove any existing networks
-            docker network prune -f
-          
-            # Remove dangling volumes
-            docker volume prune -f
-          EOF
-
       - name: Deploy Application
         run: |
           ssh -i tkadprokey.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             cd ~/app
             docker-compose pull
             docker-compose down --remove-orphans
-            docker system prune -f
             docker-compose up -d
-          
-            docker ps
-            docker-compose ps 
           EOF
 
       - name: Cleanup
