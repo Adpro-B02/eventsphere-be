@@ -5,6 +5,7 @@ import backend.eventsphere.ticket.model.TicketFactory;
 import backend.eventsphere.ticket.repository.TicketRepository;
 import backend.eventsphere.ticket.model.TicketObserver;
 import backend.eventsphere.ticket.enums.TicketEventType;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +19,9 @@ public class TicketService {
     private final TicketRepository ticketRepository;
     private final TicketFactory ticketFactory;
     private final List<TicketObserver> observers = new ArrayList<>();
+
+    @Autowired
+    private TicketService self;
 
     public TicketService(TicketRepository ticketRepository, TicketFactory ticketFactory) {
         this.ticketRepository = ticketRepository;
@@ -94,7 +98,7 @@ public class TicketService {
     @Transactional
     public CompletableFuture<Ticket> createTicketAsync(UUID eventId, String ticketType, Double price, Integer quota) {
         try {
-            return CompletableFuture.completedFuture(createTicket(eventId, ticketType, price, quota));
+            return CompletableFuture.completedFuture(self.createTicket(eventId, ticketType, price, quota));
         } catch (Exception e) {
             CompletableFuture<Ticket> future = new CompletableFuture<>();
             future.completeExceptionally(e);
@@ -117,7 +121,7 @@ public class TicketService {
     @Transactional
     public CompletableFuture<Ticket> updateTicketAsync(UUID ticketId, Double newPrice, Integer newQuota) {
         try {
-            return CompletableFuture.completedFuture(updateTicket(ticketId, newPrice, newQuota));
+            return CompletableFuture.completedFuture(self.updateTicket(ticketId, newPrice, newQuota));
         } catch (Exception e) {
             CompletableFuture<Ticket> future = new CompletableFuture<>();
             future.completeExceptionally(e);
@@ -129,7 +133,7 @@ public class TicketService {
     @Transactional
     public CompletableFuture<Boolean> deleteTicketAsync(UUID ticketId) {
         try {
-            return CompletableFuture.completedFuture(deleteTicket(ticketId));
+            return CompletableFuture.completedFuture(self.deleteTicket(ticketId));
         } catch (Exception e) {
             CompletableFuture<Boolean> future = new CompletableFuture<>();
             future.completeExceptionally(e);
