@@ -67,6 +67,28 @@ class ReviewControllerTest {
     }
 
     @Test
+    void whenGetReview_thenSuccess() throws ExecutionException, InterruptedException {
+        when(reviewService.findByIdAsync(reviewId))
+            .thenReturn(CompletableFuture.completedFuture(sampleReview));
+
+        ResponseEntity<Review> response = reviewController.getReview(reviewId).get();
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(sampleReview, response.getBody());
+    }
+
+    @Test
+    void whenGetReview_withNonexistentReview_thenNotFound() throws ExecutionException, InterruptedException {
+        when(reviewService.findByIdAsync(reviewId))
+            .thenReturn(CompletableFuture.completedFuture(null));
+
+        ResponseEntity<Review> response = reviewController.getReview(reviewId).get();
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertNull(response.getBody());
+    }
+
+    @Test
     void whenCreateReview_thenSuccess() throws ExecutionException, InterruptedException {
         when(reviewService.createReviewAsync(
             reviewCreateDto.getEventId(),
@@ -170,5 +192,28 @@ class ReviewControllerTest {
             reviewController.deleteReview(reviewId, userId).get();
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void testGetAverageRating_whenSuccess() throws ExecutionException, InterruptedException {
+        double expectedAverageRating = 4.5;
+        when(reviewService.calculateAverageRatingByEventIdAsync(eventId))
+            .thenReturn(CompletableFuture.completedFuture(expectedAverageRating));
+
+        ResponseEntity<Double> response = reviewController.getAverageRating(eventId).get();
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(expectedAverageRating, response.getBody());
+    }
+
+    @Test
+    void testGetAverageRating_whenInternalServerError() throws ExecutionException, InterruptedException {
+        when(reviewService.calculateAverageRatingByEventIdAsync(eventId))
+            .thenReturn(CompletableFuture.failedFuture(new RuntimeException("Database error")));
+
+        ResponseEntity<Double> response = reviewController.getAverageRating(eventId).get();
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertNull(response.getBody());
     }
 }
