@@ -6,6 +6,7 @@ import backend.eventsphere.ticket.repository.TicketRepository;
 import backend.eventsphere.ticket.model.TicketObserver;
 import backend.eventsphere.ticket.enums.TicketEventType;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,7 @@ public class TicketService {
     private final List<TicketObserver> observers = new ArrayList<>();
 
     @Autowired
+    @Lazy
     private TicketService self;
 
     public TicketService(TicketRepository ticketRepository, TicketFactory ticketFactory) {
