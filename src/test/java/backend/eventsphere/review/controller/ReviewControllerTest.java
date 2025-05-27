@@ -171,4 +171,27 @@ class ReviewControllerTest {
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
+
+    @Test
+    void testGetAverageRating_whenSuccess() throws ExecutionException, InterruptedException {
+        double expectedAverageRating = 4.5;
+        when(reviewService.calculateAverageRatingByEventIdAsync(eventId))
+            .thenReturn(CompletableFuture.completedFuture(expectedAverageRating));
+
+        ResponseEntity<Double> response = reviewController.getAverageRating(eventId).get();
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(expectedAverageRating, response.getBody());
+    }
+
+    @Test
+    void testGetAverageRating_whenInternalServerError() throws ExecutionException, InterruptedException {
+        when(reviewService.calculateAverageRatingByEventIdAsync(eventId))
+            .thenReturn(CompletableFuture.failedFuture(new RuntimeException("Database error")));
+
+        ResponseEntity<Double> response = reviewController.getAverageRating(eventId).get();
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertNull(response.getBody());
+    }
 }
