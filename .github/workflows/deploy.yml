@@ -61,6 +61,11 @@ jobs:
             docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/spring-boot-app:latest
             docker stop spring-boot-app || true
             docker rm spring-boot-app || true
-            docker run -d --name spring-boot-app -p 8080:8080 ${{ secrets.DOCKER_HUB_USERNAME }}/spring-boot-app:latest
+            docker run -d --name spring-boot-app \
+            -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
+            -e DB_URL=${{ secrets.DB_URL }} \
+            -e DB_USERNAME=${{ secrets.DB_USERNAME }} \
+            -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
+            -p 8080:8080 ${{ secrets.DOCKER_HUB_USERNAME }}/spring-boot-app:latest
           EOF
           
