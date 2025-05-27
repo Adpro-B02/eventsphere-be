@@ -1,6 +1,6 @@
 package backend.eventsphere.ticket.service;
 
-import enums.TicketEventType;
+import backend.eventsphere.ticket.enums.TicketEventType;
 import backend.eventsphere.ticket.model.Ticket;
 import backend.eventsphere.ticket.model.TicketFactory;
 import backend.eventsphere.ticket.model.TicketObserver;
@@ -10,8 +10,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -30,6 +34,7 @@ public class TicketServiceTest {
     @BeforeEach
     void setUp() {
         ticketService = new TicketService(ticketRepository, ticketFactory);
+        ReflectionTestUtils.setField(ticketService, "self", ticketService);
         testObserver = new TestObserver();
         ticketService.registerObserver(testObserver);
     }
@@ -230,5 +235,155 @@ public class TicketServiceTest {
 
         assertEquals(1, testObserver.notificationCount);
         assertEquals(0, secondObserver.notificationCount);
+    }
+
+    @Test
+    void testUpdateTicketWithNullPrice() {
+        UUID ticketId = UUID.randomUUID();
+        UUID eventId = UUID.randomUUID();
+        Ticket ticket = new Ticket(eventId, "VIP", 150.0, 80);
+
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
+        when(ticketRepository.save(ticket)).thenReturn(ticket);
+
+        testObserver.reset();
+
+        Ticket updatedTicket = ticketService.updateTicket(ticketId, null, 100);
+
+        assertEquals(TicketEventType.UPDATED, testObserver.lastEvent);
+        assertEquals(150.0, updatedTicket.getPrice());
+        assertEquals(100, updatedTicket.getQuota());
+
+        verify(ticketRepository).save(ticket);
+    }
+
+    @Test
+    void testUpdateTicketWithNullQuota() {
+        UUID ticketId = UUID.randomUUID();
+        UUID eventId = UUID.randomUUID();
+        Ticket ticket = new Ticket(eventId, "VIP", 150.0, 80);
+
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
+        when(ticketRepository.save(ticket)).thenReturn(ticket);
+
+        testObserver.reset();
+
+        Ticket updatedTicket = ticketService.updateTicket(ticketId, 200.0, null);
+
+        assertEquals(TicketEventType.UPDATED, testObserver.lastEvent);
+        assertEquals(200.0, updatedTicket.getPrice());
+        assertEquals(80, updatedTicket.getQuota());
+
+        verify(ticketRepository).save(ticket);
+    }
+
+    @Test
+    void testUpdateTicketWithBothNull() {
+        UUID ticketId = UUID.randomUUID();
+        UUID eventId = UUID.randomUUID();
+        Ticket ticket = new Ticket(eventId, "VIP", 150.0, 80);
+
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
+        when(ticketRepository.save(ticket)).thenReturn(ticket);
+
+        testObserver.reset();
+
+        Ticket updatedTicket = ticketService.updateTicket(ticketId, null, null);
+
+        assertEquals(TicketEventType.UPDATED, testObserver.lastEvent);
+        assertEquals(150.0, updatedTicket.getPrice());
+        assertEquals(80, updatedTicket.getQuota());
+
+        verify(ticketRepository).save(ticket);
+    }
+
+    @Test
+    void testCreateTicketAsyncSuccess() throws Exception {
+        UUID eventId = UUID.randomUUID();
+        String ticketType = "VIP";
+        Double price = 123.0;
+        Integer quota = 6;
+        Ticket ticket = new Ticket(eventId, ticketType, price, quota);
+
+        when(ticketFactory.createTicket(eventId, ticketType, price, quota)).thenReturn(ticket);
+        when(ticketRepository.save(ticket)).thenReturn(ticket);
+
+        CompletableFuture<Ticket> future = ticketService.createTicketAsync(eventId, ticketType, price, quota);
+        assertEquals(ticket, future.get());
+        assertEquals(TicketEventType.CREATED, testObserver.lastEvent);
+    }
+
+    @Test
+    void testCreateTicketAsyncException() {
+        UUID eventId = UUID.randomUUID();
+        String ticketType = "VIP";
+        when(ticketFactory.createTicket(eventId, ticketType, 1d, 1)).thenThrow(new IllegalArgumentException("error"));
+
+        CompletableFuture<Ticket> future = ticketService.createTicketAsync(eventId, ticketType, 1d, 1);
+        assertTrue(future.isCompletedExceptionally());
+        assertThrows(ExecutionException.class, future::get);
+    }
+
+    @Test
+    void testGetTicketsByEventAsyncSuccess() throws Exception {
+        UUID eventId = UUID.randomUUID();
+        List<Ticket> tickets = List.of(
+            new Ticket(eventId, "A", 10d, 1),
+            new Ticket(eventId, "B", 20d, 2)
+        );
+        when(ticketRepository.findByEventId(eventId)).thenReturn(tickets);
+        CompletableFuture<Map<UUID, Ticket>> future = ticketService.getTicketsByEventAsync(eventId);
+        Map<UUID, Ticket> map = future.get();
+        assertEquals(2, map.size());
+    }
+
+    @Test
+    void testGetTicketsByEventAsyncException() {
+        UUID eventId = UUID.randomUUID();
+        when(ticketRepository.findByEventId(eventId)).thenThrow(new RuntimeException("fail"));
+        CompletableFuture<Map<UUID, Ticket>> future = ticketService.getTicketsByEventAsync(eventId);
+        assertTrue(future.isCompletedExceptionally());
+        assertThrows(ExecutionException.class, future::get);
+    }
+
+    @Test
+    void testUpdateTicketAsyncSuccess() throws Exception {
+        UUID ticketId = UUID.randomUUID();
+        UUID eventId = UUID.randomUUID();
+        Ticket ticket = new Ticket(eventId, "VIP", 100.0, 10);
+
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
+        when(ticketRepository.save(ticket)).thenReturn(ticket);
+        CompletableFuture<Ticket> future = ticketService.updateTicketAsync(ticketId, 200.0, 20);
+        assertEquals(ticket, future.get());
+    }
+
+    @Test
+    void testUpdateTicketAsyncException() {
+        UUID ticketId = UUID.randomUUID();
+        when(ticketRepository.findById(ticketId)).thenThrow(new RuntimeException("error"));
+        CompletableFuture<Ticket> future = ticketService.updateTicketAsync(ticketId, 1.0, 1);
+        assertTrue(future.isCompletedExceptionally());
+        assertThrows(ExecutionException.class, future::get);
+    }
+
+    @Test
+    void testDeleteTicketAsyncSuccess() throws Exception {
+        UUID ticketId = UUID.randomUUID();
+        UUID eventId = UUID.randomUUID();
+        Ticket ticket = new Ticket(eventId, "VIP", 100.0, 10);
+
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
+        CompletableFuture<Boolean> future = ticketService.deleteTicketAsync(ticketId);
+        assertTrue(future.get());
+    }
+
+    @Test
+    void testDeleteTicketAsyncException() {
+        UUID ticketId = UUID.randomUUID();
+        when(ticketRepository.findById(ticketId)).thenThrow(new RuntimeException("error"));
+        CompletableFuture<Boolean> future = ticketService.deleteTicketAsync(ticketId);
+        assertTrue(future.isCompletedExceptionally());
+        assertThrows(ExecutionException.class, future::get);
     }
 }

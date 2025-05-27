@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -25,7 +24,7 @@ public class TicketController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('ORGANIZER')")
-    public CompletableFuture<ResponseEntity<?>> createTicket(@RequestBody CreateTicketRequest request) {
+    public CompletableFuture<ResponseEntity<Object>> createTicket(@RequestBody CreateTicketRequest request) {
         return ticketService.createTicketAsync(
             UUID.fromString(request.getEventId()),
             request.getTicketType(),
@@ -43,7 +42,7 @@ public class TicketController {
 
     @GetMapping("/{id_event}")
     @PreAuthorize("hasAnyAuthority('ATTENDEE', 'ORGANIZER', 'ADMIN')")
-    public CompletableFuture<ResponseEntity<?>> getTicketsByEvent(@PathVariable("id_event") String eventId) {
+    public CompletableFuture<ResponseEntity<Object>> getTicketsByEvent(@PathVariable("id_event") String eventId) {
         return ticketService.getTicketsByEventAsync(UUID.fromString(eventId))
             .handle((tickets, ex) -> {
                 if (ex != null) {
@@ -61,7 +60,7 @@ public class TicketController {
 
     @PutMapping("/{id_ticket}")
     @PreAuthorize("hasAuthority('ORGANIZER')")
-    public CompletableFuture<ResponseEntity<?>> updateTicket(
+    public CompletableFuture<ResponseEntity<Object>> updateTicket(
             @PathVariable("id_ticket") String ticketId,
             @RequestBody UpdateTicketRequest request) {
         return ticketService.updateTicketAsync(
@@ -82,7 +81,7 @@ public class TicketController {
 
     @DeleteMapping("/{id_ticket}")
     @PreAuthorize("hasAuthority('ADMIN')")
-    public CompletableFuture<ResponseEntity<?>> deleteTicket(@PathVariable("id_ticket") String ticketId) {
+    public CompletableFuture<ResponseEntity<Object>> deleteTicket(@PathVariable("id_ticket") String ticketId) {
         return ticketService.deleteTicketAsync(UUID.fromString(ticketId))
             .handle((deleted, ex) -> {
                 if (ex != null) {
@@ -90,7 +89,7 @@ public class TicketController {
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body("Error deleting ticket: " + cause.getMessage());
                 }
-                if (deleted) {
+                if (Boolean.TRUE.equals(deleted)) {
                     return ResponseEntity.noContent().build();
                 } else {
                     return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Ticket not found");

@@ -20,7 +20,6 @@
   "graphTooltip": 0,
   "id": null,
   "links": [],
-  "liveNow": false,
   "panels": [
     {
       "datasource": {
@@ -33,50 +32,19 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "axisLabel": "",
+            "axisLabel": "Requests per Second",
             "axisPlacement": "auto",
-            "barAlignment": 0,
             "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "vis": false
-            },
+            "fillOpacity": 20,
+            "gradientMode": "opacity",
             "lineInterpolation": "linear",
-            "lineWidth": 1,
+            "lineWidth": 2,
             "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
+            "showPoints": "auto",
+            "spanNulls": false
           },
           "unit": "reqps"
-        },
-        "overrides": []
+        }
       },
       "gridPos": {
         "h": 8,
@@ -87,23 +55,23 @@
       "id": 1,
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
+          "calcs": ["mean", "max"],
+          "displayMode": "table",
           "placement": "bottom"
         },
         "tooltip": {
-          "mode": "single"
+          "mode": "multi",
+          "sort": "none"
         }
       },
       "targets": [
         {
-          "expr": "rate(http_server_requests_seconds_count{job=\"springboot_application\"}[5m])",
-          "interval": "",
-          "legendFormat": "{{method}} {{uri}}",
+          "expr": "sum(rate(http_server_requests_seconds_count{job=\"springboot_application\"}[5m])) by (method)",
+          "legendFormat": "{{method}} Requests",
           "refId": "A"
         }
       ],
-      "title": "HTTP Request Rate",
+      "title": "Request Rate by Method",
       "type": "timeseries"
     },
     {
@@ -117,50 +85,19 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "axisLabel": "",
+            "axisLabel": "Seconds",
             "axisPlacement": "auto",
-            "barAlignment": 0,
             "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "vis": false
-            },
+            "fillOpacity": 20,
+            "gradientMode": "opacity",
             "lineInterpolation": "linear",
-            "lineWidth": 1,
+            "lineWidth": 2,
             "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
+            "showPoints": "auto",
+            "spanNulls": false
           },
           "unit": "s"
-        },
-        "overrides": []
+        }
       },
       "gridPos": {
         "h": 8,
@@ -171,29 +108,28 @@
       "id": 2,
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
+          "calcs": ["mean", "max"],
+          "displayMode": "table",
           "placement": "bottom"
         },
         "tooltip": {
-          "mode": "single"
+          "mode": "multi",
+          "sort": "none"
         }
       },
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{job=\"springboot_application\"}[5m]))",
-          "interval": "",
-          "legendFormat": "95th percentile",
+          "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{job=\"springboot_application\"}[5m])) by (le))",
+          "legendFormat": "95th Percentile Latency",
           "refId": "A"
         },
         {
-          "expr": "histogram_quantile(0.50, rate(http_server_requests_seconds_bucket{job=\"springboot_application\"}[5m]))",
-          "interval": "",
-          "legendFormat": "50th percentile",
+          "expr": "histogram_quantile(0.50, sum(rate(http_server_requests_seconds_bucket{job=\"springboot_application\"}[5m])) by (le))",
+          "legendFormat": "Median Latency",
           "refId": "B"
         }
       ],
-      "title": "HTTP Request Duration",
+      "title": "Request Latency",
       "type": "timeseries"
     },
     {
@@ -207,50 +143,19 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "axisLabel": "",
+            "axisLabel": "Bytes",
             "axisPlacement": "auto",
-            "barAlignment": 0,
             "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "vis": false
-            },
+            "fillOpacity": 20,
+            "gradientMode": "opacity",
             "lineInterpolation": "linear",
-            "lineWidth": 1,
+            "lineWidth": 2,
             "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
+            "showPoints": "auto",
+            "spanNulls": false
           },
           "unit": "bytes"
-        },
-        "overrides": []
+        }
       },
       "gridPos": {
         "h": 8,
@@ -261,29 +166,28 @@
       "id": 3,
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
+          "calcs": ["mean", "max"],
+          "displayMode": "table",
           "placement": "bottom"
         },
         "tooltip": {
-          "mode": "single"
+          "mode": "multi",
+          "sort": "none"
         }
       },
       "targets": [
         {
-          "expr": "jvm_memory_used_bytes{job=\"springboot_application\"}",
-          "interval": "",
-          "legendFormat": "{{area}} - used",
+          "expr": "jvm_memory_used_bytes{job=\"springboot_application\", area=\"heap\"}",
+          "legendFormat": "Heap Memory Used",
           "refId": "A"
         },
         {
-          "expr": "jvm_memory_max_bytes{job=\"springboot_application\"}",
-          "interval": "",
-          "legendFormat": "{{area}} - max",
+          "expr": "jvm_memory_max_bytes{job=\"springboot_application\", area=\"heap\"}",
+          "legendFormat": "Heap Memory Max",
           "refId": "B"
         }
       ],
-      "title": "JVM Memory Usage",
+      "title": "JVM Heap Memory",
       "type": "timeseries"
     },
     {
@@ -297,50 +201,19 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "axisLabel": "",
+            "axisLabel": "Percentage",
             "axisPlacement": "auto",
-            "barAlignment": 0,
             "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "vis": false
-            },
+            "fillOpacity": 20,
+            "gradientMode": "opacity",
             "lineInterpolation": "linear",
-            "lineWidth": 1,
+            "lineWidth": 2,
             "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
+            "showPoints": "auto",
+            "spanNulls": false
           },
           "unit": "percent"
-        },
-        "overrides": []
+        }
       },
       "gridPos": {
         "h": 8,
@@ -351,25 +224,24 @@
       "id": 4,
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
+          "calcs": ["mean", "max"],
+          "displayMode": "table",
           "placement": "bottom"
         },
         "tooltip": {
-          "mode": "single"
+          "mode": "multi",
+          "sort": "none"
         }
       },
       "targets": [
         {
           "expr": "system_cpu_usage{job=\"springboot_application\"} * 100",
-          "interval": "",
-          "legendFormat": "System CPU",
+          "legendFormat": "System CPU Usage",
           "refId": "A"
         },
         {
           "expr": "process_cpu_usage{job=\"springboot_application\"} * 100",
-          "interval": "",
-          "legendFormat": "Process CPU",
+          "legendFormat": "Process CPU Usage",
           "refId": "B"
         }
       ],
@@ -378,19 +250,13 @@
     }
   ],
   "refresh": "5s",
-  "schemaVersion": 30,
+  "schemaVersion": 37,
   "style": "dark",
   "tags": ["spring-boot"],
-  "templating": {
-    "list": []
-  },
   "time": {
-    "from": "now-15m",
+    "from": "now-1h",
     "to": "now"
   },
-  "timepicker": {},
-  "timezone": "",
-  "title": "Spring Boot Dashboard",
-  "uid": "spring-boot-dashboard",
-  "version": 1
+  "title": "Spring Boot Monitoring",
+  "uid": "spring-boot-simple-dashboard"
 }
