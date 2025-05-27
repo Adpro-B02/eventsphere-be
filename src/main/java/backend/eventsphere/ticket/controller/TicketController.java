@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -90,7 +89,7 @@ public class TicketController {
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body("Error deleting ticket: " + cause.getMessage());
                 }
-                if (deleted) {
+                if (Boolean.TRUE.equals(deleted)) {
                     return ResponseEntity.noContent().build();
                 } else {
                     return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Ticket not found");
