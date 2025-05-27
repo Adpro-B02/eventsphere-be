@@ -45,7 +45,7 @@
             .then(response => response.json())
             .then(data => {
                 if (data.id) {
-                    window.location.href = "/dashboard";
+                    window.location.href = "/login";
                 } else {
                     document.getElementById("registerResult").innerText = data.error || "Registration failed";
                 }

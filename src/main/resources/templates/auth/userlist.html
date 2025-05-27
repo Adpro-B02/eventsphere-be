@@ -23,22 +23,36 @@
 <button onclick="openModal('addModal')">Add User</button>
 <button onclick="logout()">Logout</button>
 <table border="1">
+    <thead>
     <tr>
         <th>ID</th>
         <th>Username</th>
+        <th>Full Name</th>
         <th>Email</th>
         <th>Role</th>
         <th>Actions</th>
     </tr>
-    <tbody id="userTable" th:each="user : ${users}">
-    <tr>
+    </thead>
+    <tbody id="userTable">
+    <tr th:each="user : ${users}">
         <td th:text="${user.id}"></td>
         <td th:text="${user.username}"></td>
+        <td th:text="${user.fullName}"></td>
         <td th:text="${user.email}"></td>
         <td th:text="${user.role}"></td>
         <td>
-            <button onclick="showUpdateModal([[${user.id}]], '[[${user.username}]]', '[[${user.email}]]', '[[${user.role}]]')">Update</button>
-            <button onclick="showDeleteModal([[${user.id}]])">Delete</button>
+            <button
+                    type="button"
+                    class="update-btn"
+                    th:attr="data-id=${user.id}, data-username=${user.username}, data-email=${user.email}, data-role=${user.role}, data-fullname=${user.fullName}">
+                Update
+            </button>
+            <button
+                    type="button"
+                    class="delete-btn"
+                    th:attr="data-id=${user.id}">
+                Delete
+            </button>
         </td>
     </tr>
     </tbody>
@@ -49,6 +63,7 @@
     <h3>Add User</h3>
     <form onsubmit="addUser(event)">
         <input type="text" id="addUsername" placeholder="Username" required/><br/>
+        <input type="text" id="addFullName" placeholder="Full Name" required/><br/>
         <input type="email" id="addEmail" placeholder="Email" required/><br/>
         <input type="password" id="addPassword" placeholder="Password" required/><br/>
         <select id="addRole" required>
@@ -68,6 +83,7 @@
     <form onsubmit="updateUser(event)">
         <input type="hidden" id="updateId"/>
         <input type="text" id="updateUsername" placeholder="Username" required/><br/>
+        <input type="text" id="updateFullName" placeholder="Full Name" required/><br/>
         <input type="email" id="updateEmail" placeholder="Email" required/><br/>
         <input type="password" id="updatePassword" placeholder="Password"/><br/>
         <select id="updateRole" required>
@@ -93,6 +109,26 @@
 </div>
 
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.update-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const id = btn.getAttribute('data-id');
+                const username = btn.getAttribute('data-username');
+                const email = btn.getAttribute('data-email');
+                const role = btn.getAttribute('data-role');
+                const fullName = btn.getAttribute('data-fullname');
+                showUpdateModal(id, username, email, role, fullName);
+            });
+        });
+
+        document.querySelectorAll('.delete-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const id = btn.getAttribute('data-id');
+                showDeleteModal(id);
+            });
+        });
+    });
+
     function openModal(id) {
         document.getElementById(id).classList.add('show');
     }
@@ -101,9 +137,10 @@
         document.getElementById(id).classList.remove('show');
     }
 
-    function showUpdateModal(id, username, email, role) {
+    function showUpdateModal(id, username, email, role, fullName) {
         document.getElementById('updateId').value = id;
         document.getElementById('updateUsername').value = username;
+        document.getElementById('updateFullName').value = fullName;
         document.getElementById('updateEmail').value = email;
         document.getElementById('updatePassword').value = '';
         document.getElementById('updateRole').value = role;
@@ -126,6 +163,7 @@
             credentials: 'include',
             body: JSON.stringify({
                 username: document.getElementById('addUsername').value,
+                fullName: document.getElementById('addFullName').value,
                 email: document.getElementById('addEmail').value,
                 password: document.getElementById('addPassword').value,
                 role: document.getElementById('addRole').value
@@ -153,6 +191,7 @@
             credentials: 'include',
             body: JSON.stringify({
                 username: document.getElementById('updateUsername').value,
+                fullName: document.getElementById('updateFullName').value,
                 email: document.getElementById('updateEmail').value,
                 password: document.getElementById('updatePassword').value,
                 role: document.getElementById('updateRole').value
