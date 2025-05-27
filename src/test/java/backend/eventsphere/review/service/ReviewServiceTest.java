@@ -55,6 +55,26 @@ class ReviewServiceTest {
     }
 
     @Test
+    void whenRatingIsBelowMinimum_thenThrowException() {
+        // Arrange, Act & Assert
+        ExecutionException exception = assertThrows(ExecutionException.class, () -> 
+            reviewService.createReviewAsync(eventId, userId, "Test Review", 0).get()
+        );
+        assertTrue(exception.getCause() instanceof IllegalArgumentException);
+        assertEquals("Rating must be between 1 and 5", exception.getCause().getMessage());
+    }
+
+    @Test
+    void whenRatingIsAboveMaximum_thenThrowException() {
+        // Arrange, Act & Assert
+        ExecutionException exception = assertThrows(ExecutionException.class, () -> 
+            reviewService.createReviewAsync(eventId, userId, "Test Review", 6).get()
+        );
+        assertTrue(exception.getCause() instanceof IllegalArgumentException);
+        assertEquals("Rating must be between 1 and 5", exception.getCause().getMessage());
+    }
+
+    @Test
     void whenCreateDuplicateReview_thenThrowException() {
         when(reviewRepository.findByUserIdAndEventId(userId, eventId)).thenReturn(sampleReview);
 

@@ -37,13 +37,13 @@ class ReviewWebControllerTest {
     }
 
     @Test
-    void whenGetEventReviewsPage_thenSuccess() {
+    void whenGetEventReviewsPage_thenSuccess() throws Exception {
         when(reviewService.findByEventIdAsync(eventId))
             .thenReturn(CompletableFuture.completedFuture(sampleReviews));
 
-        String viewName = reviewWebController.getEventReviewsPage(eventId, model);
+        CompletableFuture<String> result = reviewWebController.getEventReviewsPage(eventId, model);
 
-        assertEquals("review/review", viewName);
+        assertEquals("review/review", result.get());
         verify(model).addAttribute("eventId", eventId);
         verify(model).addAttribute("reviews", sampleReviews);
     }
