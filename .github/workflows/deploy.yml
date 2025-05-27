@@ -58,22 +58,6 @@ jobs:
           eval "$(ssh-agent -s)"
           ssh-add tkadprokey.pem
 
-      - name: Install Docker Compose
-        run: |
-          ssh -i tkadprokey.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-            # Update package manager
-            sudo yum update -y
-
-            # Install Docker Compose
-            sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-
-            # Make the binary executable
-            sudo chmod +x /usr/local/bin/docker-compose
-
-            # Verify installation
-            docker-compose --version
-          EOF
-
       - name: Create directories and .env file on EC2
         run: |
           ssh -i tkadprokey.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
@@ -99,11 +83,6 @@ jobs:
             chmod 600 ~/app/.env
           EOF
 
-      - name: List files
-        run: |
-          pwd
-          ls -R
-
       - name: Copy configuration files
         run: |
           scp -i tkadprokey.pem -o StrictHostKeyChecking=no docker-compose.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app/
@@ -112,13 +91,33 @@ jobs:
           scp -i tkadprokey.pem -o StrictHostKeyChecking=no docker/grafana/provisioning/dashboards/dashboard.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app/docker/grafana/provisioning/dashboards/
           scp -i tkadprokey.pem -o StrictHostKeyChecking=no docker/grafana/dashboards/spring-boot-dashboard.json ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app/docker/grafana/dashboards/
 
+      - name: Clean Up Existing Containers
+        run: |
+          ssh -i tkadprokey.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            # Stop all running containers
+            docker stop $(docker ps -a -q)
+          
+            # Remove all containers
+            docker rm $(docker ps -a -q)
+          
+            # Remove any existing networks
+            docker network prune -f
+          
+            # Remove dangling volumes
+            docker volume prune -f
+          EOF
+
       - name: Deploy Application
         run: |
           ssh -i tkadprokey.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             cd ~/app
             docker-compose pull
-            docker-compose down
+            docker-compose down --remove-orphans
+            docker system prune -f
             docker-compose up -d
+          
+            docker ps
+            docker-compose ps 
           EOF
 
       - name: Cleanup
