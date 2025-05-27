@@ -2,80 +2,254 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Daftar Event</title>
+    <title>Daftar Event | EventSphere</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #e3f0ff 0%, #f8fbff 100%);
+            color: #232b3b;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background: linear-gradient(90deg, #2264a3 70%, #39a2db 100%);
+            padding: 32px 16px 24px 16px;
+            color: #fff;
+            text-align: center;
+            letter-spacing: 1px;
+            box-shadow: 0 2px 8px rgba(34, 100, 163, 0.08);
+        }
+        .tagline {
+            font-size: 1.1em;
+            font-weight: 400;
+            margin-top: 12px;
+            opacity: 0.9;
+        }
+        section {
+            max-width: 1200px;
+            margin: 32px auto 0 auto;
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 4px 32px rgba(34,100,163,0.07);
+            padding: 36px 3vw 30px 3vw;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            color: #1b3556;
+            margin-bottom: 14px;
+        }
+        .btn-primary, button {
+            background: linear-gradient(90deg, #2264a3 70%, #39a2db 100%);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 20px;
+            font-size: 1em;
+            font-weight: 500;
+            margin: 5px 0;
+            cursor: pointer;
+            transition: transform 0.08s, box-shadow 0.15s;
+            box-shadow: 0 2px 6px rgba(34, 100, 163, 0.10);
+        }
+        .btn-primary:hover, button:hover {
+            background: linear-gradient(90deg, #1c4d75 70%, #297eb8 100%);
+            transform: translateY(-2px) scale(1.04);
+            box-shadow: 0 5px 18px rgba(34, 100, 163, 0.13);
+        }
+        a {
+            text-decoration: none;
+        }
+        .btn-secondary {
+            background: #fff;
+            color: #2264a3;
+            border: 1px solid #299edb;
+        }
+        .btn-secondary:hover {
+            background: #e3f3ff;
+        }
+
+        .alert-success {
+            background: #eaf7e6;
+            color: #228900;
+            border-radius: 8px;
+            padding: 13px 20px;
+            margin: 10px 0;
+            border: 1px solid #aeefa8;
+        }
+        .alert-error, .alert-warning {
+            background: #faeaea;
+            color: #d61d1d;
+            border-radius: 8px;
+            padding: 13px 20px;
+            margin: 10px 0;
+            border: 1px solid #f8b4b4;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 22px;
+            background: #f6faff;
+            border-radius: 11px;
+            overflow: hidden;
+            box-shadow: 0px 2px 12px rgba(34,100,163,0.06);
+        }
+        th, td {
+            padding: 13px 10px;
+            text-align: left;
+        }
+        th {
+            background: #2264a3;
+            color: #fff;
+            font-weight: 600;
+        }
+        tr:nth-child(even) {
+            background: #e3f0ff;
+        }
+        tr:hover {
+            background: #d7e9ff;
+        }
+        td img {
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(60,75,100,0.12);
+            background: #eee;
+        }
+        .action-buttons > * {
+            display: inline-block;
+            margin-right: 7px;
+        }
+        /* Responsive tweaks */
+        @media (max-width: 880px) {
+            section {
+                padding: 18px 2vw 14px 2vw;
+            }
+            table, thead, tbody, th, td, tr {
+                font-size: 0.95em;
+            }
+        }
+        @media (max-width:600px){
+            table, thead, tbody, th, td, tr {
+                font-size: 0.84em;
+            }
+            h1 {
+                font-size: 1.5em;
+            }
+            section {
+                padding: 6px 2vw;
+            }
+        }
+        .action-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .dashboard-btn {
+            background: linear-gradient(90deg, #4a4e69 70%, #6a7187 100%);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 20px;
+            font-size: 1em;
+            font-weight: 500;
+            margin: 5px 0;
+            cursor: pointer;
+            transition: transform 0.08s, box-shadow 0.15s;
+            box-shadow: 0 2px 6px rgba(74, 78, 105, 0.10);
+        }
+        .dashboard-btn:hover {
+            background: linear-gradient(90deg, #373a4a 70%, #585d72 100%);
+            transform: translateY(-2px) scale(1.04);
+            box-shadow: 0 5px 18px rgba(74, 78, 105, 0.13);
+        }
+    </style>
 </head>
 <body>
-<h1>Daftar Event</h1>
+<header>
+    <div style="font-size: 2.1em; font-weight: 700; letter-spacing: 0.7px;">
+        EventSphere
+    </div>
+</header>
 
-<a th:if="${userRole == T(backend.eventsphere.auth.model.User.UserRole).ORGANIZER}" th:href="@{/events/create}">
-    <button>+ Tambah Event</button>
-</a>
+<section>
+    <h1>Daftar Event</h1>
 
-<br><br>
-
-<div th:if="${successMessage}" style="color:green">
-    <p th:text="${successMessage}"></p>
-</div>
-
-<div th:if="${warningMessage}" style="color:red">
-    <p th:text="${warningMessage}"></p>
-</div>
-
-<div th:if="${errorMessage}" style="color:red">
-    <p th:text="${errorMessage}"></p>
-</div>
-
-<table border="1">
-    <thead>
-    <tr>
-        <th>Nama</th>
-        <th>Harga Tiket</th>
-        <th>Tanggal & Waktu</th>
-        <th>Lokasi</th>
-        <th>Deskripsi</th>
-        <th>Gambar</th>
-        <th>Status</th>
-        <th>Organizer ID</th>
-        <th>Aksi</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="event : ${events}">
-        <td th:text="${event.name}"></td>
-        <td th:text="${event.ticketPrice}"></td>
-        <td th:text="${#temporals.format(event.eventDateTime, 'dd-MM-yyyy HH:mm')}"></td>
-        <td th:text="${event.location}"></td>
-        <td th:text="${event.description}"></td>
-        <td>
-            <img th:src="@{${event.link_image}}" alt="Event Image" width="100">
-        </td>
-        <td th:text="${event.status}"></td>
-        <td th:text="${event.organizerId}"></td>
-        <td>
-            <form th:if="${userRole == T(backend.eventsphere.auth.model.User.UserRole).ORGANIZER}" th:action="@{/events/update}" method="get" style="display:inline;">
-                <input type="hidden" name="id" th:value="${event.id}" />
-                <button type="submit">Update</button>
-            </form>
-
-            <form th:if="${userRole == T(backend.eventsphere.auth.model.User.UserRole).ORGANIZER}" th:action="@{/events/delete}" method="post" style="display:inline;">
-                <input type="hidden" name="id" th:value="${event.id}" />
-                <button type="submit">Delete</button>
-            </form>
-
-            <a th:href="@{/tickets/{eventId}(eventId=${event.id})}">
-                <button type="button">Lihat Ticket</button>
+    <div class="action-row">
+        <div>
+            <a th:if="${userRole == T(backend.eventsphere.auth.model.User.UserRole).ORGANIZER}"
+               th:href="@{/events/create}">
+                <button class="btn-primary">+ Tambah Event</button>
             </a>
 
-            <a th:href="@{/promos/event/{eventId}(eventId=${event.id})}">
-                <button type="button">Lihat Promo</button>
+            <a th:href="@{/dashboard}">
+                <button class="dashboard-btn">Kembali ke Dashboard</button>
             </a>
+        </div>
+    </div>
 
-            <a th:href="@{/reviews/{eventId}(eventId=${event.id})}">
-                <button type="button">Lihat Review</button>
-            </a>
-        </td>
-    </tr>
-    </tbody>
-</table>
+    <div th:if="${successMessage}" class="alert-success">
+        <p th:text="${successMessage}"></p>
+    </div>
+    <div th:if="${warningMessage}" class="alert-warning alert-error">
+        <p th:text="${warningMessage}"></p>
+    </div>
+    <div th:if="${errorMessage}" class="alert-error">
+        <p th:text="${errorMessage}"></p>
+    </div>
+
+    <table>
+        <thead>
+        <tr>
+            <th>Nama</th>
+            <th>Harga Tiket</th>
+            <th>Tanggal & Waktu</th>
+            <th>Lokasi</th>
+            <th>Deskripsi</th>
+            <th>Gambar</th>
+            <th>Status</th>
+            <th>Organizer ID</th>
+            <th>Aksi</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="event : ${events}">
+            <td th:text="${event.name}"></td>
+            <td th:text="${event.ticketPrice}"></td>
+            <td th:text="${#temporals.format(event.eventDateTime, 'dd-MM-yyyy HH:mm')}"></td>
+            <td th:text="${event.location}"></td>
+            <td th:text="${event.description}"></td>
+            <td>
+                <img th:src="@{${event.link_image}}" alt="Event Image" width="100">
+            </td>
+            <td th:text="${event.status}"></td>
+            <td th:text="${event.organizerId}"></td>
+            <td class="action-buttons">
+                <form th:if="${userRole == T(backend.eventsphere.auth.model.User.UserRole).ORGANIZER}" th:action="@{/events/update}" method="get" style="display:inline;">
+                    <input type="hidden" name="id" th:value="${event.id}" />
+                    <button type="submit" class="btn-secondary">Update</button>
+                </form>
+
+                <form th:if="${userRole == T(backend.eventsphere.auth.model.User.UserRole).ORGANIZER}" th:action="@{/events/delete}" method="post" style="display:inline;">
+                    <input type="hidden" name="id" th:value="${event.id}" />
+                    <button type="submit" class="btn-secondary">Delete</button>
+                </form>
+
+                <a th:href="@{/tickets/{eventId}(eventId=${event.id})}">
+                    <button type="button">Lihat Ticket</button>
+                </a>
+
+                <a th:href="@{/promos/event/{eventId}(eventId=${event.id})}">
+                    <button type="button">Lihat Promo</button>
+                </a>
+
+                <a th:href="@{/reviews/{eventId}(eventId=${event.id})}">
+                    <button type="button">Lihat Review</button>
+                </a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</section>
 </body>
 </html>

@@ -1,170 +1,222 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Promo Code for Events</title>
+    <meta charset="UTF-8">
+    <title>Promo Event | EventSphere</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* Modal styles */
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #e3f0ff 0%, #f8fbff 100%);
+            color: #232b3b;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background: linear-gradient(90deg, #2264a3 70%, #39a2db 100%);
+            padding: 32px 16px 24px 16px;
+            color: #fff;
+            text-align: center;
+            letter-spacing: 1px;
+            box-shadow: 0 2px 8px rgba(34, 100, 163, 0.08);
+        }
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        section {
+            max-width: 1200px;
+            margin: 32px auto 0 auto;
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 4px 32px rgba(34,100,163,0.07);
+            padding: 36px 3vw 30px 3vw;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            color: #1b3556;
+            margin-bottom: 24px;
+        }
+        .btn-primary, .btn-secondary, .btn-danger {
+            background: linear-gradient(90deg, #2264a3 70%, #39a2db 100%);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 1em;
+            font-weight: 500;
+            margin: 5px;
+            cursor: pointer;
+            transition: transform 0.08s, box-shadow 0.15s;
+            box-shadow: 0 2px 6px rgba(34, 100, 163, 0.10);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary:hover, .btn-secondary:hover {
+            background: linear-gradient(90deg, #1c4d75 70%, #297eb8 100%);
+            transform: translateY(-2px) scale(1.04);
+            box-shadow: 0 5px 18px rgba(34, 100, 163, 0.13);
+        }
+        .btn-danger {
+            background: linear-gradient(90deg, #d63031 70%, #ff7675 100%);
+        }
+        .btn-danger:hover {
+            background: linear-gradient(90deg, #b22222 70%, #e66767 100%);
+        }
+        .action-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .promo-item {
+            background: #f6faff;
+            border: 1px solid #d1e6f7;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(34,100,163,0.06);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
         .modal {
             display: none;
             position: fixed;
-            z-index: 1000;
-            left: 0;
             top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
         }
-
         .modal-content {
-            background-color: #fefefe;
-            margin: 15% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            border-radius: 5px;
-            width: 80%;
-            max-width: 500px;
-        }
-
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .close:hover,
-        .close:focus {
-            color: black;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-
-        .form-group input,
-        .form-group select {
+            background: white;
+            padding: 30px;
+            border-radius: 18px;
             width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
+            max-width: 500px;
+            box-shadow: 0 4px 32px rgba(34,100,163,0.07);
         }
-
-        .btn {
-            background-color: #007bff;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-right: 10px;
+        .modal.show {
+            display: flex;
         }
-
-        .btn:hover {
-            background-color: #0056b3;
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #d1e6f7;
+            border-radius: 8px;
         }
-
-        .btn-secondary {
-            background-color: #6c757d;
-        }
-
-        .btn-secondary:hover {
-            background-color: #545b62;
-        }
-
-        .promo-item {
-            border: 1px solid #ddd;
-            padding: 15px;
-            margin-bottom: 10px;
-            border-radius: 5px;
-            background-color: #f9f9f9;
-        }
-
-        .promo-controls {
-            margin-top: 10px;
-        }
-
-        .promo-controls a,
-        .promo-controls button {
-            margin-right: 10px;
-            padding: 5px 10px;
-            text-decoration: none;
-            border: 1px solid #007bff;
-            border-radius: 3px;
-            background-color: #007bff;
-            color: white;
-            cursor: pointer;
-        }
-
-        .promo-controls a:hover,
-        .promo-controls button:hover {
-            background-color: #0056b3;
-        }
-
-        .promo-controls .delete-btn {
-            background-color: #dc3545;
-            border-color: #dc3545;
-        }
-
-        .promo-controls .delete-btn:hover {
-            background-color: #c82333;
-        }
-
-        .percentage-badge {
-            background-color: #4e73df;
-            color: white;
+        .promo-badge {
+            display: inline-block;
+            margin-left: 10px;
             padding: 3px 8px;
-            border-radius: 3px;
+            border-radius: 4px;
             font-size: 0.8em;
+            font-weight: 600;
         }
-
+        .percentage-badge {
+            background-color: #2264a3;
+            color: white;
+        }
         .fixed-badge {
+            background-color: #39a2db;
+            color: white;
+        }
+        .active-badge {
             background-color: #1cc88a;
             color: white;
-            padding: 3px 8px;
-            border-radius: 3px;
-            font-size: 0.8em;
         }
-
-        .active-badge {
-            background-color: #28a745;
-            color: white;
-            padding: 3px 8px;
-            border-radius: 3px;
-            font-size: 0.8em;
-        }
-
         .expired-badge {
             background-color: #6c757d;
             color: white;
-            padding: 3px 8px;
-            border-radius: 3px;
-            font-size: 0.8em;
+        }
+        .dashboard-btn {
+            background: linear-gradient(90deg, #4a4e69 70%, #6a7187 100%);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 20px;
+            font-size: 1em;
+            font-weight: 500;
+            margin: 5px 0;
+            cursor: pointer;
+            transition: transform 0.08s, box-shadow 0.15s;
+            box-shadow: 0 2px 6px rgba(74, 78, 105, 0.10);
+        }
+        .dashboard-btn:hover {
+            background: linear-gradient(90deg, #373a4a 70%, #585d72 100%);
+            transform: translateY(-2px) scale(1.04);
+            box-shadow: 0 5px 18px rgba(74, 78, 105, 0.13);
+        }
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 10px 20px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.3s;
+        }
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        @media (max-width: 768px) {
+            .promo-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .promo-controls {
+                width: 100%;
+                margin-top: 10px;
+                display: flex;
+                gap: 10px;
+            }
         }
     </style>
 </head>
 <body>
-<h1 th:text="${userRole == T(backend.eventsphere.auth.model.User.UserRole).ORGANIZER}
-              ? 'Sistem Manajemen Kode Promo'
-              : 'Daftar Promo'"></h1>
-<div style="display: flex; gap: 5px; margin-bottom: 20px;">
-    <button id="back-to-events-btn" class="btn btn-secondary">Kembali ke Acara</button>
-    <button id="add-promo-btn" class="btn" style="display:none;">Tambah Promo</button>
-</div>
-<div id="promos-container"></div>
+<header>
+    <div class="header-container">
+        <button id="back-to-events-btn" class="back-btn">
+            <i class="fas fa-arrow-left"></i> Kembali ke Acara
+        </button>
+        <div style="font-size: 2.1em; font-weight: 700; letter-spacing: 0.7px;">
+            EventSphere
+        </div>
+        <div style="width: 120px;"></div>
+    </div>
+</header>
+
+<section>
+    <h1 th:text="${userRole == T(backend.eventsphere.auth.model.User.UserRole).ORGANIZER}
+                  ? 'Sistem Manajemen Kode Promo'
+                  : 'Daftar Promo'"></h1>
+
+    <div class="action-row">
+        <button id="add-promo-btn" class="btn-primary" style="display:none;">
+            <i class="fas fa-plus"></i> Tambah Promo
+        </button>
+    </div>
+
+    <div id="promos-container"></div>
+</section>
 
 <!-- Add Promo Modal -->
 <div id="add-promo-modal" class="modal">
     <div class="modal-content">
-        <span class="close" id="add-modal-close">&times;</span>
-        <h2>Tambah Promo Baru</h2>
+        <h3>Tambah Promo Baru</h3>
         <form id="add-promo-form">
             <div class="form-group">
                 <label for="add-promo-code">Kode Promo:</label>
@@ -197,8 +249,12 @@
                 <label for="add-end-date">Tanggal Berakhir:</label>
                 <input type="date" id="add-end-date" name="endDate" required>
             </div>
-            <button type="submit" class="btn">Tambah Promo</button>
-            <button type="button" class="btn btn-secondary" id="add-modal-cancel">Batal</button>
+            <button type="submit" class="btn-primary">
+                <i class="fas fa-save"></i> Tambah Promo
+            </button>
+            <button type="button" class="btn-secondary" id="add-modal-cancel">
+                <i class="fas fa-times"></i> Batal
+            </button>
         </form>
     </div>
 </div>
@@ -206,13 +262,12 @@
 <!-- Edit Promo Modal -->
 <div id="edit-promo-modal" class="modal">
     <div class="modal-content">
-        <span class="close" id="edit-modal-close">&times;</span>
-        <h2>Edit Promo</h2>
+        <h3>Edit Promo</h3>
         <form id="edit-promo-form">
             <input type="hidden" id="edit-promo-id">
             <div class="form-group">
                 <label for="edit-promo-code">Kode Promo:</label>
-                <input type="text" id="edit-promo-code" name="code" required>
+                <input type="text" id="edit-promo-code" name="code" readonly>
             </div>
             <div class="form-group">
                 <label for="edit-event-id">Event ID:</label>
@@ -234,151 +289,231 @@
                 <label for="edit-end-date">Tanggal Berakhir:</label>
                 <input type="date" id="edit-end-date" name="endDate" required>
             </div>
-            <button type="submit" class="btn">Perbarui Promo</button>
-            <button type="button" class="btn btn-secondary" id="edit-modal-cancel">Batal</button>
+            <button type="submit" class="btn-primary">
+                <i class="fas fa-save"></i> Perbarui Promo
+            </button>
+            <button type="button" class="btn-secondary" id="edit-modal-cancel">
+                <i class="fas fa-times"></i> Batal
+            </button>
         </form>
     </div>
 </div>
 
 <script>
-    const eventId = "[[${eventId}]]";
+    document.addEventListener('DOMContentLoaded', function() {
+        // Extract eventId from the current URL
+        const eventId = "[[${eventId}]]" || window.location.pathname.split('/').pop();
 
-    document.getElementById('back-to-events-btn').onclick = function() {
-        window.location.href = '/events/'
-    };
+        // Utility functions for role and user ID
+        async function checkRole() {
+            try {
+                const response = await fetch('/api/auth/role', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
 
-    async function fetchUserRole() {
-        try {
-            const response = await fetch('/api/auth/role', {
-                method: 'GET',
-                credentials: 'include'
-            });
+                if (!response.ok) {
+                    throw new Error('Gagal mengambil peran pengguna');
+                }
 
-            if (!response.ok) {
-                throw new Error('Gagal mengambil peran pengguna');
+                const data = await response.json();
+
+                // Show/hide add promo button based on role
+                const addPromoBtn = document.getElementById('add-promo-btn');
+                if (addPromoBtn) {
+                    addPromoBtn.style.display = (data.role === 'ORGANIZER') ? 'block' : 'none';
+                }
+
+                return data.role;
+            } catch (error) {
+                console.error('Error mengambil peran pengguna:', error);
+                return null;
+            }
+        }
+
+        async function getCurrentUserId() {
+            try {
+                const response = await fetch('/api/auth/user-id', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Gagal mengambil user ID');
+                }
+
+                const data = await response.json();
+                return data.userId;
+            } catch (error) {
+                console.error('Error dalam getCurrentUserId:', error);
+                return null;
+            }
+        }
+
+        // Safe event listener for back button
+        const backToEventsBtn = document.getElementById('back-to-events-btn');
+        if (backToEventsBtn) {
+            backToEventsBtn.onclick = function() {
+                window.location.href = '/events/';
+            };
+        }
+
+        // Modal functions
+        function openAddPromoModal() {
+            const addEventIdInput = document.getElementById('add-event-id');
+            const addPromoModal = document.getElementById('add-promo-modal');
+
+            if (addEventIdInput) addEventIdInput.value = eventId;
+            if (addPromoModal) addPromoModal.style.display = 'block';
+        }
+
+        function closeAddPromoModal() {
+            const addPromoModal = document.getElementById('add-promo-modal');
+            const addPromoForm = document.getElementById('add-promo-form');
+
+            if (addPromoModal) addPromoModal.style.display = 'none';
+            if (addPromoForm) addPromoForm.reset();
+        }
+
+        function openEditPromoModal(promo) {
+            const editPromoIdInput = document.getElementById('edit-promo-id');
+            const editPromoCodeInput = document.getElementById('edit-promo-code');
+            const editEventIdInput = document.getElementById('edit-event-id');
+            const editDiscountTypeInput = document.getElementById('edit-discount-type');
+            const editDiscountValueInput = document.getElementById('edit-discount-value');
+            const editStartDateInput = document.getElementById('edit-start-date');
+            const editEndDateInput = document.getElementById('edit-end-date');
+            const editPromoModal = document.getElementById('edit-promo-modal');
+
+            if (editPromoIdInput) editPromoIdInput.value = promo.id;
+            if (editPromoCodeInput) editPromoCodeInput.value = promo.code;
+            if (editEventIdInput) editEventIdInput.value = promo.eventId;
+            if (editDiscountTypeInput) {
+                editDiscountTypeInput.value = promo.discountType === 'PERCENTAGE' ? 'Persentase' : 'Jumlah Tetap';
             }
 
-            const data = await response.json();
-            return data.role;
-        } catch (error) {
-            console.error('Error mengambil peran pengguna:', error);
-            return null;
+            const discountValue = promo.discountType === 'PERCENTAGE' ? promo.discount * 100 : promo.discount;
+            if (editDiscountValueInput) editDiscountValueInput.value = discountValue;
+
+            if (editStartDateInput) editStartDateInput.value = promo.startDate.split('T')[0];
+            if (editEndDateInput) editEndDateInput.value = promo.endDate.split('T')[0];
+
+            if (editPromoModal) editPromoModal.style.display = 'block';
         }
-    }
 
-    async function checkRole() {
-        const role = await fetchUserRole();
+        function closeEditPromoModal() {
+            const editPromoModal = document.getElementById('edit-promo-modal');
+            const editPromoForm = document.getElementById('edit-promo-form');
 
-        if (role === 'ORGANIZER') {
-            const addPromoBtn = document.getElementById('add-promo-btn');
-            addPromoBtn.style.display = 'block';
+            if (editPromoModal) editPromoModal.style.display = 'none';
+            if (editPromoForm) editPromoForm.reset();
+        }
+
+        // Modal close buttons
+        const addModalCancelBtn = document.getElementById('add-modal-cancel');
+        const editModalCancelBtn = document.getElementById('edit-modal-cancel');
+
+        if (addModalCancelBtn) {
+            addModalCancelBtn.onclick = closeAddPromoModal;
+        }
+        if (editModalCancelBtn) {
+            editModalCancelBtn.onclick = closeEditPromoModal;
+        }
+
+        // Discount type change listener
+        const addDiscountTypeSelect = document.getElementById('add-discount-type');
+        if (addDiscountTypeSelect) {
+            addDiscountTypeSelect.addEventListener('change', function() {
+                const suffix = this.value === 'PERCENTAGE' ? '%' : 'IDR';
+                const discountSuffixSpan = document.getElementById('discount-suffix');
+                if (discountSuffixSpan) discountSuffixSpan.textContent = suffix;
+            });
+        }
+
+        // Outside click modal close
+        window.onclick = function(event) {
+            const addPromoModal = document.getElementById('add-promo-modal');
+            const editPromoModal = document.getElementById('edit-promo-modal');
+
+            if (addPromoModal && event.target === addPromoModal) {
+                closeAddPromoModal();
+            }
+            if (editPromoModal && event.target === editPromoModal) {
+                closeEditPromoModal();
+            }
+        }
+
+        // Add Promo Form Submission
+        document.getElementById('add-promo-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const role = await checkRole();
+            const userId = await getCurrentUserId();
+
+            if (role !== 'ORGANIZER' || !userId) {
+                alert('Hanya ORGANIZER yang bisa membuat promo');
+                return;
+            }
+
+            try {
+                const code = document.getElementById('add-promo-code').value;
+                const discountType = document.getElementById('add-discount-type').value;
+                let discountValue = parseFloat(document.getElementById('add-discount-value').value);
+                const startDate = document.getElementById('add-start-date').value;
+                const endDate = document.getElementById('add-end-date').value;
+
+                const formatDate = (isoDate) => {
+                    const [year, month, day] = isoDate.split('-');
+                    return `${day}-${month}-${year}`;
+                };
+
+                const params = new URLSearchParams();
+                params.append('code', code);
+                params.append('eventId', eventId);
+                params.append('promoType', discountType.toLowerCase());
+
+                if (discountType === 'PERCENTAGE') {
+                    params.append('amount', Math.round(discountValue * 100).toString());
+                } else {
+                    params.append('amount', Math.round(discountValue).toString());
+                }
+
+                params.append('startDate', formatDate(startDate));
+                params.append('endDate', formatDate(endDate));
+                params.append('createdBy', userId);
+
+                const response = await fetch('/api/promos', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: params,
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(errorText || 'Gagal membuat promo');
+                }
+
+                alert('Promo berhasil dibuat!');
+                closeAddPromoModal();
+                await loadPromos();
+
+            } catch (error) {
+                console.error('Create promo error:', error);
+                alert(`Gagal membuat promo: ${error.message}`);
+            }
+        });
+
+        // Add Promo Button
+        const addPromoBtn = document.getElementById('add-promo-btn');
+        if (addPromoBtn) {
             addPromoBtn.onclick = openAddPromoModal;
         }
-        return role;
-    }
 
-    async function getCurrentUserId() {
-        try {
-            const response = await fetch('/api/auth/user-id', {
-                method: 'GET',
-                credentials: 'include'
-            });
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('Response tidak OK:', errorText);
-                throw new Error(errorText || 'Gagal mengambil user ID');
-            }
-
-            const data = await response.json();
-
-            if (!data.userId) {
-                console.error('Format response tidak valid:', data);
-                throw new Error('Format data user ID tidak valid');
-            }
-
-            return data.userId;
-
-        } catch (error) {
-            console.error('Error dalam getCurrentUserId:', {
-                error: error,
-                message: error.message,
-                stack: error.stack
-            });
-            return null;
-        }
-    }
-
-    // Modal functions
-    function openAddPromoModal() {
-        document.getElementById('add-event-id').value = eventId;
-        document.getElementById('add-promo-modal').style.display = 'block';
-    }
-
-    function closeAddPromoModal() {
-        document.getElementById('add-promo-modal').style.display = 'none';
-        document.getElementById('add-promo-form').reset();
-    }
-
-    function openEditPromoModal(promo) {
-        document.getElementById('edit-promo-id').value = promo.id;
-        document.getElementById('edit-promo-code').value = promo.code;
-        document.getElementById('edit-event-id').value = promo.eventId;
-        document.getElementById('edit-discount-type').value = promo.discountType === 'PERCENTAGE' ? 'Persentase' : 'Jumlah Tetap';
-
-        const discountValue = promo.discountType === 'PERCENTAGE' ? promo.discount * 100 : promo.discount;
-        document.getElementById('edit-discount-value').value = discountValue;
-
-        document.getElementById('edit-start-date').value = promo.startDate.split('T')[0];
-        document.getElementById('edit-end-date').value = promo.endDate.split('T')[0];
-        document.getElementById('edit-promo-modal').style.display = 'block';
-    }
-
-    function closeEditPromoModal() {
-        document.getElementById('edit-promo-modal').style.display = 'none';
-        document.getElementById('edit-promo-form').reset();
-    }
-
-    // Modal event listeners
-    document.getElementById('add-modal-close').onclick = closeAddPromoModal;
-    document.getElementById('add-modal-cancel').onclick = closeAddPromoModal;
-    document.getElementById('edit-modal-close').onclick = closeEditPromoModal;
-    document.getElementById('edit-modal-cancel').onclick = closeEditPromoModal;
-
-    document.getElementById('add-discount-type').addEventListener('change', function() {
-        const suffix = this.value === 'PERCENTAGE' ? '%' : 'IDR';
-        document.getElementById('discount-suffix').textContent = suffix;
-    });
-
-    window.onclick = function(event) {
-        const addModal = document.getElementById('add-promo-modal');
-        const editModal = document.getElementById('edit-promo-modal');
-        if (event.target === addModal) {
-            closeAddPromoModal();
-        }
-        if (event.target === editModal) {
-            closeEditPromoModal();
-        }
-    }
-
-    document.getElementById('add-promo-form').addEventListener('submit', async function(e) {
-        e.preventDefault();
-
-        const role = await checkRole();
-        const userId = await getCurrentUserId();
-
-        if (role !== 'ORGANIZER' || !userId) {
-            alert('Hanya ORGANIZER yang bisa membuat promo');
-            return;
-        }
-
-        try {
-            const code = document.getElementById('add-promo-code').value;
-            const eventId = document.getElementById('add-event-id').value;
-            const discountType = document.getElementById('add-discount-type').value;
-            let discountValue = parseFloat(document.getElementById('add-discount-value').value);
-            const startDate = document.getElementById('add-start-date').value;
-            const endDate = document.getElementById('add-end-date').value;
+        document.getElementById('edit-promo-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
 
             const formatDate = (isoDate) => {
                 const [year, month, day] = isoDate.split('-');
@@ -386,203 +521,151 @@
             };
 
             const params = new URLSearchParams();
-            params.append('code', code);
-            params.append('eventId', eventId);
-            params.append('promoType', discountType.toLowerCase());
+            params.append('code', document.getElementById('edit-promo-code').value);
+
+            const discountType = document.getElementById('edit-discount-type').value === 'Persentase' ? 'PERCENTAGE' : 'FIXED_AMOUNT';
+            const discountValue = document.getElementById('edit-discount-value').value;
 
             if (discountType === 'PERCENTAGE') {
-                params.append('amount', Math.round(discountValue * 100).toString());
+                params.append('discount', (parseFloat(discountValue) / 100));
             } else {
-                params.append('amount', Math.round(discountValue).toString());
+                params.append('discount', discountValue);
             }
 
-            params.append('startDate', formatDate(startDate));
-            params.append('endDate', formatDate(endDate));
-            params.append('createdBy', userId);
+            params.append('startDate', formatDate(document.getElementById('edit-start-date').value));
+            params.append('endDate', formatDate(document.getElementById('edit-end-date').value));
 
-            const response = await fetch('/api/promos', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: params,
-                credentials: 'include'
-            });
+            try {
+                const response = await fetch(`/api/promos/${document.getElementById('edit-promo-id').value}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: params,
+                    credentials: 'include'
+                });
 
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText || 'Gagal membuat promo');
+                if (!response.ok) throw new Error(await response.text());
+
+                alert('Promo berhasil diperbarui!');
+                closeEditPromoModal();
+                await loadPromos();
+            } catch (error) {
+                console.error('Error:', error);
+                alert(`Gagal memperbarui promo: ${error.message}`);
             }
+        });
 
-            alert('Promo berhasil dibuat!');
-            closeAddPromoModal();
-            await loadPromos();
+        async function loadPromos() {
+            const role = await checkRole();
 
-        } catch (error) {
-            console.error('Create promo error:', error);
-            alert(`Gagal membuat promo: ${error.message}`);
-        }
-    });
+            try {
+                const response = await fetch(`/api/promos/event/${eventId}`, {
+                    method: 'GET',
+                    credentials: 'include',
+                });
 
-    document.getElementById('edit-promo-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        const container = document.getElementById('promos-container');
+                        container.innerHTML = '<p>Tidak ada promo untuk event ini.</p>';
+                        return;
+                    } else if (response.status === 403) {
+                        throw new Error('Akses ditolak. Tidak memiliki izin.');
+                    } else if (response.status === 401) {
+                        throw new Error('Tidak sah. Silakan login.');
+                    }
+                    throw new Error('Gagal mengambil promo');
+                }
 
-        const formatDate = (isoDate) => {
-            const [year, month, day] = isoDate.split('-');
-            return `${day}-${month}-${year}`;
-        };
+                const promos = await response.json();
+                const container = document.getElementById('promos-container');
 
-        const params = new URLSearchParams();
-        params.append('code', document.getElementById('edit-promo-code').value);
-
-        const discountType = document.getElementById('edit-discount-type').value === 'Persentase' ? 'PERCENTAGE' : 'FIXED_AMOUNT';
-        const discountValue = document.getElementById('edit-discount-value').value;
-
-        if (discountType === 'PERCENTAGE') {
-            params.append('discount', (parseFloat(discountValue) / 100));
-        } else {
-            params.append('discount', discountValue);
-        }
-
-        params.append('startDate', formatDate(document.getElementById('edit-start-date').value));
-        params.append('endDate', formatDate(document.getElementById('edit-end-date').value));
-
-        try {
-            const response = await fetch(`/api/promos/${document.getElementById('edit-promo-id').value}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: params,
-                credentials: 'include'
-            });
-
-            if (!response.ok) throw new Error(await response.text());
-
-            alert('Promo berhasil diperbarui!');
-            closeEditPromoModal();
-            await loadPromos();
-        } catch (error) {
-            console.error('Error:', error);
-            alert(`Gagal memperbarui promo: ${error.message}`);
-        }
-    });
-
-    document.addEventListener('DOMContentLoaded', function() {
-        if (eventId) {
-            document.getElementById('add-event-id').value = eventId;
-        }
-    });
-
-    async function loadPromos() {
-        const role = await checkRole();
-
-        try {
-            const response = await fetch(`/api/promos/event/${eventId}`, {
-                method: 'GET',
-                credentials: 'include',
-            });
-
-            if (!response.ok) {
-                if (response.status === 404) {
-                    const container = document.getElementById('promos-container');
+                if (!promos.length) {
                     container.innerHTML = '<p>Tidak ada promo untuk event ini.</p>';
                     return;
-                } else if (response.status === 403) {
-                    throw new Error('Akses ditolak. Tidak memiliki izin.');
-                } else if (response.status === 401) {
-                    throw new Error('Tidak sah. Silakan login.');
                 }
-                throw new Error('Gagal mengambil promo');
+
+                container.innerHTML = '';
+                promos.forEach(promo => {
+                    const today = new Date();
+                    const startDate = new Date(promo.startDate);
+                    const endDate = new Date(promo.endDate);
+                    const isActive = today >= startDate && today <= endDate;
+
+                    const discountValue = promo.discountType === 'PERCENTAGE'
+                        ? `${(promo.discount * 100)}%`
+                        : `IDR ${promo.discount.toLocaleString()}`;
+
+                    const div = document.createElement('div');
+                    div.className = 'promo-item';
+                    div.innerHTML = `
+                        <div>
+                            <strong>${promo.code}</strong>
+                            <span class="promo-badge ${promo.discountType === 'PERCENTAGE' ? 'percentage-badge' : 'fixed-badge'}">
+                                ${promo.discountType === 'PERCENTAGE' ? 'Persentase' : 'Jumlah Tetap'}
+                            </span>
+                            <span class="promo-badge ${isActive ? 'active-badge' : 'expired-badge'}">
+                                ${isActive ? 'Aktif' : 'Kedaluwarsa'}
+                            </span>
+                            <br>
+                            Nilai: ${discountValue}<br>
+                            Berlaku: ${new Date(promo.startDate).toLocaleDateString()} - ${new Date(promo.endDate).toLocaleDateString()}
+                        </div>
+                        <div class="promo-controls" id="promo-controls-${promo.id}"></div>
+                    `;
+                    container.appendChild(div);
+
+                    const controlsDiv = document.getElementById(`promo-controls-${promo.id}`);
+
+                    if (role === 'ORGANIZER') {
+                        const editBtn = document.createElement('button');
+                        editBtn.textContent = 'Edit';
+                        editBtn.className = 'btn';
+                        editBtn.onclick = () => openEditPromoModal(promo);
+                        controlsDiv.appendChild(editBtn);
+
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.textContent = 'Hapus';
+                        deleteBtn.className = 'btn delete-btn';
+                        deleteBtn.onclick = () => deletePromo(promo.id);
+                        controlsDiv.appendChild(deleteBtn);
+                    }
+                });
+            } catch (error) {
+                console.error('Error mengambil promo:', error);
+                const container = document.getElementById('promos-container');
+                container.innerHTML = `<p>Error: ${error.message}</p>`;
             }
+        }
 
-            const promos = await response.json();
-            const container = document.getElementById('promos-container');
-
-            if (!promos.length) {
-                container.innerHTML = '<p>Tidak ada promo untuk event ini.</p>';
+        async function deletePromo(promoId) {
+            if (!confirm('Apakah Anda yakin ingin menghapus promo ini?')) {
                 return;
             }
 
-            container.innerHTML = '';
-            promos.forEach(promo => {
-                const today = new Date();
-                const startDate = new Date(promo.startDate);
-                const endDate = new Date(promo.endDate);
-                const isActive = today >= startDate && today <= endDate;
+            try {
+                const response = await fetch(`/api/promos/${promoId}`, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
 
-                const discountValue = promo.discountType === 'PERCENTAGE'
-                    ? `${(promo.discount * 100)}%`
-                    : `IDR ${promo.discount.toLocaleString()}`;
-
-                const div = document.createElement('div');
-                div.className = 'promo-item';
-                div.innerHTML = `
-                    <div>
-                        <strong>${promo.code}</strong>
-                        <span class="${promo.discountType === 'PERCENTAGE' ? 'percentage-badge' : 'fixed-badge'}">
-                            ${promo.discountType === 'PERCENTAGE' ? 'Persentase' : 'Jumlah Tetap'}
-                        </span>
-                        <span class="${isActive ? 'active-badge' : 'expired-badge'}">
-                            ${isActive ? 'Aktif' : 'Kedaluwarsa'}
-                        </span>
-                        <br>
-                        Nilai: ${discountValue}<br>
-                        Berlaku: ${new Date(promo.startDate).toLocaleDateString()} - ${new Date(promo.endDate).toLocaleDateString()}
-                    </div>
-                    <div class="promo-controls" id="promo-controls-${promo.id}"></div>
-                `;
-                container.appendChild(div);
-
-                const controlsDiv = document.getElementById(`promo-controls-${promo.id}`);
-
-                if (role === 'ORGANIZER') {
-                    const editBtn = document.createElement('button');
-                    editBtn.textContent = 'Edit';
-                    editBtn.className = 'btn';
-                    editBtn.onclick = () => openEditPromoModal(promo);
-                    controlsDiv.appendChild(editBtn);
-
-                    const deleteBtn = document.createElement('button');
-                    deleteBtn.textContent = 'Hapus';
-                    deleteBtn.className = 'btn delete-btn';
-                    deleteBtn.onclick = () => deletePromo(promo.id);
-                    controlsDiv.appendChild(deleteBtn);
+                if (response.status === 204) {
+                    alert('Promo berhasil dihapus!');
+                    await loadPromos();
+                } else {
+                    const errorText = await response.text();
+                    alert('Error menghapus promo: ' + errorText);
                 }
-            });
-        } catch (error) {
-            console.error('Error mengambil promo:', error);
-            const container = document.getElementById('promos-container');
-            container.innerHTML = `<p>Error: ${error.message}</p>`;
-        }
-    }
-
-    async function deletePromo(promoId) {
-        if (!confirm('Apakah Anda yakin ingin menghapus promo ini?')) {
-            return;
-        }
-
-        try {
-            const response = await fetch(`/api/promos/${promoId}`, {
-                method: 'DELETE',
-                credentials: 'include'
-            });
-
-            if (response.status === 204) {
-                alert('Promo berhasil dihapus!');
-                await loadPromos();
-            } else {
-                const errorText = await response.text();
-                alert('Error menghapus promo: ' + errorText);
+            } catch (error) {
+                console.error('Error menghapus promo:', error);
+                alert('Gagal menghapus promo');
             }
-        } catch (error) {
-            console.error('Error menghapus promo:', error);
-            alert('Gagal menghapus promo');
         }
-    }
 
-    // Initial load
-    loadPromos();
+        // Initial load
+        loadPromos();
+    });
 </script>
 </body>
 </html>

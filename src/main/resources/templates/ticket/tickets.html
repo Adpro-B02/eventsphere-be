@@ -1,153 +1,224 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Tickets for Event</title>
+    <meta charset="UTF-8">
+    <title>Tiket Event | EventSphere</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* Modal styles */
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #e3f0ff 0%, #f8fbff 100%);
+            color: #232b3b;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background: linear-gradient(90deg, #2264a3 70%, #39a2db 100%);
+            padding: 32px 16px 24px 16px;
+            color: #fff;
+            text-align: center;
+            letter-spacing: 1px;
+            box-shadow: 0 2px 8px rgba(34, 100, 163, 0.08);
+        }
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 10px 20px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.3s;
+        }
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        section {
+            max-width: 1200px;
+            margin: 32px auto 0 auto;
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 4px 32px rgba(34,100,163,0.07);
+            padding: 36px 3vw 30px 3vw;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            color: #1b3556;
+            margin-bottom: 24px;
+        }
+        .btn-primary, .btn-secondary, .btn-danger {
+            background: linear-gradient(90deg, #2264a3 70%, #39a2db 100%);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 1em;
+            font-weight: 500;
+            margin: 5px;
+            cursor: pointer;
+            transition: transform 0.08s, box-shadow 0.15s;
+            box-shadow: 0 2px 6px rgba(34, 100, 163, 0.10);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary:hover, .btn-secondary:hover {
+            background: linear-gradient(90deg, #1c4d75 70%, #297eb8 100%);
+            transform: translateY(-2px) scale(1.04);
+            box-shadow: 0 5px 18px rgba(34, 100, 163, 0.13);
+        }
+        .btn-danger {
+            background: linear-gradient(90deg, #d63031 70%, #ff7675 100%);
+        }
+        .btn-danger:hover {
+            background: linear-gradient(90deg, #b22222 70%, #e66767 100%);
+        }
+        .dashboard-btn {
+            background: linear-gradient(90deg, #4a4e69 70%, #6a7187 100%);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 20px;
+            font-size: 1em;
+            font-weight: 500;
+            margin: 5px 0;
+            cursor: pointer;
+            transition: transform 0.08s, box-shadow 0.15s;
+            box-shadow: 0 2px 6px rgba(74, 78, 105, 0.10);
+        }
+        .dashboard-btn:hover {
+            background: linear-gradient(90deg, #373a4a 70%, #585d72 100%);
+            transform: translateY(-2px) scale(1.04);
+            box-shadow: 0 5px 18px rgba(74, 78, 105, 0.13);
+        }
+        .action-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .ticket-item {
+            background: #f6faff;
+            border: 1px solid #d1e6f7;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(34,100,163,0.06);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .ticket-details {
+            flex-grow: 1;
+        }
+        .ticket-controls {
+            display: flex;
+            gap: 10px;
+        }
         .modal {
             display: none;
             position: fixed;
-            z-index: 1000;
-            left: 0;
             top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
         }
-
         .modal-content {
-            background-color: #fefefe;
-            margin: 15% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            border-radius: 5px;
-            width: 80%;
-            max-width: 500px;
-        }
-
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .close:hover,
-        .close:focus {
-            color: black;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-
-        .form-group input,
-        .form-group select {
+            background: white;
+            padding: 30px;
+            border-radius: 18px;
             width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
+            max-width: 500px;
+            box-shadow: 0 4px 32px rgba(34,100,163,0.07);
         }
-
-        .btn {
-            background-color: #007bff;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-right: 10px;
+        .modal.show {
+            display: flex;
         }
-
-        .btn:hover {
-            background-color: #0056b3;
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #d1e6f7;
+            border-radius: 8px;
         }
-
-        .btn-secondary {
-            background-color: #6c757d;
-        }
-
-        .btn-secondary:hover {
-            background-color: #545b62;
-        }
-
-        .ticket-item {
-            border: 1px solid #ddd;
-            padding: 15px;
-            margin-bottom: 10px;
-            border-radius: 5px;
-            background-color: #f9f9f9;
-        }
-
-        .ticket-controls {
+        .error-message {
+            color: #d61d1d;
             margin-top: 10px;
         }
-
-        .ticket-controls a,
-        .ticket-controls button {
-            margin-right: 10px;
-            padding: 5px 10px;
-            text-decoration: none;
-            border: 1px solid #007bff;
-            border-radius: 3px;
-            background-color: #007bff;
-            color: white;
-            cursor: pointer;
-        }
-
-        .ticket-controls a:hover,
-        .ticket-controls button:hover {
-            background-color: #0056b3;
-        }
-
-        .ticket-controls .delete-btn {
-            background-color: #dc3545;
-            border-color: #dc3545;
-        }
-
-        .ticket-controls .delete-btn:hover {
-            background-color: #c82333;
+        @media (max-width: 768px) {
+            .ticket-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .ticket-controls {
+                width: 100%;
+                margin-top: 10px;
+            }
         }
     </style>
 </head>
 <body>
-<h1>Tiket</h1>
-<div>
-    <button id="back-to-event-btn" class="btn btn-secondary">Kembali ke Acara</button>
-</div>
-<div>
+<header>
+    <div class="header-container">
+        <button id="back-to-event-btn" class="back-btn">
+            <i class="fas fa-arrow-left"></i> Kembali ke Acara
+        </button>
+        <div style="font-size: 2.1em; font-weight: 700; letter-spacing: 0.7px;">
+            EventSphere
+        </div>
+        <div style="width: 120px;"></div> <!-- Placeholder for layout balance -->
+    </div>
+</header>
+
+<section>
+    <h1>Tiket Event</h1>
+
+    <div class="action-row">
+        <button id="add-ticket-btn" class="btn-primary" style="display:none;">
+            <i class="fas fa-plus"></i> Tambah Tiket
+        </button>
+    </div>
+
     <div id="tickets-container"></div>
-    <button id="add-ticket-btn" class="btn" style="display:none;">Tambah Tiket</button>
-</div>
+</section>
 
 <!-- Add Ticket Modal -->
 <div id="add-ticket-modal" class="modal">
     <div class="modal-content">
-        <span class="close" id="add-modal-close">&times;</span>
-        <h2>Tambah Tiket Baru</h2>
+        <h3>Tambah Tiket Baru</h3>
         <form id="add-ticket-form">
             <div class="form-group">
                 <label for="add-ticket-type">Jenis Tiket:</label>
-                <input type="text" id="add-ticket-type" name="ticketType" required>
+                <input type="text" id="add-ticket-type" name="ticketType" required/>
             </div>
             <div class="form-group">
                 <label for="add-ticket-price">Harga:</label>
-                <input type="number" id="add-ticket-price" name="ticketPrice" step="0.01" min="0" required>
+                <input type="number" id="add-ticket-price" name="ticketPrice" step="0.01" min="0" required/>
             </div>
             <div class="form-group">
                 <label for="add-quota">Kuota:</label>
-                <input type="number" id="add-quota" name="quota" min="1" required>
+                <input type="number" id="add-quota" name="quota" min="1" required/>
             </div>
-            <button type="submit" class="btn">Tambah Tiket</button>
-            <button type="button" class="btn btn-secondary" id="add-modal-cancel">Batal</button>
+            <button type="submit" class="btn-primary">
+                <i class="fas fa-save"></i> Tambah Tiket
+            </button>
+            <button type="button" class="btn-secondary" id="add-modal-cancel">
+                <i class="fas fa-times"></i> Batal
+            </button>
         </form>
     </div>
 </div>
@@ -155,203 +226,211 @@
 <!-- Edit Ticket Modal -->
 <div id="edit-ticket-modal" class="modal">
     <div class="modal-content">
-        <span class="close" id="edit-modal-close">&times;</span>
-        <h2>Edit Tiket</h2>
+        <h3>Edit Tiket</h3>
         <form id="edit-ticket-form">
-            <input type="hidden" id="edit-ticket-id">
+            <input type="hidden" id="edit-ticket-id"/>
             <div class="form-group">
                 <label for="edit-ticket-type">Jenis Tiket:</label>
-                <input type="text" id="edit-ticket-type" name="ticketType" readonly>
+                <input type="text" id="edit-ticket-type" name="ticketType" readonly/>
             </div>
             <div class="form-group">
                 <label for="edit-ticket-price">Harga:</label>
-                <input type="number" id="edit-ticket-price" name="ticketPrice" step="0.01" min="0" required>
+                <input type="number" id="edit-ticket-price" name="ticketPrice" step="0.01" min="0" required/>
             </div>
             <div class="form-group">
                 <label for="edit-quota">Kuota:</label>
-                <input type="number" id="edit-quota" name="quota" min="1" required>
+                <input type="number" id="edit-quota" name="quota" min="1" required/>
             </div>
-            <button type="submit" class="btn">Perbarui Tiket</button>
-            <button type="button" class="btn btn-secondary" id="edit-modal-cancel">Batal</button>
+            <button type="submit" class="btn-primary">
+                <i class="fas fa-save"></i> Perbarui Tiket
+            </button>
+            <button type="button" class="btn-secondary" id="edit-modal-cancel">
+                <i class="fas fa-times"></i> Batal
+            </button>
         </form>
     </div>
 </div>
 
 <script>
-    const eventId = window.location.pathname.split('/').pop();
+    document.addEventListener('DOMContentLoaded', function() {
+        const eventId = window.location.pathname.split('/').pop();
 
-    // BUTTON Back to event page
-    document.getElementById('back-to-event-btn').onclick = function() {
-        window.location.href = '/events/'
-    };
-
-    async function fetchUserRole() {
-        try {
-            const response = await fetch('/api/auth/role', {
-                method: 'GET',
-                credentials: 'include'
-            });
-
-            if (!response.ok) {
-                throw new Error('Gagal mengambil peran pengguna');
-            }
-
-            const data = await response.json();
-            return data.role;
-        } catch (error) {
-            console.error('Error mengambil peran pengguna:', error);
-            return null;
+        // BUTTON Back to event page
+        const backToEventBtn = document.getElementById('back-to-event-btn');
+        if (backToEventBtn) {
+            backToEventBtn.onclick = function () {
+                window.location.href = '/events/';
+            };
         }
-    }
 
-    async function checkRole() {
-        const role = await fetchUserRole();
+        async function fetchUserRole() {
+            try {
+                const response = await fetch('/api/auth/role', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
 
-        if (role === 'ORGANIZER') {
-            const addTicketBtn = document.getElementById('add-ticket-btn');
-            addTicketBtn.style.display = 'block';
-            addTicketBtn.onclick = openAddTicketModal;
-        }
-        return role;
-    }
-
-    // Modal functions
-    function openAddTicketModal() {
-        document.getElementById('add-ticket-modal').style.display = 'block';
-    }
-
-    function closeAddTicketModal() {
-        document.getElementById('add-ticket-modal').style.display = 'none';
-        document.getElementById('add-ticket-form').reset();
-    }
-
-    function openEditTicketModal(ticket) {
-        document.getElementById('edit-ticket-id').value = ticket.id;
-        document.getElementById('edit-ticket-type').value = ticket.ticketType;
-        document.getElementById('edit-ticket-price').value = ticket.ticketPrice;
-        document.getElementById('edit-quota').value = ticket.quota;
-        document.getElementById('edit-ticket-modal').style.display = 'block';
-    }
-
-    function closeEditTicketModal() {
-        document.getElementById('edit-ticket-modal').style.display = 'none';
-        document.getElementById('edit-ticket-form').reset();
-    }
-
-    // Modal event listeners
-    document.getElementById('add-modal-close').onclick = closeAddTicketModal;
-    document.getElementById('add-modal-cancel').onclick = closeAddTicketModal;
-    document.getElementById('edit-modal-close').onclick = closeEditTicketModal;
-    document.getElementById('edit-modal-cancel').onclick = closeEditTicketModal;
-
-    // Close modal when clicking outside
-    window.onclick = function(event) {
-        const addModal = document.getElementById('add-ticket-modal');
-        const editModal = document.getElementById('edit-ticket-modal');
-        if (event.target === addModal) {
-            closeAddTicketModal();
-        }
-        if (event.target === editModal) {
-            closeEditTicketModal();
-        }
-    }
-
-    // Form submissions
-    document.getElementById('add-ticket-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const ticketData = {
-            eventId: eventId,
-            ticketType: formData.get('ticketType'),
-            ticketPrice: parseFloat(formData.get('ticketPrice')),
-            quota: parseInt(formData.get('quota'))
-        };
-
-        try {
-            const response = await fetch('/api/tickets', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                credentials: 'include',
-                body: JSON.stringify(ticketData)
-            });
-
-            if (response.ok) {
-                alert('Tiket berhasil ditambahkan!');
-                closeAddTicketModal();
-                await loadTickets();
-            } else {
-                const errorText = await response.text();
-                alert('Error menambah tiket: ' + errorText);
-            }
-        } catch (error) {
-            console.error('Error menambah tiket:', error);
-            alert('Gagal menambah tiket');
-        }
-    });
-
-    document.getElementById('edit-ticket-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const ticketId = document.getElementById('edit-ticket-id').value;
-        const ticketData = {
-            ticketPrice: parseFloat(formData.get('ticketPrice')),
-            quota: parseInt(formData.get('quota'))
-        };
-
-        try {
-            const response = await fetch(`/api/tickets/${ticketId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                credentials: 'include',
-                body: JSON.stringify(ticketData)
-            });
-
-            if (response.ok) {
-                alert('Tiket berhasil diperbarui!');
-                closeEditTicketModal();
-                await loadTickets();
-            } else {
-                const errorText = await response.text();
-                alert('Error memperbarui tiket: ' + errorText);
-            }
-        } catch (error) {
-            console.error('Error memperbarui tiket:', error);
-            alert('Gagal memperbarui tiket');
-        }
-    });
-
-    // Load tickets
-    async function loadTickets() {
-        const role = await checkRole();
-
-        try {
-            const response = await fetch(`/api/tickets/${eventId}`, {
-                method: 'GET',
-                credentials: 'include',
-            });
-
-            if (!response.ok) {
-                if (response.status === 404) {
-                    const container = document.getElementById('tickets-container');
-                    container.innerHTML = '<p>Tidak ada ticket.</p>';
-                    return;
-                } else if (response.status === 403) {
-                    throw new Error('Akses ditolak. Tidak memiliki izin.');
-                } else if (response.status === 401) {
-                    throw new Error('Tidak sah. Silakan login.');
+                if (!response.ok) {
+                    throw new Error('Gagal mengambil peran pengguna');
                 }
-                throw new Error('Gagal mengambil tiket');
-            }
 
-            const tickets = await response.json();
+                const data = await response.json();
+                return data.role;
+            } catch (error) {
+                console.error('Error mengambil peran pengguna:', error);
+                return null;
+            }
+        }
+
+        async function checkRole() {
+            const role = await fetchUserRole();
+
+            if (role === 'ORGANIZER') {
+                const addTicketBtn = document.getElementById('add-ticket-btn');
+                if (addTicketBtn) {
+                    addTicketBtn.style.display = 'block';
+                    addTicketBtn.onclick = openAddTicketModal;
+                }
+            }
+            return role;
+        }
+
+        // Modal functions
+        function openAddTicketModal() {
+            const modal = document.getElementById('add-ticket-modal');
+            if (modal) modal.style.display = 'block';
+        }
+
+        function closeAddTicketModal() {
+            const modal = document.getElementById('add-ticket-modal');
+            const form = document.getElementById('add-ticket-form');
+            if (modal) modal.style.display = 'none';
+            if (form) form.reset();
+        }
+
+        function openEditTicketModal(ticket) {
+            const editTicketId = document.getElementById('edit-ticket-id');
+            const editTicketType = document.getElementById('edit-ticket-type');
+            const editTicketPrice = document.getElementById('edit-ticket-price');
+            const editQuota = document.getElementById('edit-quota');
+            const modal = document.getElementById('edit-ticket-modal');
+
+            if (editTicketId) editTicketId.value = ticket.id;
+            if (editTicketType) editTicketType.value = ticket.ticketType;
+            if (editTicketPrice) editTicketPrice.value = ticket.ticketPrice;
+            if (editQuota) editQuota.value = ticket.quota;
+            if (modal) modal.style.display = 'block';
+        }
+
+        function closeEditTicketModal() {
+            const modal = document.getElementById('edit-ticket-modal');
+            const form = document.getElementById('edit-ticket-form');
+            if (modal) modal.style.display = 'none';
+            if (form) form.reset();
+        }
+
+        // Modal event listeners
+        const addModalClose = document.getElementById('add-modal-close');
+        const addModalCancel = document.getElementById('add-modal-cancel');
+        const editModalClose = document.getElementById('edit-modal-close');
+        const editModalCancel = document.getElementById('edit-modal-cancel');
+
+        if (addModalClose) addModalClose.onclick = closeAddTicketModal;
+        if (addModalCancel) addModalCancel.onclick = closeAddTicketModal;
+        if (editModalClose) editModalClose.onclick = closeEditTicketModal;
+        if (editModalCancel) editModalCancel.onclick = closeEditTicketModal;
+
+        // Close modal when clicking outside
+        window.onclick = function (event) {
+            const addModal = document.getElementById('add-ticket-modal');
+            const editModal = document.getElementById('edit-ticket-modal');
+            if (addModal && event.target === addModal) {
+                closeAddTicketModal();
+            }
+            if (editModal && event.target === editModal) {
+                closeEditTicketModal();
+            }
+        }
+
+        // Form submissions
+        const addTicketForm = document.getElementById('add-ticket-form');
+        if (addTicketForm) {
+            addTicketForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const ticketData = {
+                    eventId: eventId,
+                    ticketType: formData.get('ticketType'),
+                    ticketPrice: parseFloat(formData.get('ticketPrice')),
+                    quota: parseInt(formData.get('quota'))
+                };
+
+                try {
+                    const response = await fetch('/api/tickets', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify(ticketData)
+                    });
+
+                    if (response.ok) {
+                        alert('Tiket berhasil ditambahkan!');
+                        closeAddTicketModal();
+                        await loadTickets();
+                    } else {
+                        const errorText = await response.text();
+                        alert('Error menambah tiket: ' + errorText);
+                    }
+                } catch (error) {
+                    console.error('Error menambah tiket:', error);
+                    alert('Gagal menambah tiket');
+                }
+            });
+        }
+
+        const editTicketForm = document.getElementById('edit-ticket-form');
+        if (editTicketForm) {
+            editTicketForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const ticketId = document.getElementById('edit-ticket-id').value;
+                const ticketData = {
+                    ticketPrice: parseFloat(formData.get('ticketPrice')),
+                    quota: parseInt(formData.get('quota'))
+                };
+
+                try {
+                    const response = await fetch(`/api/tickets/${ticketId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify(ticketData)
+                    });
+
+                    if (response.ok) {
+                        alert('Tiket berhasil diperbarui!');
+                        closeEditTicketModal();
+                        await loadTickets();
+                    } else {
+                        const errorText = await response.text();
+                        alert('Error memperbarui tiket: ' + errorText);
+                    }
+                } catch (error) {
+                    console.error('Error memperbarui tiket:', error);
+                    alert('Gagal memperbarui tiket');
+                }
+            });
+        }
+
+        function renderTickets(tickets, role) {
             const container = document.getElementById('tickets-container');
 
             if (!tickets.length) {
-                container.innerHTML = '<p>Tidak ada tiket ditemukan.</p>';
+                container.innerHTML = '<p style="text-align:center; color:#636e72;">Tidak ada tiket ditemukan.</p>';
                 return;
             }
 
@@ -360,10 +439,10 @@
                 const div = document.createElement('div');
                 div.className = 'ticket-item';
                 div.innerHTML = `
-                    <div>
-                        <strong>${ticket.ticketType}</strong><br>
-                        Harga: Rp${ticket.ticketPrice}<br>
-                        Kuota: ${ticket.quota}
+                    <div class="ticket-details">
+                        <strong style="color:#2264a3; font-size:1.2em;">${ticket.ticketType}</strong><br>
+                        <span style="color:#636e72;">Harga: Rp${ticket.ticketPrice.toLocaleString()}</span><br>
+                        <span style="color:#636e72;">Kuota: ${ticket.quota}</span>
                     </div>
                     <div class="ticket-controls" id="ticket-controls-${ticket.id}"></div>
                 `;
@@ -373,57 +452,84 @@
 
                 if (role === 'ORGANIZER') {
                     const editBtn = document.createElement('button');
-                    editBtn.textContent = 'Edit';
-                    editBtn.className = 'btn';
+                    editBtn.innerHTML = '<i class="fas fa-edit"></i> Edit';
+                    editBtn.className = 'btn-secondary';
                     editBtn.onclick = () => openEditTicketModal(ticket);
                     controlsDiv.appendChild(editBtn);
                 }
 
                 if (role === 'ADMIN') {
                     const deleteBtn = document.createElement('button');
-                    deleteBtn.textContent = 'Hapus';
-                    deleteBtn.className = 'btn delete-btn';
+                    deleteBtn.innerHTML = '<i class="fas fa-trash"></i> Hapus';
+                    deleteBtn.className = 'btn-danger';
                     deleteBtn.onclick = () => deleteTicket(ticket.id);
                     controlsDiv.appendChild(deleteBtn);
                 }
             });
-        } catch (error) {
-            console.error('Error mengambil tiket:', error);
-            const container = document.getElementById('tickets-container');
-            container.innerHTML = `<p>Error: ${error.message}</p>`;
+        }
 
-            if (error.message.includes('Tidak sah') || error.message.includes('Akses ditolak')) {
-                window.location.href = '/login';
+        async function loadTickets() {
+            const role = await checkRole();
+
+            try {
+                const response = await fetch(`/api/tickets/${eventId}`, {
+                    method: 'GET',
+                    credentials: 'include',
+                });
+
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        const container = document.getElementById('tickets-container');
+                        container.innerHTML = '<p style="text-align:center; color:#636e72;">Tidak ada tiket.</p>';
+                        return;
+                    } else if (response.status === 403) {
+                        throw new Error('Akses ditolak. Tidak memiliki izin.');
+                    } else if (response.status === 401) {
+                        throw new Error('Tidak sah. Silakan login.');
+                    }
+                    throw new Error('Gagal mengambil tiket');
+                }
+
+                const tickets = await response.json();
+                renderTickets(tickets, role);
+            } catch (error) {
+                console.error('Error mengambil tiket:', error);
+                const container = document.getElementById('tickets-container');
+                container.innerHTML = `<p style="text-align:center; color:#d61d1d;">Error: ${error.message}</p>`;
+
+                if (error.message.includes('Tidak sah') || error.message.includes('Akses ditolak')) {
+                    window.location.href = '/login';
+                }
             }
         }
-    }
 
-    async function deleteTicket(ticketId) {
-        if (!confirm('Apakah Anda yakin ingin menghapus tiket ini?')) {
-            return;
-        }
-
-        try {
-            const response = await fetch(`/api/tickets/${ticketId}`, {
-                method: 'DELETE',
-                credentials: 'include'
-            });
-
-            if (response.status === 204) {
-                alert('Tiket berhasil dihapus!');
-                await loadTickets();
-            } else {
-                const errorText = await response.text();
-                alert('Error menghapus tiket: ' + errorText);
+        async function deleteTicket(ticketId) {
+            if (!confirm('Apakah Anda yakin ingin menghapus tiket ini?')) {
+                return;
             }
-        } catch (error) {
-            console.error('Error menghapus tiket:', error);
-            alert('Gagal menghapus tiket');
-        }
-    }
 
-    // Initial load
-    loadTickets();
+            try {
+                const response = await fetch(`/api/tickets/${ticketId}`, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+
+                if (response.status === 204) {
+                    alert('Tiket berhasil dihapus!');
+                    await loadTickets();
+                } else {
+                    const errorText = await response.text();
+                    alert('Error menghapus tiket: ' + errorText);
+                }
+            } catch (error) {
+                console.error('Error menghapus tiket:', error);
+                alert('Gagal menghapus tiket');
+            }
+        }
+
+        // Initial load
+        loadTickets();
+    });
 </script>
 </body>
 </html>

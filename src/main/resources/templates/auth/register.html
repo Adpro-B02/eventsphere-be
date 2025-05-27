@@ -1,35 +1,191 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Register</title>
+    <meta charset="UTF-8">
+    <title>Register | EventSphere</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #e3f0ff 0%, #f8fbff 100%);
+            color: #232b3b;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .register-container {
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 4px 32px rgba(34,100,163,0.07);
+            padding: 40px 30px;
+            width: 100%;
+            max-width: 500px;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            font-size: 2.5em;
+            color: #2264a3;
+            font-weight: 700;
+            letter-spacing: 0.7px;
+            margin-bottom: 10px;
+        }
+        .tagline {
+            color: #636e72;
+            font-size: 1em;
+            opacity: 0.8;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2264a3;
+            font-weight: 600;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1e6f7;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #2264a3;
+            box-shadow: 0 0 0 2px rgba(34, 100, 163, 0.1);
+        }
+        .btn-primary {
+            background: linear-gradient(90deg, #2264a3 70%, #39a2db 100%);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 1em;
+            font-weight: 500;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.08s, box-shadow 0.15s;
+            box-shadow: 0 2px 6px rgba(34, 100, 163, 0.10);
+            margin-top: 20px;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(90deg, #1c4d75 70%, #297eb8 100%);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 5px 18px rgba(34, 100, 163, 0.13);
+        }
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9em;
+        }
+        .login-link a {
+            color: #2264a3;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        .login-link a:hover {
+            color: #39a2db;
+            text-decoration: underline;
+        }
+        .error-message {
+            color: #d61d1d;
+            text-align: center;
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+        .role-select {
+            background-color: #f6f9fc;
+            border: 1px solid #d1e6f7;
+        }
+        @media (max-width: 480px) {
+            .register-container {
+                width: 90%;
+                padding: 30px 20px;
+            }
+            .logo {
+                font-size: 2em;
+            }
+        }
+    </style>
 </head>
 <body>
-<h2>Register</h2>
-<form onsubmit="registerUser(event)">
-    <label>Fullname:</label>
-    <input type="text" id="fullname" required/><br/>
-    <label>Username:</label>
-    <input type="text" id="username" required/><br/>
-    <label>Email:</label>
-    <input type="email" id="email" required/><br/>
-    <label>Password:</label>
-    <input type="password" id="password" required/><br/>
-    <label>Role:</label>
-    <select id="role" required>
-        <option value="ADMIN">Admin</option>
-        <option value="ORGANIZER">Organizer</option>
-        <option value="ATTENDEE">Attendee</option>
-    </select><br/>
-    <button type="submit">Register</button>
-</form>
-<div id="registerResult" style="color:red;"></div>
-<p>
-    Sudah punya akun?
-    <a href="/login">Login</a>
-</p>
+<div class="register-container">
+    <header>
+        <div class="logo">EventSphere</div>
+        <div class="tagline">Buat Akun Baru</div>
+    </header>
+
+    <form onsubmit="registerUser(event)">
+        <div class="form-group">
+            <label for="fullname">
+                <i class="fas fa-user"></i> Nama Lengkap
+            </label>
+            <input type="text" id="fullname" required
+                   placeholder="Masukkan nama lengkap"/>
+        </div>
+
+        <div class="form-group">
+            <label for="username">
+                <i class="fas fa-user-circle"></i> Username
+            </label>
+            <input type="text" id="username" required
+                   placeholder="Pilih username"/>
+        </div>
+
+        <div class="form-group">
+            <label for="email">
+                <i class="fas fa-envelope"></i> Email
+            </label>
+            <input type="email" id="email" required
+                   placeholder="Masukkan email"/>
+        </div>
+
+        <div class="form-group">
+            <label for="password">
+                <i class="fas fa-lock"></i> Password
+            </label>
+            <input type="password" id="password" required
+                   placeholder="Buat password"/>
+        </div>
+
+        <div class="form-group">
+            <label for="role">
+                <i class="fas fa-user-tag"></i> Pilih Peran
+            </label>
+            <select id="role" required class="role-select">
+                <option value="ADMIN">Admin</option>
+                <option value="ORGANIZER">Organizer</option>
+                <option value="ATTENDEE">Attendee</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn-primary">
+            <i class="fas fa-user-plus"></i> Daftar
+        </button>
+
+        <div id="registerResult" class="error-message"></div>
+    </form>
+
+    <div class="login-link">
+        Sudah punya akun?
+        <a href="/login">Login</a>
+    </div>
+</div>
+
 <script>
     function registerUser(e) {
         e.preventDefault();
+        const registerResult = document.getElementById("registerResult");
+        registerResult.innerText = ""; // Clear previous error messages
+
         fetch('/api/auth/register', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -47,8 +203,11 @@
                 if (data.id) {
                     window.location.href = "/login";
                 } else {
-                    document.getElementById("registerResult").innerText = data.error || "Registration failed";
+                    registerResult.innerText = data.error || "Registrasi gagal. Silakan coba lagi.";
                 }
+            })
+            .catch(error => {
+                registerResult.innerText = "Terjadi kesalahan. Silakan coba lagi.";
             });
     }
 </script>
