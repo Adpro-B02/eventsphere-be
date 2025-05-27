@@ -65,6 +65,10 @@
             <a th:href="@{/tickets/{eventId}(eventId=${event.id})}">
                 <button type="button">Lihat Ticket</button>
             </a>
+
+            <a th:href="@{/promos/event/{eventId}(eventId=${event.id})}">
+                <button type="button">Lihat Promo</button>
+            </a>
         </td>
     </tr>
     </tbody>

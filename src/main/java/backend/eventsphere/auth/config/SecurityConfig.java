@@ -38,7 +38,7 @@ public class SecurityConfig {
                 .requestMatchers("/dashboard", "/api/auth/username", "/api/auth/role", "/api/auth/user-id", "/tickets/**").hasAnyAuthority("ADMIN", "ATTENDEE", "ORGANIZER")
                 .requestMatchers("/events/create", "/events/update", "/events/delete").hasAuthority("ORGANIZER")
                 .requestMatchers("/events/**").permitAll()
-                .requestMatchers("/api/promos/**").permitAll()
+                .requestMatchers("/api/promos/**", "/promos/**").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS); // Stateless
