@@ -33,15 +33,16 @@ public class AuthController {
 
     private final UserService userService;
 
-    @Autowired
     private JwtUtil jwtUtil;
 
-    @Autowired
     private AuthenticationManager authenticationManager;
 
     @Autowired
-    public AuthController(UserService userService) {
-        this.userService = userService;
+    public AuthController(UserService userService, JwtUtil jwtUtil, AuthenticationManager authenticationManager, UserRepository userRepository) {
+            this.userService = userService;
+            this.jwtUtil = jwtUtil;
+            this.authenticationManager = authenticationManager;
+            this.userRepository = userRepository;
     }
 
     @Autowired
