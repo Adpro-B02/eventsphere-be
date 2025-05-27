@@ -1,6 +1,6 @@
 package backend.eventsphere.ticket.model;
 
-import enums.TicketEventType;
+import backend.eventsphere.ticket.enums.TicketEventType;
 
 public interface TicketObserver {
     void onTicketEvent(Ticket ticket, TicketEventType eventType);
